@@ -20,7 +20,7 @@ export default function PortfolioPage() {
   const { data: wallet, isLoading } = useQuery({
     queryKey: ['wallet', investorId],
     queryFn: async () => {
-      const response = await apiClient.getWallet({ investorId });
+      const response = await apiClient.getWallet(investorId);
       return response.data;
     },
     enabled: !!investorId && status === 'authenticated' && !!session,

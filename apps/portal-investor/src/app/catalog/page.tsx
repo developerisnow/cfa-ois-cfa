@@ -28,10 +28,7 @@ export default function CatalogPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['market-issuances', filters],
     queryFn: async () => {
-      // TODO: Use generated SDK method
-      const response = await apiClient.get(`/v1/market/issuances`, {
-        params: filters,
-      });
+      const response = await apiClient.getMarketIssuances(filters);
       return response.data;
     },
     enabled: status === 'authenticated' && !!session,

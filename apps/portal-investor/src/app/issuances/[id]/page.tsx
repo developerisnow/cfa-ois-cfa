@@ -28,7 +28,7 @@ export default function IssuanceDetailPage() {
   const { data: issuance, isLoading } = useQuery({
     queryKey: ['market-issuance', id],
     queryFn: async () => {
-      const response = await apiClient.get(`/v1/market/issuances/${id}`);
+      const response = await apiClient.getMarketIssuance(id);
       return response.data;
     },
     enabled: !!id && status === 'authenticated' && !!session,
@@ -36,8 +36,7 @@ export default function IssuanceDetailPage() {
 
   const orderMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const response = await apiClient.post(
-        '/v1/orders',
+      const response = await apiClient.createOrder(
         {
           investorId,
           issuanceId: id,

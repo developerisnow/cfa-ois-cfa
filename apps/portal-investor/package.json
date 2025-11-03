@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ois/api-client": "file:../../packages/sdks/ts",
     "@tanstack/react-query": "^5.17.0",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.6.0",
@@ -23,6 +24,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@stoplight/spectral-cli": "^6.15.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",

@@ -1,42 +1,59 @@
-// Temporary client until SDK is generated
-import axios from 'axios';
+import { getSession } from 'next-auth/react';
+import { OisApiClient } from '@ois/api-client';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
-// Create axios instance with auth
-const axiosInstance = axios.create({
-  baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Helper to create client with token
+async function getClient() {
+  const session = await getSession();
+  const token = (session?.accessToken as string) || undefined;
+  return new OisApiClient({ baseURL, accessToken: token });
+}
 
-// Add auth interceptor if needed
-// axiosInstance.interceptors.request.use((config) => {
-//   const token = getToken(); // Implement getToken
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
-
+// SDK wrapper with NextAuth integration
 export const apiClient = {
-  get: axiosInstance.get.bind(axiosInstance),
-  post: axiosInstance.post.bind(axiosInstance),
-  put: axiosInstance.put.bind(axiosInstance),
-  delete: axiosInstance.delete.bind(axiosInstance),
-
-  // Legacy methods for compatibility
-  getWallet: async (params: { investorId: string }) => {
-    const response = await axiosInstance.get(`/v1/wallets/${params.investorId}`);
-    return { data: response.data };
+  // Market
+  async getMarketIssuances(params?: any) {
+    const client = await getClient();
+    const data = await client.getMarketIssuances(params);
+    return { data };
   },
+
+  async getMarketIssuance(id: string) {
+    const client = await getClient();
+    const data = await client.getMarketIssuance(id);
+    return { data };
+  },
+
+  // Orders
+  async createOrder(data: any, options?: { headers?: Record<string, string> }) {
+    const client = await getClient();
+    const orderData = await client.createOrder(data);
+    return { data: orderData };
+  },
+
+  // Wallet
+  async getWallet(investorId: string) {
+    const client = await getClient();
+    const wallet = await client.getWallet(investorId);
+    return { data: wallet };
+  },
+
+  // Investor
+  async getInvestorTransactions(investorId: string, params?: any) {
+    const client = await getClient();
+    const transactions = await client.getInvestorTransactions(investorId, params);
+    return { data: transactions };
+  },
+
+  async getInvestorPayouts(investorId: string, params?: any) {
+    const client = await getClient();
+    const payouts = await client.getInvestorPayouts(investorId, params);
+    return { data: payouts };
+  },
+
+  // Legacy compatibility methods
   placeOrder: async (data: any, options?: { headers?: Record<string, string> }) => {
-    const response = await axiosInstance.post(
-      `/v1/orders`,
-      data.createOrderRequest,
-      { headers: options?.headers }
-    );
-    return { data: response.data };
+    return apiClient.createOrder(data, options);
   },
 };

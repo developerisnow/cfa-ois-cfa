@@ -13,7 +13,7 @@ export default function IssuanceDetailPage() {
   const { data: issuance, isLoading } = useQuery({
     queryKey: ['issuance', id],
     queryFn: async () => {
-      const response = await apiClient.getIssuance({ id });
+      const response = await apiClient.getIssuance(id);
       return response.data;
     },
     enabled: !!id,
@@ -21,7 +21,7 @@ export default function IssuanceDetailPage() {
 
   const publishMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.publishIssuance({ id });
+      await apiClient.publishIssuance(id);
     },
     onSuccess: () => {
       toast.success('Issuance published');
@@ -33,7 +33,7 @@ export default function IssuanceDetailPage() {
 
   const closeMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.closeIssuance({ id });
+      await apiClient.closeIssuance(id);
     },
     onSuccess: () => {
       toast.success('Issuance closed');

@@ -1,47 +1,66 @@
-// Temporary client until SDK is generated
-import axios from 'axios';
+import { getSession } from 'next-auth/react';
+import { OisApiClient } from '@ois/api-client';
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
-// Create axios instance
-const axiosInstance = axios.create({
-  baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Helper to create client with token
+async function getClient() {
+  const session = await getSession();
+  const token = (session?.accessToken as string) || undefined;
+  return new OisApiClient({ baseURL, accessToken: token });
+}
 
+// SDK wrapper with NextAuth integration
 export const apiClient = {
-  get: axiosInstance.get.bind(axiosInstance),
-  post: axiosInstance.post.bind(axiosInstance),
-  put: axiosInstance.put.bind(axiosInstance),
-  delete: axiosInstance.delete.bind(axiosInstance),
+  // Issuances
+  async createIssuance(data: any) {
+    const client = await getClient();
+    const issuance = await client.createIssuance(data);
+    return { data: issuance };
+  },
 
-  // Legacy methods for compatibility
-  createIssuance: async (data: any) => {
-    const response = await axiosInstance.post('/issuances', data.createIssuanceRequest);
-    return { data: response.data };
+  async getIssuance(id: string) {
+    const client = await getClient();
+    const issuance = await client.getIssuance(id);
+    return { data: issuance };
   },
-  getIssuance: async (params: { id: string }) => {
-    const response = await axiosInstance.get(`/issuances/${params.id}`);
-    return { data: response.data };
+
+  async publishIssuance(id: string) {
+    const client = await getClient();
+    const issuance = await client.publishIssuance(id);
+    return { data: issuance };
   },
-  publishIssuance: async (params: { id: string }) => {
-    const response = await axiosInstance.post(`/issuances/${params.id}/publish`);
-    return { data: response.data };
+
+  async closeIssuance(id: string) {
+    const client = await getClient();
+    const issuance = await client.closeIssuance(id);
+    return { data: issuance };
   },
-  closeIssuance: async (params: { id: string }) => {
-    const response = await axiosInstance.post(`/issuances/${params.id}/close`);
-    return { data: response.data };
+
+  // Reports
+  async getIssuerIssuancesReport(params: { issuerId: string; from: string; to: string }) {
+    const client = await getClient();
+    const report = await client.getIssuerIssuancesReport(params);
+    return { data: report };
   },
+
+  async getIssuerPayoutsReport(params: { issuerId: string; from: string; to: string; granularity?: 'day' | 'week' | 'month' | 'year' }) {
+    const client = await getClient();
+    const report = await client.getIssuerPayoutsReport(params);
+    return { data: report };
+  },
+
+  // Settlement
+  async runSettlement(params?: { date?: string }) {
+    const client = await getClient();
+    const result = await client.runSettlement(params);
+    return { data: result };
+  },
+
+  // Legacy compatibility
   getPayoutsReport: async (params: { from: string; to: string }) => {
-    const response = await axiosInstance.get('/v1/reports/payouts', { params });
-    return { data: response.data };
-  },
-  runSettlement: async (params?: { date?: string }) => {
-    const response = await axiosInstance.post('/v1/settlement/run', null, {
-      params: params?.date ? { date: params.date } : undefined,
-    });
-    return { data: response.data };
+    const client = await getClient();
+    const report = await client.getPayoutsReport(params);
+    return { data: report };
   },
 };

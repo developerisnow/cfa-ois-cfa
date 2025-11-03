@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import type { IssuerReportRow } from '@ois/api-client';
 import {
   AppShell,
   PageHeader,
@@ -13,27 +14,18 @@ import {
   Skeleton,
 } from '../../../../shared-ui/src';
 import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
-interface IssuerReportRow {
-  issuanceId: string;
-  assetCode: string;
-  assetName: string;
-  totalAmount: number;
-  soldAmount: number;
-  investorsCount: number;
-  status: 'draft' | 'published' | 'closed' | 'redeemed';
-  issueDate: string;
-  maturityDate: string;
-  publishedAt: string | null;
-}
+// Using types from SDK
 
 export default function ReportsPage() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'issuances' | 'payouts'>('issuances');
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -41,25 +33,29 @@ export default function ReportsPage() {
   });
   const [granularity, setGranularity] = useState<'day' | 'week' | 'month' | 'year'>('month');
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
+
+  const issuerId = (session?.user as any)?.issuerId || (session?.user as any)?.id || '';
+
   if (status === 'loading') {
     return <div className="p-8">Loading...</div>;
   }
 
   if (!session) {
-    redirect('/auth/signin');
+    return null;
   }
-
-  const issuerId = (session.user as any)?.issuerId || '';
 
   const { data: issuancesReport, isLoading: issuancesLoading } = useQuery({
     queryKey: ['issuer-issuances-report', issuerId, dateRange],
     queryFn: async () => {
-      const response = await apiClient.get('/v1/reports/issuances', {
-        params: {
-          issuerId,
-          from: dateRange.from,
-          to: dateRange.to,
-        },
+      const response = await apiClient.getIssuerIssuancesReport({
+        issuerId,
+        from: dateRange.from,
+        to: dateRange.to,
       });
       return response.data;
     },
@@ -69,13 +65,11 @@ export default function ReportsPage() {
   const { data: payoutsReport, isLoading: payoutsLoading } = useQuery({
     queryKey: ['issuer-payouts-report', issuerId, dateRange, granularity],
     queryFn: async () => {
-      const response = await apiClient.get('/v1/reports/payouts', {
-        params: {
-          issuerId,
-          from: dateRange.from,
-          to: dateRange.to,
-          granularity,
-        },
+      const response = await apiClient.getIssuerPayoutsReport({
+        issuerId,
+        from: dateRange.from,
+        to: dateRange.to,
+        granularity,
       });
       return response.data;
     },
@@ -201,8 +195,51 @@ export default function ReportsPage() {
   };
 
   const exportToXLSX = () => {
-    // Placeholder - would need xlsx library
-    toast.error('XLSX export not yet implemented');
+    const data = activeTab === 'issuances'
+      ? issuancesReport?.items || []
+      : payoutsReport?.items || [];
+
+    if (data.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    try {
+      const headers = activeTab === 'issuances'
+        ? ['Issuance ID', 'Asset Code', 'Asset Name', 'Total Amount', 'Sold Amount', 'Investors', 'Status', 'Issue Date', 'Maturity Date']
+        : ['Period', 'Total Amount', 'Payout Count', 'Investors Count'];
+
+      const rows = data.map((item: any) => {
+        if (activeTab === 'issuances') {
+          return [
+            item.issuanceId,
+            item.assetCode,
+            item.assetName,
+            item.totalAmount,
+            item.soldAmount,
+            item.investorsCount,
+            item.status,
+            new Date(item.issueDate).toLocaleDateString(),
+            new Date(item.maturityDate).toLocaleDateString(),
+          ];
+        } else {
+          return [
+            item.period,
+            item.totalAmount,
+            item.payoutCount,
+            item.investorsCount,
+          ];
+        }
+      });
+
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, activeTab === 'issuances' ? 'Issuances' : 'Payouts');
+      XLSX.writeFile(workbook, `${activeTab}-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success('XLSX exported successfully');
+    } catch (error: any) {
+      toast.error(`Export failed: ${error.message}`);
+    }
   };
 
   return (
@@ -239,6 +276,18 @@ export default function ReportsPage() {
             >
               <Download className="h-4 w-4" />
               Export CSV
+            </button>
+            <button
+              onClick={exportToXLSX}
+              className="flex items-center gap-2 px-4 py-2 border border-border rounded-md bg-surface text-text-primary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={
+                activeTab === 'issuances'
+                  ? !issuancesReport?.items?.length
+                  : !payoutsReport?.items?.length
+              }
+            >
+              <Download className="h-4 w-4" />
+              Export XLSX
             </button>
           </div>
         }

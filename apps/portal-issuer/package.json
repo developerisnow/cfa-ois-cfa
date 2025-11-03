@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ois/api-client": "file:../../packages/sdks/ts",
     "@tanstack/react-query": "^5.17.0",
     "@tanstack/react-table": "^8.21.3",
+    "@types/xlsx": "^0.0.35",
     "axios": "^1.6.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.303.0",
@@ -20,6 +22,7 @@
     "react-dom": "^18.3.0",
     "sonner": "^1.3.1",
     "tailwind-merge": "^2.2.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.22.4"
   },
   "devDependencies": {

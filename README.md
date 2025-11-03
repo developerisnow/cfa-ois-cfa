@@ -1,93 +1,260 @@
-# ois-cfa
+# ОИС ЦФА - Оператор информационной системы цифровых финансовых активов
 
+**Версия:** 1.0.0-MVP  
+**Дата:** 2025-01-XX  
+**Оператор:** {{COMPANY_NAME}} (ОГРН: {{OGRN}}, ИНН: {{INN}})
 
+---
 
-## Getting started
+## 📋 ОБЗОР ПРОЕКТА
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+ОИС ЦФА - это комплексная информационная система для выпуска, учета и обращения цифровых финансовых активов в соответствии с требованиями Федерального закона № 259-ФЗ.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### 🎯 Основные функции MVP
 
-## Add your files
+- **Выпуск ЦФА** - создание и публикация цифровых финансовых активов
+- **Покупка ЦФА** - размещение заказов инвесторами
+- **Выплаты** - выполнение выплат по расписанию
+- **Погашение** - погашение выпуска
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+---
+
+## 🚀 БЫСТРЫЙ СТАРТ
+
+### Предварительные требования
+
+- .NET 9 SDK
+- Node.js 20+
+- Docker & Docker Compose
+- Go 1.21+ (для chaincode)
+
+### Установка и запуск
+
+```bash
+# 1. Клонирование
+git clone <repo-url>
+cd capital
+
+# 2. Запуск инфраструктуры
+make docker-up
+# или
+docker-compose up -d
+
+# 3. Проверка здоровья сервисов
+make health
+
+# 4. Валидация спецификаций
+make validate-specs
+
+# 5. Загрузка демо-данных
+make seed
+```
+
+---
+
+## 📚 СПЕЦИФИКАЦИИ (Spec-First)
+
+Все API контракты определены в `/packages/contracts`:
+
+### OpenAPI (REST)
+- `openapi-gateway.yaml` - Gateway API (основные endpoints)
+- `openapi-identity.yaml` - Identity Service (OIDC)
+- `openapi-integrations-esia.yaml` - ESIA Adapter
+- `openapi-integrations-bank.yaml` - Bank Nominal
+- `openapi-integrations-edo.yaml` - EDO Connector
+
+### AsyncAPI (Events)
+- `asyncapi.yaml` - Kafka события
+
+### JSON Schemas
+- `schemas/CFA.json` - Цифровой финансовый актив
+- `schemas/Issuance.json` - Выпуск
+- `schemas/Order.json` - Заказ
+- `schemas/Payout.json` - Выплата
+- `schemas/AuditEvent.json` - Событие аудита
+
+---
+
+## 🔗 SWAGGER URLs
+
+После запуска `docker-compose up`:
+
+- **Gateway**: http://localhost:5000/swagger
+- **Identity**: http://localhost:5001/swagger
+- **ESIA Adapter**: http://localhost:5002/swagger
+- **Bank Nominal**: http://localhost:5003/swagger
+- **EDO Connector**: http://localhost:5004/swagger
+
+---
+
+## 🧪 ТЕСТИРОВАНИЕ
+
+```bash
+# Unit tests
+make test
+
+# E2E tests (Playwright)
+make e2e
+
+# Load tests (k6)
+make load
+
+# Contract tests (Pact)
+cd tests/contracts && npm test
+```
+
+---
+
+## 🔄 ГЕНЕРАЦИЯ SDK
+
+SDK генерируются из OpenAPI спецификаций:
+
+```bash
+# Установить openapi-generator-cli
+npm install -g @openapitools/openapi-generator-cli
+
+# Генерировать SDK
+make generate-sdks
+```
+
+SDK будут в `/packages/sdks/`:
+
+- `typescript-gateway/` - TypeScript клиент для Gateway API
+
+---
+
+## 📁 СТРУКТУРА ПРОЕКТА
 
 ```
-cd existing_repo
-git remote add origin https://git.telex.global/npk/ois-cfa.git
-git branch -M main
-git push -uf origin main
+/apps
+  /portal-issuer      - Next.js 15 (эмитент)
+  /portal-investor    - Next.js 15 (инвестор)
+  /backoffice         - Next.js 15 (админка)
+  /api-gateway        - ASP.NET Core (YARP)
+
+/services
+  /identity           - .NET 9 (OIDC/аутентификация)
+  /issuance           - .NET 9 (выпуск ЦФА)
+  /registry           - .NET 9 (реестр/трансферы)
+  /settlement         - .NET 9 (выплаты)
+  /compliance         - .NET 9 (KYC/AML)
+  /integrations
+    /esia-adapter     - .NET 9 (ЕСИА mock)
+    /bank-nominal     - .NET 9 (банк mock)
+    /edo-connector    - .NET 9 (ЭДО mock)
+
+/chaincode
+  /issuance           - Go (HLF chaincode)
+  /registry           - Go (HLF chaincode)
+
+/packages
+  /contracts          - OpenAPI/AsyncAPI/JSON Schemas
+  /sdks               - Автогенерированные клиенты
+
+/tests
+  /e2e                - Playwright
+  /contracts          - Pact
+  /services           - xUnit
+  /load               - k6
+
+/ops
+  /infra              - K8s/Helm
+  /ci                 - GitHub Actions
 ```
 
-## Integrate with your tools
+---
 
-- [ ] [Set up project integrations](https://git.telex.global/npk/ois-cfa/-/settings/integrations)
+## 🛠️ КОМАНДЫ (Makefile)
 
-## Collaborate with your team
+```bash
+make help              # Список всех команд
+make install           # Установить зависимости
+make build             # Собрать все проекты
+make test              # Запустить тесты
+make lint              # Линтинг
+make validate-specs    # Валидация OpenAPI/AsyncAPI/JSON
+make seed              # Загрузить демо-данные
+make e2e               # E2E тесты
+make load              # Нагрузочные тесты
+make docker-up         # Запустить docker-compose
+make docker-down       # Остановить docker-compose
+make generate-sdks     # Генерировать SDK
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+---
 
-## Test and Deploy
+## 🔐 БЕЗОПАСНОСТЬ
 
-Use the built-in continuous integration in GitLab.
+⚠️ **ВАЖНО**: В dev окружении используются mock-сервисы и простые пароли.  
+Для production требуется:
+- Vault для секретов
+- mTLS между сервисами
+- HSM для ключей
+- Полная интеграция с ЕСИА/банком/ЭДО
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+---
 
-***
+## 📝 ЛОГИ И АУДИТ
 
-# Editing this README
+- Логи: Serilog (JSON формат) → stdout
+- Аудит: События в Kafka (`ois.audit.logged`)
+- Трейсинг: OpenTelemetry (планируется)
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+---
 
-## Suggestions for a good README
+## 🐛 TROUBLESHOOTING
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Сервисы не стартуют
 
-## Name
-Choose a self-explaining name for your project.
+```bash
+# Проверить логи
+docker-compose logs -f <service-name>
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# Проверить здоровье
+curl http://localhost:5000/health
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### База данных не доступна
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```bash
+# Пересоздать базу
+docker-compose down -v
+docker-compose up -d postgres
+sleep 5
+docker-compose up -d
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 📖 ДОКУМЕНТАЦИЯ
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- Архитектура: `/docs/architecture/`
+- Правила ИС: `/docs/legal/01-ПравилаИС-template.md`
+- Описание ИС: `/docs/legal/02-ОписаниеИС-template.md`
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+---
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 🔄 CHANGELOG
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### 1.0.0-MVP (2025-01-XX)
+- ✅ Monorepo структура
+- ✅ Spec-first: OpenAPI/AsyncAPI/JSON Schemas
+- ✅ Docker Compose инфраструктура
+- ✅ API Gateway (YARP)
+- ✅ Identity Service skeleton
+- ⏳ Остальные сервисы (в разработке)
+- ⏳ Chaincode (в разработке)
+- ⏳ Frontends (в разработке)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## 📄 ЛИЦЕНЗИЯ
 
-## License
-For open source projects, say how it is licensed.
+Проприетарное ПО. Все права защищены.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+---
+
+## 👥 КОНТАКТЫ
+
+- Техподдержка: support@example.com
+- Архитектор: architect@example.com

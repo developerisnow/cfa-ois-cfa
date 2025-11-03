@@ -9,27 +9,9 @@ import { useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Download } from 'lucide-react';
 
-interface TxHistoryItem {
-  id: string;
-  type: 'transfer' | 'redeem' | 'issue';
-  issuanceId: string;
-  issuanceCode: string;
-  amount: number;
-  status: 'pending' | 'confirmed' | 'failed';
-  dltTxHash: string | null;
-  createdAt: string;
-  confirmedAt: string | null;
-}
+// Import types from SDK instead of defining locally
+import type { TxHistoryItem, PayoutItem } from '@ois/api-client';
 
-interface PayoutItem {
-  id: string;
-  batchId: string;
-  issuanceId: string;
-  investorId: string;
-  amount: number;
-  status: 'pending' | 'executed' | 'failed';
-  executedAt: string | null;
-}
 
 export default function HistoryPage() {
   const { data: session, status } = useSession();
@@ -51,12 +33,10 @@ export default function HistoryPage() {
   const { data: transactions, isLoading: txLoading } = useQuery({
     queryKey: ['investor-transactions', investorId, dateRange],
     queryFn: async () => {
-      const response = await apiClient.get(`/v1/investors/${investorId}/transactions`, {
-        params: {
-          from: dateRange.from,
-          to: dateRange.to,
-          type: 'all',
-        },
+      const response = await apiClient.getInvestorTransactions(investorId, {
+        from: dateRange.from,
+        to: dateRange.to,
+        type: 'all',
       });
       return response.data;
     },
@@ -66,11 +46,9 @@ export default function HistoryPage() {
   const { data: payouts, isLoading: payoutsLoading } = useQuery({
     queryKey: ['investor-payouts', investorId, dateRange],
     queryFn: async () => {
-      const response = await apiClient.get(`/v1/investors/${investorId}/payouts`, {
-        params: {
-          from: dateRange.from,
-          to: dateRange.to,
-        },
+      const response = await apiClient.getInvestorPayouts(investorId, {
+        from: dateRange.from,
+        to: dateRange.to,
       });
       return response.data;
     },

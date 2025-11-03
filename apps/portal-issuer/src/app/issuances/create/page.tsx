@@ -30,14 +30,12 @@ export default function CreateIssuancePage() {
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiClient.createIssuance({
-        createIssuanceRequest: {
-          assetId: data.assetId,
-          issuerId: data.issuerId,
-          totalAmount: parseFloat(data.totalAmount),
-          nominal: parseFloat(data.nominal),
-          issueDate: data.issueDate,
-          maturityDate: data.maturityDate,
-        },
+        assetId: data.assetId,
+        issuerId: data.issuerId,
+        totalAmount: parseFloat(data.totalAmount),
+        nominal: parseFloat(data.nominal),
+        issueDate: data.issueDate,
+        maturityDate: data.maturityDate,
       });
       return response.data;
     },

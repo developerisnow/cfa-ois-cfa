@@ -24,13 +24,11 @@ export default function NewOrderPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiClient.placeOrder(
+      const response = await apiClient.createOrder(
         {
-          createOrderRequest: {
-            investorId: data.investorId,
-            issuanceId: data.issuanceId,
-            amount: parseFloat(data.amount),
-          },
+          investorId: data.investorId,
+          issuanceId: data.issuanceId,
+          amount: parseFloat(data.amount),
         },
         {
           headers: {

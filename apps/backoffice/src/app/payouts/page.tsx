@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, legacyApiClient } from '@/lib/api-client';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -12,7 +12,7 @@ export default function PayoutsPage() {
       const from = new Date();
       from.setDate(from.getDate() - 30);
       const to = new Date();
-      const response = await apiClient.getPayoutsReport({
+      const response = await legacyApiClient.getPayoutsReport({
         from: from.toISOString().split('T')[0],
         to: to.toISOString().split('T')[0],
       });
@@ -22,7 +22,7 @@ export default function PayoutsPage() {
 
   const runSettlementMutation = useMutation({
     mutationFn: async (date?: string) => {
-      const response = await apiClient.runSettlement({ date });
+      const response = await legacyApiClient.runSettlement({ date });
       return response.data;
     },
     onSuccess: () => {
@@ -53,21 +53,29 @@ export default function PayoutsPage() {
           <h2 className="text-xl font-semibold mb-4">Report</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-600">Total Batches</p>
-              <p className="text-2xl font-bold">{report.totalBatches}</p>
-            </div>
-            <div>
               <p className="text-gray-600">Total Amount</p>
               <p className="text-2xl font-bold">{report.totalAmount}</p>
             </div>
             <div>
-              <p className="text-gray-600">Completed Items</p>
-              <p className="text-2xl font-bold">{report.completedItems}</p>
+              <p className="text-gray-600">Items Count</p>
+              <p className="text-2xl font-bold">{report.items?.length || 0}</p>
             </div>
-            <div>
-              <p className="text-gray-600">Failed Items</p>
-              <p className="text-2xl font-bold">{report.failedItems}</p>
-            </div>
+            {report.items && report.items.length > 0 && (
+              <>
+                <div>
+                  <p className="text-gray-600">Executed</p>
+                  <p className="text-2xl font-bold">
+                    {report.items.filter((item) => item.status === 'executed').length}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Failed</p>
+                  <p className="text-2xl font-bold">
+                    {report.items.filter((item) => item.status === 'failed').length}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
