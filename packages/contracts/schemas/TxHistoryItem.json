@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TxHistoryItem",
+  "description": "Элемент истории транзакций инвестора",
+  "type": "object",
+  "required": ["id", "type", "issuanceId", "issuanceCode", "amount", "status", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["transfer", "redeem", "issue"],
+      "description": "Тип транзакции"
+    },
+    "issuanceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "issuanceCode": {
+      "type": "string",
+      "description": "Код выпуска для отображения"
+    },
+    "amount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "failed"],
+      "description": "Статус транзакции"
+    },
+    "dltTxHash": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "Хеш транзакции в DLT"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "confirmedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата подтверждения"
+    }
+  }
+}
+

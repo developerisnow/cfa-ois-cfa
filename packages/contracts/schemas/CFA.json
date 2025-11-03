@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CFA (Digital Financial Asset)",
+  "description": "Схема цифрового финансового актива",
+  "type": "object",
+  "required": ["id", "code", "name", "type", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Уникальный идентификатор ЦФА"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{3,20}$",
+      "description": "Код ЦФА (символ)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Наименование ЦФА"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["TOKEN", "BOND", "SHARE", "MONETARY_CLAIM", "OTHER"],
+      "description": "Тип ЦФА"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 5000,
+      "description": "Описание ЦФА"
+    },
+    "issuerId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор эмитента"
+    },
+    "totalSupply": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "description": "Общий объём выпуска"
+    },
+    "issuedAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Выпущенный объём"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "ACTIVE", "SUSPENDED", "CANCELLED"],
+      "description": "Статус ЦФА"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата создания"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата обновления"
+    },
+    "activatedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата активации"
+    }
+  }
+}
+

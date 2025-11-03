@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Order",
+  "description": "Схема заказа на покупку ЦФА",
+  "type": "object",
+  "required": ["id", "investorId", "issuanceId", "amount", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Уникальный идентификатор заказа"
+    },
+    "investorId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор инвестора"
+    },
+    "issuanceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор выпуска"
+    },
+    "amount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "description": "Сумма заказа"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "failed", "cancelled"],
+      "description": "Статус заказа"
+    },
+    "walletId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Идентификатор кошелька после подтверждения"
+    },
+    "dltTxHash": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "Хеш транзакции в DLT"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата создания заказа"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата обновления"
+    },
+    "confirmedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата подтверждения"
+    },
+    "failureReason": {
+      "type": ["string", "null"],
+      "description": "Причина отказа (если статус failed)"
+    },
+    "idemKey": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Ключ идемпотентности"
+    }
+  }
+}
+

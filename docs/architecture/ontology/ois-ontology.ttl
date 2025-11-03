@@ -1,0 +1,17 @@
+@prefix ois: <https://example.org/ois#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ois:OIS a rdfs:Class .
+ois:Issuer a rdfs:Class .
+ois:Investor a rdfs:Class .
+ois:CFA a rdfs:Class .
+ois:Issuance a rdfs:Class .
+ois:NominalAccount a rdfs:Class .
+ois:AnalyticalSubaccount a rdfs:Class .
+ois:UKEP a rdfs:Class .
+ois:EDODocument a rdfs:Class .
+
+ois:hasIssuer a rdf:Property ; rdfs:domain ois:Issuance ; rdfs:range ois:Issuer .
+ois:hasAsset a rdf:Property ; rdfs:domain ois:Issuance ; rdfs:range ois:CFA .
+ois:hasNominalAccount a rdf:Property ; rdfs:domain ois:OIS ; rdfs:range ois:NominalAccount .

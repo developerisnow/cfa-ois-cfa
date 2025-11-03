@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Wallet",
+  "description": "Схема кошелька инвестора",
+  "type": "object",
+  "required": ["investorId", "balance", "blocked", "holdings"],
+  "properties": {
+    "investorId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор инвестора"
+    },
+    "balance": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Баланс кошелька"
+    },
+    "blocked": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Заблокированные средства"
+    },
+    "holdings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Holding"
+      },
+      "description": "Владения ЦФА"
+    }
+  },
+  "definitions": {
+    "Holding": {
+      "type": "object",
+      "required": ["issuanceId", "quantity"],
+      "properties": {
+        "issuanceId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Идентификатор выпуска"
+        },
+        "quantity": {
+          "type": "number",
+          "format": "decimal",
+          "minimum": 0,
+          "exclusiveMinimum": true,
+          "description": "Количество ЦФА"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Дата последнего обновления"
+        }
+      }
+    }
+  }
+}
+

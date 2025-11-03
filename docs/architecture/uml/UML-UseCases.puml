@@ -1,0 +1,26 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+left to right direction
+actor Issuer
+actor Investor
+actor Compliance
+actor Security
+actor Admin
+rectangle OIS {
+  usecase UC1 as "Регистрация/ЕСИА"
+  usecase UC2 as "Эмиссия ЦФА"
+  usecase UC3 as "Инвестирование"
+  usecase UC4 as "Выплаты/Погашение"
+  usecase UC5 as "Квалификация инвестора (5635-У)"
+  usecase UC6 as "Обмен документами (ЭДО/УКЭП)"
+  usecase UC7 as "Обращения пользователей"
+}
+Issuer --> UC2
+Investor --> UC1
+Investor --> UC3
+Compliance --> UC5
+Compliance --> UC6
+Security --> UC7
+Admin --> UC6
+
+@enduml

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.149193Z" agent="python" etag="2757" version="20.6.2">
+  <diagram name="STRIDE-Dataflow">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="t_dmz" value="DMZ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999" vertex="1" parent="1">
+          <mxGeometry x="200" y="120" width="180" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_core" value="Core" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999" vertex="1" parent="1">
+          <mxGeometry x="520" y="120" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_es" value="ESIA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="40" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_bank" value="Bank" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="760" y="40" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_edo" value="EDO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="60" y="260" width="120" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="te1" value="OIDC" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="t_es" target="t_dmz">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="te2" value="mTLS" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="t_dmz" target="t_core">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="te3" value="ISO20022" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="t_core" target="t_bank">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="te4" value="УКЭП docs" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="t_edo" target="t_core">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,13 @@
+@import '../../../_theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary;
+    font-family: var(--font-sans);
+  }
+}
+

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.144342Z" agent="python" etag="4254" version="20.6.2">
+  <diagram name="C4-Code">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="cc1" value="Chaincode.Issuance\n- Issue\n- Close\n- Schedule" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="160" y="120" width="240" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="cc2" value="Chaincode.Registry\n- Transfer\n- Redeem\n- GetHistory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="160" y="260" width="240" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="cc3" value="Domain\nCFA, Issuance,\nAccount, Holder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="500" y="120" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cc4" value="Tests\nunit/e2e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="500" y="280" width="220" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="ccE1" value="uses" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="cc1" target="cc3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ccE2" value="uses" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="cc2" target="cc3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ccE3" value="verify" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="cc4" target="cc1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ccE4" value="verify" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="cc4" target="cc2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

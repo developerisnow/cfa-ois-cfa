@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Bank Nominal Account API
+  version: 0.1.0
+  description: Адаптер номинального счёта и аналитического учёта
+servers:
+  - url: https://api.example.com
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+
+  /nominal/accounts:
+    post:
+      summary: Открыть номинальный счёт
+      responses:
+        '201':
+          description: Создан
+  /nominal/transfer:
+    post:
+      summary: Перевод средств
+      responses:
+        '200':
+          description: Проведено

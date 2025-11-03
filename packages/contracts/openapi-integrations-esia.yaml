@@ -1,0 +1,174 @@
+openapi: 3.1.0
+info:
+  title: ESIA Adapter API
+  version: 1.0.0
+  description: ЕСИА адаптер - OIDC и профиль пользователя (mock для dev)
+servers:
+  - url: http://localhost:5002
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+  
+  /oidc/authorize:
+    get:
+      summary: OIDC authorization (redirect to ESIA or mock)
+      operationId: authorize
+      tags:
+        - OIDC
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+        - name: scope
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to ESIA or mock callback
+        '400':
+          description: Invalid request
+  
+  /oidc/callback:
+    post:
+      summary: OIDC callback handler
+      operationId: callback
+      tags:
+        - OIDC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                state:
+                  type: string
+      responses:
+        '200':
+          description: Callback processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  state:
+                    type: string
+        '400':
+          description: Invalid callback
+  
+  /profile:
+    get:
+      summary: Get ESIA profile (mock)
+      operationId: getProfile
+      tags:
+        - Profile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: snils
+          in: query
+          schema:
+            type: string
+            description: СНИЛС для поиска
+      responses:
+        '200':
+          description: ESIA profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EsiaProfile'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Profile not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    EsiaProfile:
+      type: object
+      properties:
+        snils:
+          type: string
+          description: СНИЛС
+        firstName:
+          type: string
+        lastName:
+          type: string
+        middleName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        passport:
+          type: object
+          properties:
+            series:
+              type: string
+            number:
+              type: string
+            issuedBy:
+              type: string
+            issuedDate:
+              type: string
+              format: date
+        address:
+          type: object
+          properties:
+            registration:
+              type: string
+            residence:
+              type: string
+        contacts:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+            phone:
+              type: string
+

@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: EDO Connector API
+  version: 0.1.0
+  description: Интеграция с ЭДО (Диадок/СБИС/1С)
+servers:
+  - url: https://api.example.com
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+
+  /documents:
+    post:
+      summary: Отправить документ на подпись
+      responses:
+        '202':
+          description: Принято
+  /documents/{id}/status:
+    get:
+      summary: Статус документа
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Статус

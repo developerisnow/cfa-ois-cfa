@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.141859Z" agent="python" etag="6502" version="20.6.2">
+  <diagram name="C2-Containers">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="portal" value="Portal (Issuer/Investor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="140" y="120" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="back" value="Backoffice (Operator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="500" y="120" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="320" y="260" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="idp" value="Identity/MSP/PKI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="500" y="260" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="kyc" value="KYC/AML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="740" y="260" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="ledger" value="Ledger Node(s)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="500" y="360" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="bankad" value="Bank Nominal Adapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="760" y="120" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="esiaad" value="ESIA Adapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="140" y="260" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="edoad" value="EDO Connector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="140" y="360" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit" value="Audit/Logging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="320" y="360" width="160" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e1" value="HTTPS" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="portal" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e2" value="gRPC/REST" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="api" target="back">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e3" value="mTLS" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="back" target="idp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e4" value="REST" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="back" target="kyc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e5" value="Chaincode/SDK" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="back" target="ledger">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e6" value="ISO20022/REST" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="back" target="bankad">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e7" value="OIDC" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="api" target="esiaad">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e8" value="REST" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="api" target="edoad">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2e9" value="Logs" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="back" target="audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

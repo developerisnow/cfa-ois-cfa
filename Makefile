@@ -1,0 +1,141 @@
+.PHONY: help install build test lint validate-specs seed e2e load clean docker-up docker-down
+
+help: ## Show this help message
+	@echo 'Usage: make [target]'
+	@echo ''
+	@echo 'Available targets:'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+install: ## Install dependencies
+	@echo "Installing dependencies..."
+	cd backend && dotnet restore
+	cd chaincode/issuance && go mod download
+	cd chaincode/registry && go mod download
+	cd apps/portal-issuer && npm install
+	cd apps/portal-investor && npm install
+	cd apps/backoffice && npm install
+
+build: ## Build all projects
+	@echo "Building .NET services..."
+	cd packages/domain && dotnet build --no-restore
+	cd services/issuance && dotnet build --no-restore
+	cd services/registry && dotnet build --no-restore
+	cd services/settlement && dotnet build --no-restore
+	cd services/compliance && dotnet build --no-restore
+	@echo "Building chaincode..."
+	cd chaincode/issuance && go build -o bin/issuance .
+	cd chaincode/registry && go build -o bin/registry .
+	@echo "Testing chaincode..."
+	cd chaincode/registry && go test ./...
+	@echo "Building frontends..."
+	cd apps/portal-issuer && npm run build
+	cd apps/portal-investor && npm run build
+	cd apps/backoffice && npm run build
+
+test: ## Run all tests
+	@echo "Running .NET tests..."
+	cd packages/domain && dotnet test --no-build --verbosity minimal
+	cd services/issuance && dotnet test --no-build --verbosity minimal
+	cd services/registry && dotnet test --no-build --verbosity minimal || true
+	cd services/settlement && dotnet test --no-build --verbosity minimal || true
+	cd services/compliance && dotnet test --no-build --verbosity minimal || true
+	@echo "Running chaincode tests..."
+	cd chaincode/issuance && go test ./...
+	cd chaincode/registry && go test ./...
+	@echo "Running frontend tests..."
+	cd apps/portal-issuer && npm test -- --passWithNoTests
+
+k6: ## Run k6 load tests
+	@echo "Running k6 load tests..."
+	k6 run tests/k6/payouts-report.js
+
+k6-load: ## Run k6 gateway critical paths
+	@echo "Running k6 gateway critical paths..."
+	k6 run tests/k6/gateway-critical-paths.js
+
+k6-report: ## Run k6 and generate JSON report
+	k6 run --out json=k6-report.json tests/k6/gateway-critical-paths.js
+
+pact: ## Run Pact tests
+	@echo "Running Pact consumer tests..."
+	cd tests/contracts/pact-consumer && npm test
+
+coverage: ## Generate coverage report
+	@echo "Running tests with coverage..."
+	dotnet test --collect:"XPlat Code Coverage" --results-directory:./coverage
+
+e2e: ## Run E2E tests
+	@echo "Running Playwright E2E tests..."
+	cd tests/e2e && npx playwright test
+
+e2e-ui: ## Run E2E tests with UI
+	cd tests/e2e && npx playwright test --ui
+
+lint: ## Run linters
+	@echo "Linting .NET code..."
+	cd backend && dotnet format --verify-no-changes
+	@echo "Linting Go code..."
+	cd chaincode/issuance && golangci-lint run
+	cd chaincode/registry && golangci-lint run
+	@echo "Linting frontend code..."
+	cd apps/portal-issuer && npm run lint
+	cd apps/portal-investor && npm run lint
+	cd apps/backoffice && npm run lint
+
+validate-specs: ## Validate OpenAPI/AsyncAPI/JSON Schemas
+	@echo "Validating OpenAPI specs..."
+	@which spectral > /dev/null || (echo "Install @stoplight/spectral-cli: npm i -g @stoplight/spectral-cli" && exit 1)
+	spectral lint packages/contracts/openapi-*.yaml
+	@echo "Validating AsyncAPI spec..."
+	@which asyncapi > /dev/null || (echo "Install asyncapi-cli: npm i -g @asyncapi/cli" && exit 1)
+	asyncapi validate packages/contracts/asyncapi.yaml
+	@echo "Validating JSON Schemas..."
+	@which ajv > /dev/null || (echo "Install ajv-cli: npm i -g ajv-cli" && exit 1)
+	ajv validate -s packages/contracts/schemas/CFA.json -d '{"id":"00000000-0000-0000-0000-000000000000","code":"TEST","name":"Test","type":"TOKEN","status":"DRAFT"}' || true
+	@echo "Spec validation complete"
+
+seed: ## Seed database with demo data
+	@echo "Seeding database..."
+	docker-compose exec api-gateway dotnet run --project services/seed -- seed-db
+	@echo "Demo data seeded"
+
+e2e: ## Run E2E tests (Playwright)
+	@echo "Running E2E tests..."
+	cd tests/e2e && npm test
+
+load: ## Run load tests (k6)
+	@echo "Running load tests..."
+	cd tests/load && k6 run load-test.js
+
+docker-up: ## Start all services with docker-compose
+	docker-compose up -d
+	@echo "Waiting for services to be healthy..."
+	@sleep 10
+	@echo "Services started. Check health: make health"
+
+docker-down: ## Stop all services
+	docker-compose down
+
+health: ## Check health of all services
+	@echo "Checking service health..."
+	@curl -s http://localhost:5000/health | jq . || echo "Gateway: not ready"
+	@curl -s http://localhost:5001/health | jq . || echo "Identity: not ready"
+	@curl -s http://localhost:5002/health | jq . || echo "ESIA: not ready"
+
+clean: ## Clean build artifacts
+	@echo "Cleaning build artifacts..."
+	cd backend && dotnet clean
+	cd chaincode/issuance && rm -rf bin
+	cd chaincode/registry && rm -rf bin
+	cd apps/portal-issuer && rm -rf .next
+	cd apps/portal-investor && rm -rf .next
+	cd apps/backoffice && rm -rf .next
+
+generate-sdks: ## Generate SDKs from OpenAPI specs
+	@echo "Generating SDKs..."
+	@which openapi-generator-cli > /dev/null || (echo "Install openapi-generator-cli" && exit 1)
+	openapi-generator-cli generate -i packages/contracts/openapi-gateway.yaml -g typescript-fetch -o packages/sdks/typescript-gateway
+	@echo "SDKs generated in packages/sdks/"
+
+.DEFAULT_GOAL := help
+

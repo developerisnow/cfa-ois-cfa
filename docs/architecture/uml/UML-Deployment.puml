@@ -1,0 +1,20 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+node "DC-1" {
+  node "DMZ" {
+    node "Ingress/WAF"
+    node "API Gateway"
+    node "Portal"
+  }
+  node "Core" {
+    node "Backoffice"
+    node "Ledger Peer"
+    node "DB"
+    node "HSM"
+  }
+}
+node "DC-2 (DR)" {
+  node "Core-DR"
+}
+
+@enduml

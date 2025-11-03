@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReconciliationReport",
+  "description": "Схема отчёта по reconciliation",
+  "type": "object",
+  "required": ["batchId", "runDate", "reconciledAt"],
+  "properties": {
+    "batchId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор batch"
+    },
+    "runDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Дата settlement"
+    },
+    "reconciledAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Время reconciliation"
+    },
+    "payload": {
+      "type": "object",
+      "description": "JSON payload с деталями reconciliation",
+      "additionalProperties": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["matched", "mismatch", "partial"],
+      "description": "Статус reconciliation"
+    }
+  }
+}
+

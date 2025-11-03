@@ -1,0 +1,19 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+participant Investor
+participant Portal
+participant ESIA
+participant Backoffice
+participant Bank
+participant Ledger
+Investor -> Portal: Login (ESIA-OIDC)
+Portal -> ESIA: OIDC flow
+ESIA --> Portal: id_token/profile
+Portal -> Backoffice: Check KYC/Qualification
+Backoffice -> Bank: Reserve funds (nominal)
+Bank --> Backoffice: Reserved
+Backoffice -> Ledger: transfer(to=Investor, amount)
+Ledger --> Backoffice: txHash
+Backoffice -> Portal: Confirm purchase
+
+@enduml

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.151725Z" agent="python" etag="5746" version="20.6.2">
+  <diagram name="DRP-Topology">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="drp_pri" value="Primary DC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="200" y="80" width="240" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="drp_sec" value="Secondary DC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="240" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="drp_obj" value="Offsite Backups" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="900" y="80" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="dre1" value="Async Replication" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="drp_pri" target="drp_sec">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="dre2" value="Daily backups" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="drp_pri" target="drp_obj">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,36 @@
+# ... existing code ...
+  postgres:
+    # ... existing config ...
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ops/scripts:/scripts:ro
+    # ... rest of config ...
+
+  # Add backup cron service (optional, for scheduled backups)
+  postgres-backup:
+    image: postgres:16-alpine
+    container_name: ois-postgres-backup
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ois
+      POSTGRES_USER: ois
+      POSTGRES_PASSWORD: ois_dev_password
+    volumes:
+      - ./ops/scripts:/scripts:ro
+      - ./backups:/backups
+    command: >
+      sh -c "
+        apk add --no-cache postgresql-client gzip bash &&
+        chmod +x /scripts/backup.sh &&
+        while true; do
+          /scripts/backup.sh /backups
+          sleep 86400
+        done
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ois-network
+    restart: unless-stopped

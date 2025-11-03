@@ -1,0 +1,18 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+participant Issuer
+participant Portal
+participant Backoffice
+participant EDO
+participant Bank as "Bank/Nominal"
+participant Ledger as "DLT"
+Issuer -> Portal: Create Issuance (draft)
+Portal -> Backoffice: Validate & Approve
+Backoffice -> EDO: Send RuleSet/Decision for UKEP
+EDO --> Backoffice: Signed docs
+Backoffice -> Ledger: issue(asset, amount, schedule)
+Ledger --> Backoffice: txHash/finality
+Backoffice -> Bank: Open nominal/analytical accounts
+Bank --> Backoffice: Account IDs
+
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+class Issuer {id, name, ogrn, inn}
+class Investor {id, type, qualification}
+class CFA {id, code, type}
+class Issuance {id, assetId, schedule}
+class NominalAccount {id, bank, accountNo}
+class AnalyticalSubaccount {id, owner, balance}
+class AuditEvent {id, actor, action, ts}
+Issuer "1" -- "many" Issuance
+CFA "1" -- "many" Issuance
+Issuance "1" -- "1" NominalAccount
+Investor "1" -- "many" AnalyticalSubaccount
+Issuance "1" -- "many" AnalyticalSubaccount
+
+@enduml

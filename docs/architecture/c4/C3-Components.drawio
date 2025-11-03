@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.143346Z" agent="python" etag="4281" version="20.6.2">
+  <diagram name="C3-Components">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="c3b1" value="Svc.Identity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="120" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b2" value="Svc.Issuance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="300" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b3" value="Svc.Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="480" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b4" value="Svc.Reporting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="660" y="80" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b5" value="Svc.Notifications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="840" y="80" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b6" value="Adapter.ESIA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="240" y="200" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b7" value="Adapter.Bank" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="420" y="200" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b8" value="Adapter.EDO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="600" y="200" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3b9" value="Ledger.SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="780" y="200" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e1" value="auth" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b1" target="c3b2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e2" value="issue()" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b2" target="c3b9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e3" value="transfer(), redeem()" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b3" target="c3b9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e4" value="openAccount()" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b2" target="c3b7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e5" value="UKEP docs" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b2" target="c3b8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3e6" value="OIDC" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="c3b1" target="c3b6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

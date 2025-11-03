@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Complaint",
+  "description": "Схема жалобы",
+  "type": "object",
+  "required": ["id", "category", "text", "status", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор жалобы"
+    },
+    "investorId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Идентификатор инвестора (null для анонимных)"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["fraud", "service", "technical", "other"],
+      "description": "Категория жалобы"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 5000,
+      "description": "Текст жалобы"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open", "in_progress", "resolved", "closed"],
+      "description": "Статус обработки"
+    },
+    "slaDue": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Срок SLA"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата создания"
+    },
+    "resolvedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата разрешения"
+    }
+  }
+}
+

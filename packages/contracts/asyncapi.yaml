@@ -1,0 +1,394 @@
+asyncapi: 3.0.0
+info:
+  title: OIS Events API
+  version: 1.0.0
+  description: События системы ОИС (Kafka)
+servers:
+  kafka:
+    host: localhost:9092
+    protocol: kafka
+    description: Development Kafka broker
+
+defaultContentType: application/json
+
+channels:
+  ois.issuance.published:
+    description: Событие публикации выпуска ЦФА
+    publish:
+      operationId: onIssuancePublished
+      summary: Issuance published event
+      message:
+        $ref: '#/components/messages/IssuancePublished'
+  
+  ois.issuance.closed:
+    description: Событие закрытия выпуска
+    publish:
+      operationId: onIssuanceClosed
+      summary: Issuance closed event
+      message:
+        $ref: '#/components/messages/IssuanceClosed'
+  
+  ois.order.placed:
+    description: Событие размещения заказа на покупку
+    publish:
+      operationId: onOrderPlaced
+      summary: Order placed event
+      message:
+        $ref: '#/components/messages/OrderPlaced'
+  
+  ois.order.confirmed:
+    description: Событие подтверждения заказа
+    publish:
+      operationId: onOrderConfirmed
+      summary: Order confirmed event
+      message:
+        $ref: '#/components/messages/OrderConfirmed'
+  
+  ois.payout.executed:
+    description: Событие выполнения выплаты
+    publish:
+      operationId: onPayoutExecuted
+      summary: Payout executed event
+      message:
+        $ref: '#/components/messages/PayoutExecuted'
+  
+  ois.payout.scheduled:
+    description: Событие запланированной выплаты
+    publish:
+      operationId: onPayoutScheduled
+      summary: Payout scheduled event
+      message:
+        $ref: '#/components/messages/PayoutScheduled'
+  
+  ois.audit.logged:
+    description: Событие аудита (журналирование действий)
+    publish:
+      operationId: onAuditLogged
+      summary: Audit log event
+      message:
+        $ref: '#/components/messages/AuditLogged'
+  
+  ois.transfer.completed:
+    description: Событие завершения перевода на DLT
+    publish:
+      operationId: onTransferCompleted
+      summary: Transfer completed event
+      message:
+        $ref: '#/components/messages/TransferCompleted'
+  
+  ois.registry.transferred:
+    description: Событие перевода ЦФА через реестр
+    publish:
+      operationId: onRegistryTransferred
+      summary: Registry transfer event
+      message:
+        $ref: '#/components/messages/RegistryTransferred'
+  
+  ois.compliance.flagged:
+    description: Событие флага compliance для инвестора
+    publish:
+      operationId: onComplianceFlagged
+      summary: Compliance flagged event
+      message:
+        $ref: '#/components/messages/ComplianceFlagged'
+
+components:
+  messages:
+    IssuancePublished:
+      name: IssuancePublished
+      title: Issuance Published Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IssuancePublishedPayload'
+    
+    IssuanceClosed:
+      name: IssuanceClosed
+      title: Issuance Closed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IssuanceClosedPayload'
+    
+    OrderPlaced:
+      name: OrderPlaced
+      title: Order Placed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderPlacedPayload'
+    
+    OrderConfirmed:
+      name: OrderConfirmed
+      title: Order Confirmed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderConfirmedPayload'
+    
+    PayoutExecuted:
+      name: PayoutExecuted
+      title: Payout Executed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PayoutExecutedPayload'
+    
+    PayoutScheduled:
+      name: PayoutScheduled
+      title: Payout Scheduled Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PayoutScheduledPayload'
+    
+    AuditLogged:
+      name: AuditLogged
+      title: Audit Log Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/AuditLoggedPayload'
+    
+    TransferCompleted:
+      name: TransferCompleted
+      title: Transfer Completed Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/TransferCompletedPayload'
+    
+    RegistryTransferred:
+      name: RegistryTransferred
+      title: Registry Transferred Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RegistryTransferredPayload'
+    
+    ComplianceFlagged:
+      name: ComplianceFlagged
+      title: Compliance Flagged Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ComplianceFlaggedPayload'
+  
+  schemas:
+    IssuancePublishedPayload:
+      type: object
+      required:
+        - issuanceId
+        - assetId
+        - issuerId
+        - publishedAt
+      properties:
+        issuanceId:
+          type: string
+          format: uuid
+        assetId:
+          type: string
+          format: uuid
+        issuerId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+          format: decimal
+        schedule:
+          type: object
+          description: Payout schedule JSON
+        publishedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+    
+    IssuanceClosedPayload:
+      type: object
+      required:
+        - issuanceId
+        - closedAt
+      properties:
+        issuanceId:
+          type: string
+          format: uuid
+        closedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+    
+    OrderPlacedPayload:
+      type: object
+      required:
+        - orderId
+        - investorId
+        - issuanceId
+        - amount
+        - placedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        placedAt:
+          type: string
+          format: date-time
+    
+    OrderConfirmedPayload:
+      type: object
+      required:
+        - orderId
+        - confirmedAt
+        - dltTxHash
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        confirmedAt:
+          type: string
+          format: date-time
+        dltTxHash:
+          type: string
+        walletId:
+          type: string
+          format: uuid
+    
+    PayoutExecutedPayload:
+      type: object
+      required:
+        - batchId
+        - executedAt
+        - items
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        executedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              payoutId:
+                type: string
+                format: uuid
+              investorId:
+                type: string
+                format: uuid
+              issuanceId:
+                type: string
+                format: uuid
+              amount:
+                type: number
+                format: decimal
+              status:
+                type: string
+                enum: [executed, failed]
+        totalAmount:
+          type: number
+          format: decimal
+    
+    PayoutScheduledPayload:
+      type: object
+      required:
+        - batchId
+        - scheduledFor
+        - issuanceId
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        scheduledFor:
+          type: string
+          format: date-time
+        issuanceId:
+          type: string
+          format: uuid
+        expectedAmount:
+          type: number
+          format: decimal
+    
+    AuditLoggedPayload:
+      type: object
+      required:
+        - actorId
+        - action
+        - entity
+        - timestamp
+      properties:
+        actorId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [create, update, delete, read, execute]
+        entity:
+          type: string
+          enum: [issuance, order, wallet, payout, user]
+        entityId:
+          type: string
+          format: uuid
+        payload:
+          type: object
+          description: Additional audit data
+        ip:
+          type: string
+          format: ipv4
+        userAgent:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    
+    TransferCompletedPayload:
+      type: object
+      required:
+        - transferId
+        - dltTxHash
+        - completedAt
+      properties:
+        transferId:
+          type: string
+          format: uuid
+        dltTxHash:
+          type: string
+        blockNumber:
+          type: integer
+        fromWalletId:
+          type: string
+          format: uuid
+        toWalletId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        completedAt:
+          type: string
+          format: date-time
+    
+    ComplianceFlaggedPayload:
+      type: object
+      required:
+        - investorId
+        - reason
+        - severity
+        - flaggedAt
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          enum: [kyc_fail, qualification_exceeded, watchlist_match, manual_review]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        flaggedAt:
+          type: string
+          format: date-time
+        details:
+          type: object
+

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PayoutBatch",
+  "description": "Схема batch payout",
+  "type": "object",
+  "required": ["id", "runDate", "totalAmount", "status", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор batch"
+    },
+    "runDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Дата выполнения settlement"
+    },
+    "issuanceId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Идентификатор выпуска (null если batch для нескольких)"
+    },
+    "totalAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Общая сумма выплат"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "processing", "completed", "failed"],
+      "description": "Статус batch"
+    },
+    "itemCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество items в batch"
+    },
+    "completedCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество успешно выполненных items"
+    },
+    "failedCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество failed items"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата создания batch"
+    }
+  }
+}
+

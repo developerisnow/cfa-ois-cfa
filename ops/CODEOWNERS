@@ -1,0 +1,344 @@
+# CODEOWNERS
+## ОИС ЦФА - Владельцы кода
+
+**Версия:** {{VERSION}}  
+**Дата:** {{DATE}}  
+**Оператор:** {{COMPANY_NAME}}
+
+---
+
+## ОБЩИЕ ПРАВИЛА
+
+### Глобальные владельцы
+* @{{COMPANY_NAME}}/security-team
+* @{{COMPANY_NAME}}/legal-team
+
+---
+
+## BACKEND (.NET 8)
+
+### Core Services
+/backend/src/Core/ @{{COMPANY_NAME}}/backend-team
+/backend/src/Infrastructure/ @{{COMPANY_NAME}}/backend-team
+/backend/src/Application/ @{{COMPANY_NAME}}/backend-team
+
+### Identity Service
+/backend/src/Services/Identity/ @{{COMPANY_NAME}}/identity-team
+/backend/tests/Services/Identity/ @{{COMPANY_NAME}}/identity-team
+
+### Issuance Service
+/backend/src/Services/Issuance/ @{{COMPANY_NAME}}/issuance-team
+/backend/tests/Services/Issuance/ @{{COMPANY_NAME}}/issuance-team
+
+### Registry Service
+/backend/src/Services/Registry/ @{{COMPANY_NAME}}/registry-team
+/backend/tests/Services/Registry/ @{{COMPANY_NAME}}/registry-team
+
+### Settlement Service
+/backend/src/Services/Settlement/ @{{COMPANY_NAME}}/settlement-team
+/backend/tests/Services/Settlement/ @{{COMPANY_NAME}}/settlement-team
+
+### Reporting Service
+/backend/src/Services/Reporting/ @{{COMPANY_NAME}}/reporting-team
+/backend/tests/Services/Reporting/ @{{COMPANY_NAME}}/reporting-team
+
+### Admin Service
+/backend/src/Services/Admin/ @{{COMPANY_NAME}}/admin-team
+/backend/tests/Services/Admin/ @{{COMPANY_NAME}}/admin-team
+
+### Notifications Service
+/backend/src/Services/Notifications/ @{{COMPANY_NAME}}/notifications-team
+/backend/tests/Services/Notifications/ @{{COMPANY_NAME}}/notifications-team
+
+---
+
+## FRONTEND (Next.js 15)
+
+### Core Application
+/frontend/src/ @{{COMPANY_NAME}}/frontend-team
+/frontend/public/ @{{COMPANY_NAME}}/frontend-team
+/frontend/styles/ @{{COMPANY_NAME}}/frontend-team
+
+### Components
+/frontend/src/components/ @{{COMPANY_NAME}}/ui-team
+/frontend/src/components/ui/ @{{COMPANY_NAME}}/ui-team
+
+### Pages
+/frontend/src/pages/ @{{COMPANY_NAME}}/frontend-team
+/frontend/src/pages/api/ @{{COMPANY_NAME}}/backend-team
+
+### Emitter Portal
+/frontend/src/pages/emitter/ @{{COMPANY_NAME}}/emitter-team
+/frontend/src/components/emitter/ @{{COMPANY_NAME}}/emitter-team
+
+### Investor Portal
+/frontend/src/pages/investor/ @{{COMPANY_NAME}}/investor-team
+/frontend/src/components/investor/ @{{COMPANY_NAME}}/investor-team
+
+### Admin Portal
+/frontend/src/pages/admin/ @{{COMPANY_NAME}}/admin-team
+/frontend/src/components/admin/ @{{COMPANY_NAME}}/admin-team
+
+### Tests
+/frontend/tests/ @{{COMPANY_NAME}}/qa-team
+/frontend/__tests__/ @{{COMPANY_NAME}}/qa-team
+
+---
+
+## CHAINCODE (Hyperledger Fabric)
+
+### Issuance Chaincode
+/chaincode/issuance/ @{{COMPANY_NAME}}/blockchain-team
+/chaincode/issuance/tests/ @{{COMPANY_NAME}}/blockchain-team
+
+### Registry Chaincode
+/chaincode/registry/ @{{COMPANY_NAME}}/blockchain-team
+/chaincode/registry/tests/ @{{COMPANY_NAME}}/blockchain-team
+
+### Common Chaincode
+/chaincode/common/ @{{COMPANY_NAME}}/blockchain-team
+
+---
+
+## INFRASTRUCTURE
+
+### Kubernetes
+/infra/k8s/ @{{COMPANY_NAME}}/devops-team
+/infra/k8s/namespaces/ @{{COMPANY_NAME}}/devops-team
+/infra/k8s/services/ @{{COMPANY_NAME}}/devops-team
+
+### Helm Charts
+/infra/helm/ @{{COMPANY_NAME}}/devops-team
+/infra/helm/backend/ @{{COMPANY_NAME}}/devops-team
+/infra/helm/frontend/ @{{COMPANY_NAME}}/devops-team
+/infra/helm/chaincode/ @{{COMPANY_NAME}}/devops-team
+
+### GitOps
+/infra/gitops/ @{{COMPANY_NAME}}/devops-team
+/infra/gitops/argocd/ @{{COMPANY_NAME}}/devops-team
+/infra/gitops/flux/ @{{COMPANY_NAME}}/devops-team
+
+### Monitoring
+/infra/monitoring/ @{{COMPANY_NAME}}/sre-team
+/infra/monitoring/prometheus/ @{{COMPANY_NAME}}/sre-team
+/infra/monitoring/grafana/ @{{COMPANY_NAME}}/sre-team
+/infra/monitoring/jaeger/ @{{COMPANY_NAME}}/sre-team
+
+---
+
+## DOCUMENTATION
+
+### Legal Documents
+/docs/legal/ @{{COMPANY_NAME}}/legal-team
+/docs/legal/01-ПравилаИС-template.md @{{COMPANY_NAME}}/legal-team
+/docs/legal/02-ОписаниеИС-template.md @{{COMPANY_NAME}}/legal-team
+/docs/legal/03-Матрица-соответствия_259ФЗ-746П.md @{{COMPANY_NAME}}/legal-team
+/docs/legal/08-Артефакты-для-ЦБ-746П.md @{{COMPANY_NAME}}/legal-team
+
+### Architecture
+/docs/architecture/ @{{COMPANY_NAME}}/architecture-team
+/docs/architecture/10-HighLevel-Architecture.md @{{COMPANY_NAME}}/architecture-team
+/docs/architecture/11-Sequence-ESIA-OIDC.md @{{COMPANY_NAME}}/architecture-team
+/docs/architecture/12-DataModel.md @{{COMPANY_NAME}}/architecture-team
+/docs/architecture/13-HLF-Network-Design.md @{{COMPANY_NAME}}/architecture-team
+/docs/architecture/14-NonFunctional-Targets.md @{{COMPANY_NAME}}/architecture-team
+
+### Security
+/docs/security/ @{{COMPANY_NAME}}/security-team
+/docs/security/20-ГОСТ57580-Чеклист.md @{{COMPANY_NAME}}/security-team
+/docs/security/21-СТОБР-Чеклист.md @{{COMPANY_NAME}}/security-team
+/docs/security/22-МодельУгроз-TA.md @{{COMPANY_NAME}}/security-team
+/docs/security/23-Plan-Pentest.md @{{COMPANY_NAME}}/security-team
+/docs/security/24-SoC-Playbooks.md @{{COMPANY_NAME}}/security-team
+
+### Testing
+/docs/testing/ @{{COMPANY_NAME}}/qa-team
+/docs/testing/30-Perf-Test-Plan.md @{{COMPANY_NAME}}/qa-team
+/docs/testing/31-DR-Drill-Runbook.md @{{COMPANY_NAME}}/qa-team
+
+---
+
+## CONFIGURATION FILES
+
+### Root Configuration
+/.github/ @{{COMPANY_NAME}}/devops-team
+/.github/workflows/ @{{COMPANY_NAME}}/devops-team
+/.github/ISSUE_TEMPLATE/ @{{COMPANY_NAME}}/devops-team
+/.github/PULL_REQUEST_TEMPLATE.md @{{COMPANY_NAME}}/devops-team
+
+### Security
+/.github/security/ @{{COMPANY_NAME}}/security-team
+/.github/dependabot.yml @{{COMPANY_NAME}}/security-team
+/.github/security.md @{{COMPANY_NAME}}/security-team
+
+### Documentation
+/README.md @{{COMPANY_NAME}}/tech-lead
+/CONTRIBUTING.md @{{COMPANY_NAME}}/tech-lead
+/SECURITY.md @{{COMPANY_NAME}}/security-team
+
+### Docker
+/Dockerfile @{{COMPANY_NAME}}/devops-team
+/docker-compose.yml @{{COMPANY_NAME}}/devops-team
+/docker-compose.prod.yml @{{COMPANY_NAME}}/devops-team
+
+### CI/CD
+/.github/workflows/ci.yml @{{COMPANY_NAME}}/devops-team
+/.github/workflows/cd.yml @{{COMPANY_NAME}}/devops-team
+/.github/workflows/security.yml @{{COMPANY_NAME}}/security-team
+
+---
+
+## OPERATIONAL DOCUMENTS
+
+### ADR (Architecture Decision Records)
+/ops/ADR/ @{{COMPANY_NAME}}/architecture-team
+/ops/ADR/001-DLT-Choice.md @{{COMPANY_NAME}}/architecture-team
+/ops/ADR/002-SLO-SLA.md @{{COMPANY_NAME}}/architecture-team
+/ops/ADR/003-Key-Management.md @{{COMPANY_NAME}}/architecture-team
+
+### Runbooks
+/ops/runbooks/ @{{COMPANY_NAME}}/sre-team
+/ops/runbooks/incident-response.md @{{COMPANY_NAME}}/sre-team
+/ops/runbooks/deployment.md @{{COMPANY_NAME}}/devops-team
+/ops/runbooks/monitoring.md @{{COMPANY_NAME}}/sre-team
+
+### Policies
+/ops/policies/ @{{COMPANY_NAME}}/security-team
+/ops/policies/security-policy.md @{{COMPANY_NAME}}/security-team
+/ops/policies/data-retention.md @{{COMPANY_NAME}}/legal-team
+/ops/policies/backup-policy.md @{{COMPANY_NAME}}/devops-team
+
+---
+
+## SPECIAL PERMISSIONS
+
+### Security Critical Files
+**Все файлы с секретами:**
+* @{{COMPANY_NAME}}/security-team
+* @{{COMPANY_NAME}}/devops-team
+
+**Файлы конфигурации безопасности:**
+* @{{COMPANY_NAME}}/security-team
+
+**Файлы с персональными данными:**
+* @{{COMPANY_NAME}}/security-team
+* @{{COMPANY_NAME}}/legal-team
+
+### Regulatory Compliance
+**Все документы для ЦБ:**
+* @{{COMPANY_NAME}}/legal-team
+* @{{COMPANY_NAME}}/compliance-team
+
+**Документы по ИБ:**
+* @{{COMPANY_NAME}}/security-team
+* @{{COMPANY_NAME}}/legal-team
+
+### Production Deployment
+**Production конфигурации:**
+* @{{COMPANY_NAME}}/devops-team
+* @{{COMPANY_NAME}}/sre-team
+
+**Критические изменения:**
+* @{{COMPANY_NAME}}/tech-lead
+* @{{COMPANY_NAME}}/architecture-team
+
+---
+
+## TEAM CONTACTS
+
+### Backend Team
+- **Lead:** @{{BACKEND_LEAD}}
+- **Email:** backend-team@{{COMPANY_DOMAIN}}
+- **Slack:** #backend-team
+
+### Frontend Team
+- **Lead:** @{{FRONTEND_LEAD}}
+- **Email:** frontend-team@{{COMPANY_DOMAIN}}
+- **Slack:** #frontend-team
+
+### Blockchain Team
+- **Lead:** @{{BLOCKCHAIN_LEAD}}
+- **Email:** blockchain-team@{{COMPANY_DOMAIN}}
+- **Slack:** #blockchain-team
+
+### DevOps Team
+- **Lead:** @{{DEVOPS_LEAD}}
+- **Email:** devops-team@{{COMPANY_DOMAIN}}
+- **Slack:** #devops-team
+
+### Security Team
+- **Lead:** @{{SECURITY_LEAD}}
+- **Email:** security-team@{{COMPANY_DOMAIN}}
+- **Slack:** #security-team
+
+### Legal Team
+- **Lead:** @{{LEGAL_LEAD}}
+- **Email:** legal-team@{{COMPANY_DOMAIN}}
+- **Slack:** #legal-team
+
+### QA Team
+- **Lead:** @{{QA_LEAD}}
+- **Email:** qa-team@{{COMPANY_DOMAIN}}
+- **Slack:** #qa-team
+
+### Architecture Team
+- **Lead:** @{{ARCHITECTURE_LEAD}}
+- **Email:** architecture-team@{{COMPANY_DOMAIN}}
+- **Slack:** #architecture-team
+
+---
+
+## ESCALATION MATRIX
+
+### Level 1: Team Leads
+- Backend: @{{BACKEND_LEAD}}
+- Frontend: @{{FRONTEND_LEAD}}
+- Blockchain: @{{BLOCKCHAIN_LEAD}}
+- DevOps: @{{DEVOPS_LEAD}}
+- Security: @{{SECURITY_LEAD}}
+- Legal: @{{LEGAL_LEAD}}
+- QA: @{{QA_LEAD}}
+- Architecture: @{{ARCHITECTURE_LEAD}}
+
+### Level 2: Technical Leadership
+- **CTO:** @{{CTO}}
+- **Head of Security:** @{{HEAD_OF_SECURITY}}
+- **Head of Legal:** @{{HEAD_OF_LEGAL}}
+
+### Level 3: Executive Leadership
+- **CEO:** @{{CEO}}
+- **COO:** @{{COO}}
+
+---
+
+## REVIEW REQUIREMENTS
+
+### Critical Changes
+**Требуют одобрения:**
+- @{{COMPANY_NAME}}/security-team
+- @{{COMPANY_NAME}}/legal-team
+- @{{COMPANY_NAME}}/architecture-team
+
+### Production Changes
+**Требуют одобрения:**
+- @{{COMPANY_NAME}}/devops-team
+- @{{COMPANY_NAME}}/sre-team
+- @{{COMPANY_NAME}}/tech-lead
+
+### Security Changes
+**Требуют одобрения:**
+- @{{COMPANY_NAME}}/security-team
+- @{{COMPANY_NAME}}/legal-team
+
+### Legal Changes
+**Требуют одобрения:**
+- @{{COMPANY_NAME}}/legal-team
+- @{{COMPANY_NAME}}/compliance-team
+
+---
+
+**Дата создания:** {{DATE}}  
+**Автор:** {{AUTHOR}}  
+**Статус:** Утверждено  
+**Версия:** {{VERSION}}  
+**Следующий пересмотр:** {{NEXT_REVIEW_DATE}}

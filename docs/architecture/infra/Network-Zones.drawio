@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.150939Z" agent="python" etag="2725" version="20.6.2">
+  <diagram name="Network-Zones">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="nz_internet" value="Internet" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="nz_dmz" value="DMZ (WAF, API GW, Portal)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="260" y="60" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="nz_core" value="Core (Backoffice, DLT, DB, HSM)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="560" y="60" width="320" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="nz_dr" value="DR Site" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="920" y="60" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="nze1" value="HTTPS" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="nz_internet" target="nz_dmz">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="nze2" value="mTLS" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="nz_dmz" target="nz_core">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="nze3" value="replication" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="nz_core" target="nz_dr">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

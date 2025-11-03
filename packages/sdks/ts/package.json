@@ -1,0 +1,18 @@
+{
+  "name": "@ois/sdks",
+  "version": "1.0.0",
+  "description": "TypeScript SDKs for OIS services",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "generate": "openapi-generator-cli generate -i ../../contracts/openapi-gateway.yaml -g typescript-axios -o ./generated --additional-properties=npmName=@ois/api-client,npmVersion=1.0.0,supportsES6=true,withNodeImports=true"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.7.0",
+    "typescript": "^5.3.0"
+  }
+}
+

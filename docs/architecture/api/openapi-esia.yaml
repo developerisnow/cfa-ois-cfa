@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: ESIA Adapter API
+  version: 0.1.0
+  description: OIDC и профиль пользователя (mock)
+servers:
+  - url: https://api.example.com
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+
+  /oidc/callback:
+    post:
+      summary: OIDC callback
+      responses:
+        '200':
+          description: OK
+  /profile:
+    get:
+      summary: Получить профиль ЕСИА
+      responses:
+        '200':
+          description: Профиль

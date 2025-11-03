@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Issuance",
+  "description": "Схема выпуска ЦФА",
+  "type": "object",
+  "required": ["id", "assetId", "issuerId", "totalAmount", "nominal", "issueDate", "maturityDate", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Уникальный идентификатор выпуска"
+    },
+    "assetId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор ЦФА"
+    },
+    "issuerId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор эмитента"
+    },
+    "totalAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "description": "Общая сумма выпуска"
+    },
+    "nominal": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "description": "Номинальная стоимость единицы"
+    },
+    "issueDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Дата выпуска"
+    },
+    "maturityDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Дата погашения"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "published", "closed", "redeemed"],
+      "description": "Статус выпуска"
+    },
+    "scheduleJson": {
+      "type": ["object", "null"],
+      "description": "График выплат (JSON объект)"
+    },
+    "dltTxHash": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "Хеш транзакции в DLT"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата создания"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Дата обновления"
+    },
+    "publishedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата публикации"
+    },
+    "closedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата закрытия"
+    }
+  }
+}
+

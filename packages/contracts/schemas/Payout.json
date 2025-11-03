@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Payout",
+  "description": "Схема выплаты по ЦФА",
+  "type": "object",
+  "required": ["id", "batchId", "issuanceId", "investorId", "amount", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Уникальный идентификатор выплаты"
+    },
+    "batchId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор пакета выплат"
+    },
+    "issuanceId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор выпуска"
+    },
+    "investorId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор инвестора"
+    },
+    "amount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "description": "Сумма выплаты"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "executed", "failed"],
+      "description": "Статус выплаты"
+    },
+    "scheduledFor": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Запланированная дата выплаты"
+    },
+    "executedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Дата выполнения выплаты"
+    },
+    "bankTransferId": {
+      "type": ["string", "null"],
+      "description": "Идентификатор банковского перевода"
+    },
+    "failureReason": {
+      "type": ["string", "null"],
+      "description": "Причина ошибки (если статус failed)"
+    },
+    "metadata": {
+      "type": ["object", "null"],
+      "description": "Дополнительные данные выплаты"
+    }
+  }
+}
+

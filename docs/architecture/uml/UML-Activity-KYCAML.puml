@@ -1,0 +1,13 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+start
+:Сбор данных KYC/KYB;
+if (Watchlists hit?) then (yes)
+  :Escalate to Compliance;
+  stop
+else (no)
+  :Approve;
+endif
+stop
+
+@enduml

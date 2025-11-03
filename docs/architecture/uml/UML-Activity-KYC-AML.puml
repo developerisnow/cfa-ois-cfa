@@ -1,0 +1,13 @@
+@startuml
+' PlantUML Activity - KYC/AML Pipeline, Investor Qualification
+' Version: 0.1 | Author: Codex-Architect-OIS | Date: 2025-10-30
+start
+:Получение данных ЕСИА;
+:Проверка по blacklist (115-ФЗ);
+if (Инвестор-КВАЛ by 5635-У?) then (да)
+  :Открыть доступ к покупке;
+else (нет)
+  :Показать ограничения; :Запретить продукт;
+endif
+stop
+@enduml

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IssuerReportRow",
+  "description": "Строка отчета эмитента по выпускам",
+  "type": "object",
+  "required": ["issuanceId", "assetCode", "assetName", "totalAmount", "soldAmount", "investorsCount", "status", "issueDate", "maturityDate"],
+  "properties": {
+    "issuanceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assetCode": {
+      "type": "string"
+    },
+    "assetName": {
+      "type": "string"
+    },
+    "totalAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0
+    },
+    "soldAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Проданная сумма"
+    },
+    "investorsCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество инвесторов"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "published", "closed", "redeemed"]
+    },
+    "issueDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "maturityDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "publishedAt": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}
+

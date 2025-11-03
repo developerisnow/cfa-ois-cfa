@@ -1,0 +1,15 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+participant Scheduler
+participant Backoffice
+participant Bank
+participant Ledger
+loop payment cycle
+  Scheduler -> Backoffice: Trigger payout
+  Backoffice -> Ledger: get holders & amounts
+  Ledger --> Backoffice: list
+  Backoffice -> Bank: payout batch via nominal
+  Bank --> Backoffice: confirmations
+end
+
+@enduml

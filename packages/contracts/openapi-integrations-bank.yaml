@@ -1,0 +1,210 @@
+openapi: 3.1.0
+info:
+  title: Bank Nominal Account API
+  version: 1.0.0
+  description: Адаптер номинального счёта и аналитического учёта (mock)
+servers:
+  - url: http://localhost:5003
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+  
+  /nominal/accounts:
+    post:
+      summary: Открыть номинальный счёт
+      operationId: createNominalAccount
+      tags:
+        - Nominal Accounts
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNominalAccountRequest'
+      responses:
+        '201':
+          description: Счёт создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NominalAccountResponse'
+        '400':
+          description: Bad request
+        '409':
+          description: Account already exists
+  
+  /nominal/accounts/{accountId}:
+    get:
+      summary: Get nominal account
+      operationId: getNominalAccount
+      tags:
+        - Nominal Accounts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NominalAccountResponse'
+        '404':
+          description: Account not found
+  
+  /nominal/transfer:
+    post:
+      summary: Перевод средств (с идемпотентностью)
+      operationId: transfer
+      tags:
+        - Transfers
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Перевод проведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Bad request
+        '409':
+          description: Idempotency key conflict (already processed)
+        '422':
+          description: Insufficient funds or invalid account
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    CreateNominalAccountRequest:
+      type: object
+      required:
+        - issuerId
+        - accountType
+      properties:
+        issuerId:
+          type: string
+          format: uuid
+        accountType:
+          type: string
+          enum: [nominal, analytical]
+        currency:
+          type: string
+          default: RUB
+        metadata:
+          type: object
+          description: Additional account metadata
+    
+    NominalAccountResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+        issuerId:
+          type: string
+          format: uuid
+        accountType:
+          type: string
+          enum: [nominal, analytical]
+        currency:
+          type: string
+        balance:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [active, frozen, closed]
+        createdAt:
+          type: string
+          format: date-time
+    
+    TransferRequest:
+      type: object
+      required:
+        - fromAccountId
+        - toAccountId
+        - amount
+        - idempotencyKey
+      properties:
+        fromAccountId:
+          type: string
+        toAccountId:
+          type: string
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+        currency:
+          type: string
+          default: RUB
+        idempotencyKey:
+          type: string
+          format: uuid
+          description: Unique key for idempotency
+        description:
+          type: string
+        metadata:
+          type: object
+    
+    TransferResponse:
+      type: object
+      properties:
+        transferId:
+          type: string
+          format: uuid
+        fromAccountId:
+          type: string
+        toAccountId:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [completed, pending, failed]
+        executedAt:
+          type: string
+          format: date-time
+        idempotencyKey:
+          type: string
+          format: uuid
+

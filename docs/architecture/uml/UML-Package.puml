@@ -1,0 +1,10 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+package "Identity & Access" { class Session ; class Role }
+package "DLT" { class SmartContracts ; class LedgerAdapter }
+package "Payments" { class NominalAdapter ; class Reconciliation }
+package "EDO" { class EDOClient }
+package "KYC/AML" { class KYCService }
+package "Audit" { class AuditLog }
+
+@enduml

@@ -1,0 +1,10 @@
+{
+  "@context": {
+    "ois": "https://example.org/ois#",
+    "Issuer": "ois:Issuer",
+    "Investor": "ois:Investor",
+    "CFA": "ois:CFA",
+    "Issuance": "ois:Issuance",
+    "NominalAccount": "ois:NominalAccount"
+  }
+}

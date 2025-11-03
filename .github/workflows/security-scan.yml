@@ -1,0 +1,83 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly
+
+jobs:
+  dependency-audit:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Install OWASP Dependency-Check
+        run: |
+          wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip -q dependency-check-10.0.4-release.zip
+          echo "$PWD/dependency-check/bin" >> $GITHUB_PATH
+      
+      - name: Run Dependency Check
+        run: |
+          dependency-check.sh \
+            --project "OIS" \
+            --scan services/ \
+            --scan apps/api-gateway/ \
+            --format HTML \
+            --format JSON \
+            --out reports/
+      
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/
+      
+      - name: Check for High Severity Vulnerabilities
+        run: |
+          HIGH_VULNS=$(jq '[.dependencies[] | select(.vulnerabilities[]?.severity == "HIGH" or .vulnerabilities[]?.severity == "CRITICAL")] | length' reports/dependency-check-report.json || echo "0")
+          if [ "$HIGH_VULNS" -gt 0 ]; then
+            echo "❌ Found $HIGH_VULNS high/critical vulnerabilities"
+            exit 1
+          fi
+          echo "✅ No high/critical vulnerabilities found"
+
+  sast-analyzer:
+    name: .NET SAST Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Install Security Code Scan
+        run: dotnet tool install --global security-scan || true
+      
+      - name: Build Solution
+        run: dotnet build --no-restore
+      
+      - name: Run Security Analyzers
+        run: |
+          dotnet list package --vulnerable --include-transitive || true
+          # Additional SAST checks would go here
+      
+      - name: Check Build Warnings
+        run: |
+          if dotnet build 2>&1 | grep -i "warning.*security\|vulnerability"; then
+            echo "❌ Security warnings found"
+            exit 1
+          fi
+

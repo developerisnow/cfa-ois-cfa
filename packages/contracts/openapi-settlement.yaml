@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: Settlement Service API
+  version: 1.0.0
+  description: Settlement service для batch payouts и reconciliation
+servers:
+  - url: http://localhost:5007
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+  
+  /v1/settlement/run:
+    post:
+      summary: Run settlement for a specific date
+      operationId: runSettlement
+      tags:
+        - Settlement
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date to run settlement for (YYYY-MM-DD). Defaults to today.
+      responses:
+        '202':
+          description: Settlement accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/reports/payouts:
+    get:
+      summary: Get payouts report
+      operationId: getPayoutsReport
+      tags:
+        - Reports
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date (YYYY-MM-DD)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Payouts report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsReportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    SettlementResponse:
+      type: object
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        runDate:
+          type: string
+          format: date
+        issuanceId:
+          type: string
+          format: uuid
+          nullable: true
+        totalAmount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        itemCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    
+    PayoutsReportResponse:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        totalBatches:
+          type: integer
+        totalAmount:
+          type: number
+          format: decimal
+        totalItems:
+          type: integer
+        completedItems:
+          type: integer
+        failedItems:
+          type: integer
+        batches:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutBatch'
+    
+    PayoutBatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        runDate:
+          type: string
+          format: date
+        issuanceId:
+          type: string
+          format: uuid
+          nullable: true
+        totalAmount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        itemCount:
+          type: integer
+        completedCount:
+          type: integer
+        failedCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+

@@ -1,0 +1,326 @@
+openapi: 3.1.0
+info:
+  title: Compliance Service API
+  version: 1.0.0
+  description: Compliance service для KYC, qualification и complaints
+servers:
+  - url: http://localhost:5008
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+  
+  /v1/compliance/kyc/check:
+    post:
+      summary: Check KYC status for investor
+      operationId: checkKyc
+      tags:
+        - Compliance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycCheckRequest'
+      responses:
+        '200':
+          description: KYC check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/compliance/qualification/evaluate:
+    post:
+      summary: Evaluate investor qualification tier
+      operationId: evaluateQualification
+      tags:
+        - Compliance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualificationEvaluateRequest'
+      responses:
+        '200':
+          description: Qualification evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualificationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/compliance/investors/{id}/status:
+    get:
+      summary: Get compliance status for investor
+      operationId: getInvestorStatus
+      tags:
+        - Compliance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Investor compliance status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestorStatusResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /v1/complaints:
+    post:
+      summary: Create complaint
+      operationId: createComplaint
+      tags:
+        - Complaints
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Idempotency key for duplicate prevention
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComplaintRequest'
+      responses:
+        '201':
+          description: Complaint created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/complaints/{id}:
+    get:
+      summary: Get complaint by ID
+      operationId: getComplaint
+      tags:
+        - Complaints
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Complaint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    KycCheckRequest:
+      type: object
+      required:
+        - investorId
+      properties:
+        investorId:
+          type: string
+          format: uuid
+    
+    KycResult:
+      type: object
+      required:
+        - investorId
+        - status
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pass, fail, pending, review]
+        checkedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          nullable: true
+    
+    QualificationEvaluateRequest:
+      type: object
+      required:
+        - investorId
+        - amount
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+    
+    QualificationResult:
+      type: object
+      required:
+        - investorId
+        - tier
+        - allowed
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        tier:
+          type: string
+          enum: [unqualified, qualified, professional]
+        limit:
+          type: number
+          format: decimal
+          nullable: true
+        used:
+          type: number
+          format: decimal
+          nullable: true
+        allowed:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+        evaluatedAt:
+          type: string
+          format: date-time
+    
+    InvestorStatusResponse:
+      type: object
+      required:
+        - investorId
+        - kyc
+        - qualificationTier
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        kyc:
+          type: string
+          enum: [pass, fail, pending, review]
+        qualificationTier:
+          type: string
+          enum: [unqualified, qualified, professional]
+        qualificationLimit:
+          type: number
+          format: decimal
+          nullable: true
+        qualificationUsed:
+          type: number
+          format: decimal
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+    
+    CreateComplaintRequest:
+      type: object
+      required:
+        - category
+        - text
+      properties:
+        investorId:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          type: string
+          enum: [fraud, service, technical, other]
+        text:
+          type: string
+          minLength: 10
+          maxLength: 5000
+    
+    ComplaintResponse:
+      type: object
+      required:
+        - id
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          type: string
+          enum: [fraud, service, technical, other]
+        text:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        slaDue:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+    
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+

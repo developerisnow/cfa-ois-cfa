@@ -1,0 +1,60 @@
+{
+  "dashboards": [
+    {
+      "name": "OIS - API Latency & RPS",
+      "panels": [
+        {
+          "title": "Request Rate",
+          "targets": [
+            {
+              "expr": "rate(http_server_request_duration_seconds_count[5m])",
+              "legendFormat": "{{service}} - {{method}} {{route}}"
+            }
+          ]
+        },
+        {
+          "title": "P95 Latency",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(http_server_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "{{service}} - {{route}}"
+            }
+          ]
+        },
+        {
+          "title": "Error Rate",
+          "targets": [
+            {
+              "expr": "rate(http_server_request_duration_seconds_count{status_code=~\"5..\"}[5m])",
+              "legendFormat": "{{service}} - {{status_code}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OIS - Payouts Throughput",
+      "panels": [
+        {
+          "title": "Payout Batches Processed",
+          "targets": [
+            {
+              "expr": "increase(ois_settlement_batches_processed_total[1h])",
+              "legendFormat": "Batches"
+            }
+          ]
+        },
+        {
+          "title": "Payout Items Success/Failure",
+          "targets": [
+            {
+              "expr": "sum by (status) (increase(ois_settlement_items_total[5m]))",
+              "legendFormat": "{{status}}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.152449Z" agent="python" etag="8067" version="20.6.2">
+  <diagram name="Backup-Topology">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="b_app" value="Apps/DB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="200" y="100" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="b_repo" value="Backup Repo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="520" y="100" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="b_off" value="Offsite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="820" y="100" width="160" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="be1" value="Snapshots" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="b_app" target="b_repo">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="be2" value="Copy/Encrypt" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="b_repo" target="b_off">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

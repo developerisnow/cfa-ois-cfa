@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-10-31T13:21:22.146523Z" agent="python" etag="9242" version="20.6.2">
+  <diagram name="DFD-L1-Emission">
+    <mxGraphModel dx="2048" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+
+        <mxCell id="d1i" value="Процесс Эмиссии" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1">
+          <mxGeometry x="520" y="140" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1d" value="Документы (решение, проспект)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="160" y="140" width="240" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1n" value="Номинальные/аналитические счета" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="900" y="140" width="260" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1l" value="Ledger (DLT)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1">
+          <mxGeometry x="520" y="300" width="200" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1e1" value="УКЭП через ЭДО" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="d1d" target="d1i">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1e2" value="issue()" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="d1i" target="d1l">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1e3" value="open accounts" style="endArrow=block;html=1;strokeColor=#6c8ebf" edge="1" parent="1" source="d1i" target="d1n">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

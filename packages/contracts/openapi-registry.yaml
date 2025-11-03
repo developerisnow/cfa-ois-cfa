@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: Registry Service API
+  version: 1.0.0
+  description: Registry service для управления заказами, кошельками и операциями с ЦФА
+servers:
+  - url: http://localhost:5006
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+  
+  /v1/orders:
+    post:
+      summary: Place buy order
+      operationId: placeOrder
+      tags:
+        - Orders
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Idempotency key to prevent duplicate orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '202':
+          description: Order accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Order with this idempotency key already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  
+  /v1/orders/{id}:
+    get:
+      summary: Get order by ID
+      operationId: getOrder
+      tags:
+        - Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /v1/wallets/{investorId}:
+    get:
+      summary: Get wallet portfolio
+      operationId: getWallet
+      tags:
+        - Wallets
+      parameters:
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Wallet portfolio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /v1/issuances/{id}/redeem:
+    post:
+      summary: Redeem issuance
+      operationId: redeemIssuance
+      tags:
+        - Issuances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemRequest'
+      responses:
+        '200':
+          description: Issuance redeemed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedeemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required:
+        - investorId
+        - issuanceId
+        - amount
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+    
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, confirmed, failed, cancelled]
+        walletId:
+          type: string
+          format: uuid
+          nullable: true
+        dltTxHash:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failureReason:
+          type: string
+          nullable: true
+    
+    WalletResponse:
+      type: object
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        balance:
+          type: number
+          format: decimal
+        blocked:
+          type: number
+          format: decimal
+        holdings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holding'
+    
+    Holding:
+      type: object
+      properties:
+        issuanceId:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          format: decimal
+        updatedAt:
+          type: string
+          format: date-time
+    
+    RedeemRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+    
+    RedeemResponse:
+      type: object
+      properties:
+        issuanceId:
+          type: string
+          format: uuid
+        redeemedAmount:
+          type: number
+          format: decimal
+        dltTxHash:
+          type: string
+        redeemedAt:
+          type: string
+          format: date-time
+    
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+

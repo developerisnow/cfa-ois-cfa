@@ -1,0 +1,12 @@
+{
+  "generatorName": "typescript-axios",
+  "inputSpec": "../../contracts/openapi-gateway.yaml",
+  "outputDir": "./generated",
+  "additionalProperties": {
+    "npmName": "@ois/api-client",
+    "npmVersion": "1.0.0",
+    "supportsES6": true,
+    "withNodeImports": true
+  }
+}
+

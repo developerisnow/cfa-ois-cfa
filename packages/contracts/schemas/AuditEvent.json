@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AuditEvent",
+  "description": "Схема события аудита",
+  "type": "object",
+  "required": ["id", "actorId", "action", "entity", "timestamp"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Уникальный идентификатор события аудита"
+    },
+    "actorId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор пользователя, выполнившего действие"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["create", "update", "delete", "read", "execute"],
+      "description": "Тип действия"
+    },
+    "entity": {
+      "type": "string",
+      "enum": ["issuance", "order", "wallet", "payout", "user", "asset", "transfer"],
+      "description": "Тип сущности"
+    },
+    "entityId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Идентификатор сущности"
+    },
+    "payload": {
+      "type": ["object", "null"],
+      "description": "Дополнительные данные события (изменённые поля, значения и т.д.)"
+    },
+    "ip": {
+      "type": ["string", "null"],
+      "format": "ipv4",
+      "description": "IP-адрес источника запроса"
+    },
+    "userAgent": {
+      "type": ["string", "null"],
+      "description": "User-Agent браузера/клиента"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Временная метка события"
+    },
+    "correlationId": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Идентификатор корреляции запроса"
+    },
+    "result": {
+      "type": ["string", "null"],
+      "enum": ["success", "failure", "denied"],
+      "description": "Результат действия"
+    },
+    "errorMessage": {
+      "type": ["string", "null"],
+      "description": "Сообщение об ошибке (если результат failure)"
+    }
+  }
+}
+

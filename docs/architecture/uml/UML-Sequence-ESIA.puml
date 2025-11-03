@@ -1,0 +1,13 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+participant User
+participant Portal
+participant ESIA
+User -> Portal: Login request
+Portal -> ESIA: authorize(code)
+ESIA --> Portal: code
+Portal -> ESIA: token(code)
+ESIA --> Portal: id_token, access_token
+Portal -> Portal: session create
+
+@enduml

@@ -1,0 +1,11 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+[*] --> Draft
+Draft --> Offering : publish
+Offering --> Issued : close subscription
+Issued --> Redeemed : full redemption
+Issued --> Default : event of default
+Default --> Restructured : plan accepted
+Redeemed --> [*]
+
+@enduml

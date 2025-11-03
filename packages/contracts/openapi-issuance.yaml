@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: Issuance Service API
+  version: 1.0.0
+  description: Issuance service для управления выпусками ЦФА
+servers:
+  - url: http://localhost:5005
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+  
+  /v1/issuances:
+    post:
+      summary: Create draft issuance
+      operationId: createIssuance
+      tags:
+        - Issuances
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssuanceRequest'
+      responses:
+        '201':
+          description: Issuance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  
+  /v1/issuances/{id}:
+    get:
+      summary: Get issuance by ID
+      operationId: getIssuance
+      tags:
+        - Issuances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Issuance details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuanceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /v1/issuances/{id}/publish:
+    post:
+      summary: Publish issuance
+      operationId: publishIssuance
+      tags:
+        - Issuances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Issuance published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /v1/issuances/{id}/close:
+    post:
+      summary: Close issuance
+      operationId: closeIssuance
+      tags:
+        - Issuances
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Issuance closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuanceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    CreateIssuanceRequest:
+      type: object
+      required:
+        - assetId
+        - issuerId
+        - totalAmount
+        - nominal
+        - issueDate
+        - maturityDate
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        issuerId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+        nominal:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+        issueDate:
+          type: string
+          format: date
+        maturityDate:
+          type: string
+          format: date
+        scheduleJson:
+          type: object
+          additionalProperties: true
+    
+    IssuanceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assetId:
+          type: string
+          format: uuid
+        issuerId:
+          type: string
+          format: uuid
+        totalAmount:
+          type: number
+          format: decimal
+        nominal:
+          type: number
+          format: decimal
+        issueDate:
+          type: string
+          format: date
+        maturityDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [draft, published, closed, redeemed]
+        scheduleJson:
+          type: object
+          additionalProperties: true
+          nullable: true
+        dltTxHash:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+    
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+

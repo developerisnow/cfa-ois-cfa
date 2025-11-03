@@ -1,0 +1,17 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+component Portal
+component Backoffice
+component API_Gateway
+component ESIA_Adapter
+component EDO_Connector
+component Bank_Adapter
+component Ledger_Node
+Portal -- API_Gateway
+API_Gateway -- Backoffice
+Backoffice -- ESIA_Adapter
+Backoffice -- EDO_Connector
+Backoffice -- Bank_Adapter
+Backoffice -- Ledger_Node
+
+@enduml

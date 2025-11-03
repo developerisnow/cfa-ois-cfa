@@ -1,0 +1,10 @@
+@startuml
+' Generated 2025-10-31 13:21  (Asia/Tokyo)
+participant Backoffice
+participant EDO
+Backoffice -> EDO: upload(document, recipient)
+EDO --> Backoffice: documentId
+Backoffice -> EDO: request-sign(documentId, UKEP)
+EDO --> Backoffice: status=SIGNED
+
+@enduml
