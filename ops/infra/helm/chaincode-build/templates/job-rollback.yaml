@@ -1,0 +1,54 @@
+{{- if .Values.rollback.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-rollback-{{ .Values.rollback.chaincode }}
+  labels:
+    app.kubernetes.io/name: chaincode-rollback
+    chaincode: {{ .Values.rollback.chaincode }}
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: rollback
+          image: hyperledger/fabric-tools:2.5
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              {{- if eq .Values.rollback.strategy "immediate" }}
+              # Immediate rollback: approve previous version
+              peer lifecycle chaincode approveformyorg \
+                -o orderer.example.com:7050 \
+                --channelID {{ .Values.rollback.channel }} \
+                --name {{ .Values.rollback.chaincode }} \
+                --version {{ .Values.rollback.previousVersion }} \
+                --sequence {{ .Values.rollback.sequence }} \
+                --tls \
+                --cafile /etc/hyperledger/fabric/orderer-tlsca.crt
+              {{- else if eq .Values.rollback.strategy "gradual" }}
+              # Gradual rollback: keep current version, prepare previous
+              echo "Gradual rollback not implemented yet"
+              {{- end }}
+          env:
+            - name: CORE_PEER_LOCALMSPID
+              value: "OisDevMSP"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: msp
+              mountPath: /etc/hyperledger/fabric/msp
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+      volumes:
+        - name: msp
+          secret:
+            secretName: fabric-peer-msp
+        - name: tls
+          secret:
+            secretName: fabric-peer-tls
+{{- end }}
+

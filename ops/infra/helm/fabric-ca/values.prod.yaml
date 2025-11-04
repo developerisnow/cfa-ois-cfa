@@ -1,0 +1,18 @@
+# Production values for fabric-ca
+replicaCount: 2
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+storage:
+  storageClass: "fabric-storage-prod"
+  size: 20Gi
+
+secrets:
+  type: "vault"
+

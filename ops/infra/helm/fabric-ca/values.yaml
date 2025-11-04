@@ -1,0 +1,110 @@
+# Default values for fabric-ca
+replicaCount: 1
+
+image:
+  repository: hyperledger/fabric-ca
+  pullPolicy: IfNotPresent
+  tag: "1.5"
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Organization configuration
+organization:
+  name: "ois-dev"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 7054
+  targetPort: 7054
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: ca.ois-dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+storage:
+  enabled: true
+  storageClass: "fabric-storage"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+config:
+  # CA configuration
+  ca:
+    name: "ca.ois-dev.example.com"
+    tls:
+      enabled: true
+      certFile: "/etc/hyperledger/fabric-ca-server-config/ca-cert.pem"
+      keyFile: "/etc/hyperledger/fabric-ca-server-config/ca-key.pem"
+    registry:
+      maxEnrollments: -1
+    identities:
+      - name: admin
+        pass: adminpw
+        type: client
+        affiliation: ""
+        attrs:
+          hf.Registrar.Roles: "*"
+          hf.Registrar.DelegateRoles: "*"
+          hf.Revoker: true
+          hf.IntermediateCA: true
+          hf.GenCRL: true
+          hf.Registrar.Attributes: "*"
+          hf.AffiliationMgr: true
+  logging:
+    level: "info"
+
+secrets:
+  # Use sealed-secrets for dev, Vault for prod
+  type: "sealed-secrets" # or "vault"
+  ca:
+    name: "fabric-ca-secrets"
+    key: "ca"
+
+# ServiceMonitor for Prometheus
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: fabric-network
+      ports:
+        - protocol: TCP
+          port: 7054
+

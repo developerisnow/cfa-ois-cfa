@@ -10,23 +10,30 @@ CC_SEQUENCE=1
 
 echo "=== Installing chaincode ==="
 
-# Install issuance chaincode
+# Package issuance chaincode locally
 echo "[1/4] Packaging issuance chaincode..."
 cd "$CHAINCODE_DIR/issuance"
-GO111MODULE=on go mod vendor
-docker exec -e CORE_PEER_LOCALMSPID=OisDevMSP \
-    -e CORE_PEER_TLS_ENABLED=true \
-    -e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt \
-    -e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp \
-    -e CORE_PEER_ADDRESS=peer0.ois-dev.example.com:7051 \
-    peer0.ois-dev.example.com \
-    peer lifecycle chaincode package issuance.tar.gz \
-    --path /opt/gopath/src/github.com/chaincode/issuance \
-    --lang golang \
-    --label issuance_${CC_VERSION} || {
-    # Fallback: package locally and copy
-    tar -czf issuance.tar.gz -C "$CHAINCODE_DIR/issuance" .
-    docker cp issuance.tar.gz peer0.ois-dev.example.com:/tmp/
+
+# Ensure Go modules are ready
+if [ -f "go.mod" ]; then
+    GO111MODULE=on go mod download || true
+    GO111MODULE=on go mod vendor || true
+fi
+
+# Package chaincode
+tar -czf issuance.tar.gz -C "$CHAINCODE_DIR/issuance" . || {
+    echo "Error: Failed to package issuance chaincode"
+    exit 1
+}
+
+# Copy to peers
+docker cp issuance.tar.gz peer0.ois-dev.example.com:/tmp/ || {
+    echo "Error: Failed to copy issuance package to peer0"
+    exit 1
+}
+docker cp issuance.tar.gz peer1.ois-dev.example.com:/tmp/ || {
+    echo "Error: Failed to copy issuance package to peer1"
+    exit 1
 }
 
 echo "[2/4] Installing issuance chaincode on peers..."
@@ -51,13 +58,31 @@ for peer in peer0.ois-dev.example.com peer1.ois-dev.example.com; do
     }
 done
 
-# Install registry chaincode
+# Package registry chaincode locally
 echo "[3/4] Packaging registry chaincode..."
 cd "$CHAINCODE_DIR/registry"
-GO111MODULE=on go mod vendor
-tar -czf registry.tar.gz -C "$CHAINCODE_DIR/registry" .
-docker cp registry.tar.gz peer0.ois-dev.example.com:/tmp/
-docker cp registry.tar.gz peer1.ois-dev.example.com:/tmp/
+
+# Ensure Go modules are ready
+if [ -f "go.mod" ]; then
+    GO111MODULE=on go mod download || true
+    GO111MODULE=on go mod vendor || true
+fi
+
+# Package chaincode
+tar -czf registry.tar.gz -C "$CHAINCODE_DIR/registry" . || {
+    echo "Error: Failed to package registry chaincode"
+    exit 1
+}
+
+# Copy to peers
+docker cp registry.tar.gz peer0.ois-dev.example.com:/tmp/ || {
+    echo "Error: Failed to copy registry package to peer0"
+    exit 1
+}
+docker cp registry.tar.gz peer1.ois-dev.example.com:/tmp/ || {
+    echo "Error: Failed to copy registry package to peer1"
+    exit 1
+}
 
 echo "[4/4] Installing registry chaincode on peers..."
 for peer in peer0.ois-dev.example.com peer1.ois-dev.example.com; do

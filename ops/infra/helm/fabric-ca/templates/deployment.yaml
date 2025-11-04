@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fabric-ca.fullname" . }}
+  labels:
+    {{- include "fabric-ca.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ca
+    organization: {{ .Values.organization.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "fabric-ca.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ca
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "fabric-ca.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ca
+        organization: {{ .Values.organization.name }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fabric-ca.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              fabric-ca-server start \
+                -b admin:adminpw \
+                --ca.name {{ .Values.config.ca.name }} \
+                --tls.enabled {{ .Values.config.ca.tls.enabled | toString }} \
+                --tls.certfile {{ .Values.config.ca.tls.certFile }} \
+                --tls.keyfile {{ .Values.config.ca.tls.keyFile }} \
+                --registry.maxenrollments {{ .Values.config.ca.registry.maxEnrollments }}
+          ports:
+            - name: ca
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: ca
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: ca
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: ca-config
+              mountPath: /etc/hyperledger/fabric-ca-server-config
+              readOnly: true
+            - name: data
+              mountPath: /etc/hyperledger/fabric-ca-server
+      volumes:
+        - name: ca-config
+          secret:
+            secretName: {{ .Values.secrets.ca.name }}
+        - name: data
+          {{- if .Values.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "fabric-ca.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

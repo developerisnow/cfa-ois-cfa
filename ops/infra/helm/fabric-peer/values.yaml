@@ -1,0 +1,158 @@
+# Default values for fabric-peer
+replicaCount: 2
+
+image:
+  repository: hyperledger/fabric-peer
+  pullPolicy: IfNotPresent
+  tag: "2.5"
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Organization configuration
+organization:
+  name: "ois-dev"
+  mspId: "OisDevMSP"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 7051
+  targetPort: 7051
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: peer0.ois-dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - fabric-peer
+          topologyKey: kubernetes.io/hostname
+
+storage:
+  enabled: true
+  storageClass: "fabric-storage"
+  accessMode: ReadWriteOnce
+  size: 50Gi
+
+couchdb:
+  enabled: true
+  image:
+    repository: couchdb
+    tag: "3.3"
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  storage:
+    enabled: true
+    storageClass: "fabric-storage"
+    accessMode: ReadWriteOnce
+    size: 20Gi
+
+config:
+  # Peer configuration
+  vm:
+    endpoint: "unix:///host/var/run/docker.sock"
+  logging:
+    spec: "INFO"
+  peer:
+    id: "peer0.ois-dev.example.com"
+    address: "0.0.0.0:7051"
+    listenAddress: "0.0.0.0:7051"
+    chaincodeListenAddress: "0.0.0.0:7052"
+    gossip:
+      bootstrap: "peer0.ois-dev.example.com:7051"
+      externalEndpoint: "peer0.ois-dev.example.com:7051"
+      useLeaderElection: true
+      orgLeader: false
+    localMSPID: "OisDevMSP"
+    mspConfigPath: "/etc/hyperledger/fabric/msp"
+    tls:
+      enabled: true
+      certFile: "/etc/hyperledger/fabric/tls/server.crt"
+      keyFile: "/etc/hyperledger/fabric/tls/server.key"
+      rootCAs:
+        - "/etc/hyperledger/fabric/tls/ca.crt"
+  ledger:
+    state:
+      stateDatabase: "CouchDB"
+      couchDBConfig:
+        couchDBAddress: "localhost:5984"
+        username: "admin"
+        password: "adminpw"
+
+secrets:
+  # Use sealed-secrets for dev, Vault for prod
+  type: "sealed-secrets" # or "vault"
+  msp:
+    name: "fabric-peer-msp"
+    key: "msp"
+  tls:
+    name: "fabric-peer-tls"
+    key: "tls"
+
+# ServiceMonitor for Prometheus
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: fabric-network
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: fabric-orderer
+      ports:
+        - protocol: TCP
+          port: 7051
+

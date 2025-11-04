@@ -1,0 +1,60 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fabric-network-ingress
+  namespace: fabric-network
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+spec:
+  tls:
+    - hosts:
+        - orderer.example.com
+        - peer0.ois-dev.example.com
+        - peer1.ois-dev.example.com
+        - ca.ois-dev.example.com
+      secretName: fabric-network-tls
+  rules:
+    - host: orderer.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fabric-orderer
+                port:
+                  number: 7050
+    - host: peer0.ois-dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fabric-peer-0
+                port:
+                  number: 7051
+    - host: peer1.ois-dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fabric-peer-1
+                port:
+                  number: 8051
+    - host: ca.ois-dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fabric-ca
+                port:
+                  number: 7054
+

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fabric-network
+  labels:
+    name: fabric-network
+    app.kubernetes.io/name: fabric-network
+    app.kubernetes.io/instance: fabric-network
+

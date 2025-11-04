@@ -1,0 +1,140 @@
+# Default values for fabric-orderer
+# This is a YAML-formatted file.
+
+replicaCount: 3
+
+image:
+  repository: hyperledger/fabric-orderer
+  pullPolicy: IfNotPresent
+  tag: "2.5"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 7050
+  targetPort: 7050
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: orderer.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - fabric-orderer
+          topologyKey: kubernetes.io/hostname
+
+storage:
+  enabled: true
+  storageClass: "fabric-storage"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+config:
+  # Orderer configuration
+  general:
+    listenAddress: "0.0.0.0"
+    listenPort: 7050
+    genesisMethod: "file"
+    genesisFile: "/var/hyperledger/orderer/orderer.genesis.block"
+    localMSPID: "OrdererMSP"
+    localMSPDir: "/var/hyperledger/orderer/msp"
+    tls:
+      enabled: true
+      privateKey: "/var/hyperledger/orderer/tls/server.key"
+      certificate: "/var/hyperledger/orderer/tls/server.crt"
+      rootCAs:
+        - "/var/hyperledger/orderer/tls/ca.crt"
+    cluster:
+      clientCertificate: "/var/hyperledger/orderer/tls/server.crt"
+      clientPrivateKey: "/var/hyperledger/orderer/tls/server.key"
+      rootCAs:
+        - "/var/hyperledger/orderer/tls/ca.crt"
+      listenAddress: "0.0.0.0"
+      listenPort: 7050
+    bootstrapMethod: "file"
+    bootstrapFile: "/var/hyperledger/orderer/orderer.genesis.block"
+    maxMessageCount: 10
+    batchTimeout: "2s"
+    maxBatchSize: "99 KB"
+    preferredMaxBytes: "512 KB"
+    absoluteMaxBytes: "99 MB"
+  logging:
+    spec: "INFO"
+
+secrets:
+  # Use sealed-secrets for dev, Vault for prod
+  type: "sealed-secrets" # or "vault"
+  msp:
+    name: "fabric-orderer-msp"
+    key: "msp"
+  tls:
+    name: "fabric-orderer-tls"
+    key: "tls"
+  genesis:
+    name: "fabric-orderer-genesis"
+    key: "genesis.block"
+
+# ServiceMonitor for Prometheus
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+# Network policies
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: fabric-network
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: fabric-peer
+      ports:
+        - protocol: TCP
+          port: 7050
+

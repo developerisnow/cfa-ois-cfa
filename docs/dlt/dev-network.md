@@ -28,12 +28,14 @@
 **Требования:**
 - Docker и Docker Compose
 - Bash (или Git Bash на Windows)
-- `jq` (для парсинга JSON в скриптах)
+- `jq` (для парсинга JSON в скриптах) - опционально
+- Go 1.20+ (для сборки chaincode)
 
 **Установка на Windows:**
 ```powershell
 # Установить Docker Desktop
 # Установить Git Bash или WSL2
+# Установить Go (для chaincode)
 ```
 
 ### 2. Запуск сети
@@ -48,26 +50,29 @@ chmod +x *.sh scripts/*.sh
 1. Генерирует crypto-material
 2. Создает genesis block
 3. Создает channel транзакцию
-4. Запускает все контейнеры
-5. Проверяет готовность сети
+4. Запускает все контейнеры (orderer, peers, CA, CouchDB)
 
-### 3. Создание канала
+### 3. Создание канала и установка chaincode
 
 ```bash
+# Создать канал cfa-main
 ./scripts/create-channel.sh
-```
 
-### 4. Установка chaincode
-
-```bash
+# Установить chaincode (issuance, registry)
 ./scripts/install-chaincode.sh
+
+# Утвердить и закоммитить chaincode definitions
 ./scripts/approve-chaincode.sh
+
+# Проверить здоровье сети
+./scripts/health-check.sh
 ```
 
-### 4. Проверка здоровья
+### 4. Примеры вызовов
 
 ```bash
-./scripts/health-check.sh
+# Пример invoke (Issue, Transfer, Redeem)
+./scripts/invoke-example.sh
 ```
 
 ---
@@ -214,24 +219,62 @@ docker exec -e CORE_PEER_LOCALMSPID=OisDevMSP \
 
 Для подключения сервисов к Fabric сети:
 
-```bash
-# .env или appsettings.json
-Ledger__UseMock=false
-Ledger__ChaincodeEndpoint=http://localhost:8080
+**appsettings.json (Issuance Service):**
+```json
+{
+  "Ledger": {
+    "UseMock": false,
+    "ChaincodeEndpoint": "http://localhost:8080"
+  },
+  "Fabric": {
+    "PeerEndpoint": "http://localhost:7051",
+    "ChannelName": "cfa-main",
+    "MspId": "OisDevMSP",
+    "TlsCertPath": "../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.crt",
+    "TlsKeyPath": "../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.key",
+    "TlsRootCertPath": "../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/ca.crt"
+  }
+}
+```
 
-Fabric__PeerEndpoint=http://localhost:7051
-Fabric__ChannelName=cfa-main
-Fabric__MspId=OisDevMSP
-Fabric__TlsCertPath=ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.crt
-Fabric__TlsKeyPath=ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.key
-Fabric__TlsRootCertPath=ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/ca.crt
+**appsettings.json (Registry Service):**
+Аналогично, с теми же настройками `Ledger` и `Fabric`.
+
+**Environment Variables (альтернатива):**
+```bash
+# Linux/Mac
+export Ledger__UseMock=false
+export Ledger__ChaincodeEndpoint=http://localhost:8080
+export Fabric__PeerEndpoint=http://localhost:7051
+export Fabric__ChannelName=cfa-main
+export Fabric__MspId=OisDevMSP
+export Fabric__TlsCertPath=../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.crt
+export Fabric__TlsKeyPath=../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.key
+export Fabric__TlsRootCertPath=../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/ca.crt
+
+# Windows PowerShell
+$env:Ledger__UseMock="false"
+$env:Ledger__ChaincodeEndpoint="http://localhost:8080"
+$env:Fabric__PeerEndpoint="http://localhost:7051"
+$env:Fabric__ChannelName="cfa-main"
+$env:Fabric__MspId="OisDevMSP"
+$env:Fabric__TlsCertPath="../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.crt"
+$env:Fabric__TlsKeyPath="../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/server.key"
+$env:Fabric__TlsRootCertPath="../../ops/fabric/crypto-config/peerOrganizations/ois-dev.example.com/peers/peer0.ois-dev.example.com/tls/ca.crt"
 ```
 
 ### Gateway Service
 
-Для dev-окружения можно использовать упрощенный HTTP Gateway, который вызывает chaincode через docker exec.
+Для dev-окружения можно использовать упрощенный HTTP Gateway (см. `ops/fabric/scripts/chaincode-api.sh`), который вызывает chaincode через docker exec.
 
 **В production**: использовать Fabric Gateway SDK (gRPC) или Fabric SDK для .NET.
+
+### Retry Policy
+
+Адаптеры `LedgerIssuanceAdapter` и `LedgerRegistryAdapter` используют Polly с exponential backoff:
+- **Retry Count**: 3
+- **Backoff**: 2s, 4s, 8s
+- **Circuit Breaker**: 5 failures → 30s break (если настроен)
 
 ---
 
@@ -363,28 +406,50 @@ docker exec peer0.ois-dev.example.com \
 
 ## Интеграция с сервисами
 
-### Issuance Service
+### Проверка работы REST API
 
-```csharp
-// appsettings.json
-{
-  "Ledger": {
-    "UseMock": false,
-    "ChaincodeEndpoint": "http://localhost:8080"
-  }
-}
+После настройки сервисов и запуска Fabric сети:
+
+1. **Publish Issuance:**
+   ```bash
+   curl -X POST http://localhost:5001/v1/issuances/{id}/publish \
+     -H "Authorization: Bearer <token>" \
+     -H "Content-Type: application/json"
+   ```
+   Ожидаемый ответ должен содержать `dltTxHash`.
+
+2. **Place Order (Transfer):**
+   ```bash
+   curl -X POST http://localhost:5002/v1/orders \
+     -H "Authorization: Bearer <token>" \
+     -H "Content-Type: application/json" \
+     -H "Idempotency-Key: <uuid>" \
+     -d '{"investorId":"...","issuanceId":"...","amount":10000}'
+   ```
+   Ожидаемый ответ должен содержать `dltTxHash`.
+
+3. **Redeem:**
+   ```bash
+   curl -X POST http://localhost:5002/v1/issuances/{id}/redeem \
+     -H "Authorization: Bearer <token>" \
+     -H "Content-Type: application/json" \
+     -d '{"amount":5000}'
+   ```
+   Ожидаемый ответ должен содержать `dltTxHash`.
+
+### E2E тест через Playwright
+
+См. `tests/e2e/tests/ledger-integration.spec.ts` для полного цикла тестирования:
+- Publish issuance → Verify txHash
+- Place order → Transfer → Verify txHash
+- Redeem → Verify txHash
+- Full lifecycle: Issue → Transfer → Redeem
+
+**Запуск:**
+```bash
+cd tests/e2e
+npx playwright test tests/ledger-integration.spec.ts
 ```
-
-### Registry Service
-
-Аналогично, настройка через `Ledger:ChaincodeEndpoint`.
-
-### Retry Policy
-
-Адаптеры используют Polly с exponential backoff:
-- **Retry Count**: 3
-- **Backoff**: 2s, 4s, 8s
-- **Circuit Breaker**: 5 failures → 30s break
 
 ---
 

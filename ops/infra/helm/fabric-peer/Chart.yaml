@@ -1,0 +1,14 @@
+apiVersion: v2
+name: fabric-peer
+description: A Helm chart for Hyperledger Fabric Peer nodes
+type: application
+version: 0.1.0
+appVersion: "2.5"
+keywords:
+  - hyperledger
+  - fabric
+  - blockchain
+  - peer
+maintainers:
+  - name: OIS DevOps Team
+

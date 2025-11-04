@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fabric-ca.fullname" . }}
+  labels:
+    {{- include "fabric-ca.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: ca
+  selector:
+    {{- include "fabric-ca.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ca
+

@@ -1,0 +1,54 @@
+{{- range .Values.chaincode }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-commit-{{ .name }}-{{ .version }}
+  labels:
+    app.kubernetes.io/name: chaincode-commit
+    chaincode: {{ .name }}
+    version: {{ .version }}
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: commit
+          image: hyperledger/fabric-tools:2.5
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              peer lifecycle chaincode commit \
+                -o orderer.example.com:7050 \
+                --channelID {{ $.Values.commit.channel }} \
+                --name {{ .name }} \
+                --version {{ .version }} \
+                --sequence {{ $.Values.commit.sequence }} \
+                --tls \
+                --cafile /etc/hyperledger/fabric/orderer-tlsca.crt \
+                --peerAddresses peer0.ois-dev.example.com:7051 \
+                --tlsRootCertFiles /etc/hyperledger/fabric/tls/ca.crt \
+                --peerAddresses peer1.ois-dev.example.com:8051 \
+                --tlsRootCertFiles /etc/hyperledger/fabric/tls/ca.crt
+          env:
+            - name: CORE_PEER_LOCALMSPID
+              value: "OisDevMSP"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: msp
+              mountPath: /etc/hyperledger/fabric/msp
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+      volumes:
+        - name: msp
+          secret:
+            secretName: fabric-peer-msp
+        - name: tls
+          secret:
+            secretName: fabric-peer-tls
+---
+{{- end }}
+

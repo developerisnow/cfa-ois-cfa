@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fabric-peer.fullname" . }}
+  labels:
+    {{- include "fabric-peer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
+    organization: {{ .Values.organization.name }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fabric-peer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: peer
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "fabric-peer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: peer
+        organization: {{ .Values.organization.name }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fabric-peer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      hostNetwork: false
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["peer", "node", "start"]
+          env:
+            - name: CORE_VM_ENDPOINT
+              value: {{ .Values.config.vm.endpoint | quote }}
+            - name: FABRIC_LOGGING_SPEC
+              value: {{ .Values.config.logging.spec | quote }}
+            - name: CORE_PEER_ID
+              value: {{ .Values.config.peer.id | quote }}
+            - name: CORE_PEER_ADDRESS
+              value: {{ .Values.config.peer.address | quote }}
+            - name: CORE_PEER_LISTENADDRESS
+              value: {{ .Values.config.peer.listenAddress | quote }}
+            - name: CORE_PEER_CHAINCODEADDRESS
+              value: {{ .Values.config.peer.chaincodeListenAddress | quote }}
+            - name: CORE_PEER_CHAINCODELISTENADDRESS
+              value: {{ .Values.config.peer.chaincodeListenAddress | quote }}
+            - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+              value: {{ .Values.config.peer.gossip.externalEndpoint | quote }}
+            - name: CORE_PEER_GOSSIP_BOOTSTRAP
+              value: {{ .Values.config.peer.gossip.bootstrap | quote }}
+            - name: CORE_PEER_GOSSIP_USELEADERELECTION
+              value: {{ .Values.config.peer.gossip.useLeaderElection | toString | quote }}
+            - name: CORE_PEER_GOSSIP_ORGLEADER
+              value: {{ .Values.config.peer.gossip.orgLeader | toString | quote }}
+            - name: CORE_PEER_LOCALMSPID
+              value: {{ .Values.config.peer.localMSPID | quote }}
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: {{ .Values.config.peer.mspConfigPath | quote }}
+            - name: CORE_PEER_TLS_ENABLED
+              value: {{ .Values.config.peer.tls.enabled | toString | quote }}
+            - name: CORE_PEER_TLS_CERT_FILE
+              value: {{ .Values.config.peer.tls.certFile | quote }}
+            - name: CORE_PEER_TLS_KEY_FILE
+              value: {{ .Values.config.peer.tls.keyFile | quote }}
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: {{ .Values.config.peer.tls.rootCAs | first | quote }}
+            - name: CORE_LEDGER_STATE_STATEDATABASE
+              value: {{ .Values.config.ledger.state.stateDatabase | quote }}
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+              value: {{ .Values.config.ledger.state.couchDBConfig.couchDBAddress | quote }}
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME
+              value: {{ .Values.config.ledger.state.couchDBConfig.username | quote }}
+            - name: CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+              value: {{ .Values.config.ledger.state.couchDBConfig.password | quote }}
+          ports:
+            - name: peer
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+            - name: chaincode
+              containerPort: 7052
+              protocol: TCP
+            - name: events
+              containerPort: 7053
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "peer node status"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "peer channel list"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: msp
+              mountPath: {{ .Values.config.peer.mspConfigPath }}
+              readOnly: true
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+              readOnly: true
+            - name: docker-sock
+              mountPath: /host/var/run/docker.sock
+            - name: data
+              mountPath: /var/hyperledger/production
+        {{- if .Values.couchdb.enabled }}
+        - name: couchdb
+          image: "{{ .Values.couchdb.image.repository }}:{{ .Values.couchdb.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: COUCHDB_USER
+              value: {{ .Values.config.ledger.state.couchDBConfig.username | quote }}
+            - name: COUCHDB_PASSWORD
+              value: {{ .Values.config.ledger.state.couchDBConfig.password | quote }}
+          ports:
+            - name: couchdb
+              containerPort: 5984
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.couchdb.resources | nindent 12 }}
+          volumeMounts:
+            - name: couchdb-data
+              mountPath: /opt/couchdb/data
+      volumes:
+        - name: msp
+          secret:
+            secretName: {{ .Values.secrets.msp.name }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.secrets.tls.name }}
+        - name: data
+          {{- if .Values.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "fabric-peer.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: couchdb-data
+          {{- if .Values.couchdb.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "fabric-peer.fullname" . }}-couchdb-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

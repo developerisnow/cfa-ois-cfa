@@ -1,0 +1,52 @@
+# Default values for chaincode-build
+image:
+  repository: chaincode-build
+  registry: "registry.example.com"
+  pullPolicy: IfNotPresent
+
+chaincode:
+  - name: issuance
+    path: "./chaincode/issuance"
+    language: golang
+    version: "1.0"
+  - name: registry
+    path: "./chaincode/registry"
+    language: golang
+    version: "1.0"
+
+build:
+  enabled: true
+  dockerfile: Dockerfile.chaincode
+  context: .
+
+publish:
+  enabled: true
+  registry: "registry.example.com"
+  namespace: "fabric-chaincode"
+
+install:
+  enabled: true
+  channel: "cfa-main"
+  peers:
+    - "peer0.ois-dev.example.com"
+    - "peer1.ois-dev.example.com"
+
+approve:
+  enabled: true
+  sequence: 1
+
+commit:
+  enabled: true
+
+rollback:
+  enabled: true
+  strategy: "immediate" # or "gradual"
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+

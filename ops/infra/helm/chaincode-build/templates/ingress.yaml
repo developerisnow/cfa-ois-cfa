@@ -1,0 +1,3 @@
+# Chaincode build jobs don't need ingress
+# This file is intentionally empty
+

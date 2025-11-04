@@ -1,0 +1,35 @@
+# Production values for fabric-orderer
+replicaCount: 5
+
+resources:
+  limits:
+    cpu: 4000m
+    memory: 4Gi
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 5
+  maxReplicas: 7
+  targetCPUUtilizationPercentage: 70
+
+storage:
+  storageClass: "fabric-storage-prod"
+  size: 50Gi
+
+secrets:
+  type: "vault"
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - fabric-orderer
+        topologyKey: topology.kubernetes.io/zone
+

@@ -1,0 +1,20 @@
+{{- if .Values.storage.enabled }}
+{{- if not (kindIs "invalid" .Values.storage.volumeClaimTemplates) }}
+{{- range $i, $e := until (.Values.replicaCount | int) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-{{ include "fabric-orderer.fullname" $ }}-{{ $i }}
+  labels:
+    {{- include "fabric-orderer.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - {{ $.Values.storage.accessMode }}
+  storageClassName: {{ $.Values.storage.storageClass }}
+  resources:
+    requests:
+      storage: {{ $.Values.storage.size }}
+{{- end }}
+{{- end }}
+{{- end }}
+

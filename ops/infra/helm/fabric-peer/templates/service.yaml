@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fabric-peer.fullname" . }}
+  labels:
+    {{- include "fabric-peer.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: peer
+    - port: 7052
+      targetPort: 7052
+      protocol: TCP
+      name: chaincode
+    - port: 7053
+      targetPort: 7053
+      protocol: TCP
+      name: events
+  selector:
+    {{- include "fabric-peer.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: peer
+

@@ -18,6 +18,11 @@ export ORDERER_CA=$SCRIPT_DIR/crypto-config/ordererOrganizations/example.com/ord
 
 # Create channel
 echo "Creating channel..."
+docker cp $SCRIPT_DIR/channel-artifacts/${CHANNEL_NAME}.tx peer0.ois-dev.example.com:/etc/hyperledger/fabric/ || {
+  echo "Error: Channel transaction file not found. Run dev-up.sh first."
+  exit 1
+}
+
 docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID \
     -e CORE_PEER_TLS_ENABLED=true \
     -e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt \
@@ -27,12 +32,20 @@ docker exec -e CORE_PEER_LOCALMSPID=$CORE_PEER_LOCALMSPID \
     peer channel create \
     -o orderer.example.com:7050 \
     -c $CHANNEL_NAME \
-    -f /etc/hyperledger/fabric/cfa-main.tx \
+    -f /etc/hyperledger/fabric/${CHANNEL_NAME}.tx \
     --tls \
-    --cafile /etc/hyperledger/fabric/orderer-tlsca.crt
+    --cafile /etc/hyperledger/fabric/orderer-tlsca.crt || {
+  echo "Error: Failed to create channel"
+  exit 1
+}
 
-# Copy channel block to peer
-docker cp $SCRIPT_DIR/channel-artifacts/${CHANNEL_NAME}.block peer0.ois-dev.example.com:/etc/hyperledger/fabric/
+# Copy channel block to peer (if created successfully)
+if [ -f "$SCRIPT_DIR/channel-artifacts/${CHANNEL_NAME}.block" ]; then
+  docker cp $SCRIPT_DIR/channel-artifacts/${CHANNEL_NAME}.block peer0.ois-dev.example.com:/etc/hyperledger/fabric/
+else
+  # Extract block from peer container
+  docker exec peer0.ois-dev.example.com cat /etc/hyperledger/fabric/${CHANNEL_NAME}.block > $SCRIPT_DIR/channel-artifacts/${CHANNEL_NAME}.block 2>/dev/null || true
+fi
 
 # Join peer0 to channel
 echo "Peer0 joining channel..."

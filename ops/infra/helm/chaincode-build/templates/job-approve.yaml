@@ -1,0 +1,51 @@
+{{- range .Values.chaincode }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-approve-{{ .name }}-{{ .version }}
+  labels:
+    app.kubernetes.io/name: chaincode-approve
+    chaincode: {{ .name }}
+    version: {{ .version }}
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: approve
+          image: hyperledger/fabric-tools:2.5
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              peer lifecycle chaincode approveformyorg \
+                -o orderer.example.com:7050 \
+                --channelID {{ $.Values.approve.channel }} \
+                --name {{ .name }} \
+                --version {{ .version }} \
+                --sequence {{ $.Values.approve.sequence }} \
+                --package-id $(peer lifecycle chaincode queryinstalled | grep {{ .name }} | cut -d' ' -f1) \
+                --tls \
+                --cafile /etc/hyperledger/fabric/orderer-tlsca.crt
+          env:
+            - name: CORE_PEER_LOCALMSPID
+              value: "OisDevMSP"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+          volumeMounts:
+            - name: msp
+              mountPath: /etc/hyperledger/fabric/msp
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+      volumes:
+        - name: msp
+          secret:
+            secretName: fabric-peer-msp
+        - name: tls
+          secret:
+            secretName: fabric-peer-tls
+---
+{{- end }}
+

@@ -1,0 +1,22 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "fabric-peer.fullname" . }}
+  labels:
+    {{- include "fabric-peer.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "fabric-peer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: peer
+  endpoints:
+    - port: peer
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+{{- end }}
+

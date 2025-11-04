@@ -55,10 +55,16 @@ if [ "$USE_CONTAINER" = true ]; then
     docker run --rm -v "$SCRIPT_DIR:/workspace" -w /workspace \
         -e FABRIC_CFG_PATH=/workspace \
         hyperledger/fabric-tools:2.5 \
-        configtxgen -profile CfaMainChannel -channelID cfa-main -outputCreateChannelTx ./channel-artifacts/cfa-main.tx
+        configtxgen -profile CfaMainChannel -channelID cfa-main -outputCreateChannelTx ./channel-artifacts/cfa-main.tx || {
+        echo -e "${RED}Error: Failed to create channel transaction${NC}"
+        exit 1
+    }
 else
     export FABRIC_CFG_PATH="$SCRIPT_DIR"
-    configtxgen -profile CfaMainChannel -channelID cfa-main -outputCreateChannelTx ./channel-artifacts/cfa-main.tx
+    configtxgen -profile CfaMainChannel -channelID cfa-main -outputCreateChannelTx ./channel-artifacts/cfa-main.tx || {
+        echo -e "${RED}Error: Failed to create channel transaction${NC}"
+        exit 1
+    }
 fi
 
 # Start network

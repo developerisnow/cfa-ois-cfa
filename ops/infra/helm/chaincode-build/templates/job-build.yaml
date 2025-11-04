@@ -1,0 +1,39 @@
+{{- range .Values.chaincode }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-build-{{ .name }}-{{ .version }}
+  labels:
+    app.kubernetes.io/name: chaincode-build
+    chaincode: {{ .name }}
+    version: {{ .version }}
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: build
+          image: docker:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              docker build \
+                -t {{ $.Values.registry }}/{{ $.Values.publish.namespace }}/{{ .name }}:{{ .version }} \
+                -f {{ $.Values.build.dockerfile }} \
+                {{ $.Values.build.context }}
+              docker push {{ $.Values.registry }}/{{ $.Values.publish.namespace }}/{{ .name }}:{{ .version }}
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+---
+{{- end }}
+

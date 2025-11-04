@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "fabric-orderer.fullname" . }}
+  labels:
+    {{- include "fabric-orderer.labels" . | nindent 4 }}
+    app.kubernetes.io/component: orderer
+spec:
+  serviceName: {{ include "fabric-orderer.fullname" . }}-headless
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fabric-orderer.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: orderer
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "fabric-orderer.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: orderer
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fabric-orderer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["orderer"]
+          env:
+            - name: FABRIC_LOGGING_SPEC
+              value: {{ .Values.config.logging.spec | quote }}
+            - name: ORDERER_GENERAL_LISTENADDRESS
+              value: {{ .Values.config.general.listenAddress | quote }}
+            - name: ORDERER_GENERAL_LISTENPORT
+              value: {{ .Values.config.general.listenPort | toString }}
+            - name: ORDERER_GENERAL_GENESISMETHOD
+              value: {{ .Values.config.general.genesisMethod | quote }}
+            - name: ORDERER_GENERAL_GENESISFILE
+              value: {{ .Values.config.general.genesisFile | quote }}
+            - name: ORDERER_GENERAL_LOCALMSPID
+              value: {{ .Values.config.general.localMSPID | quote }}
+            - name: ORDERER_GENERAL_LOCALMSPDIR
+              value: {{ .Values.config.general.localMSPDir | quote }}
+            - name: ORDERER_GENERAL_TLS_ENABLED
+              value: {{ .Values.config.general.tls.enabled | toString | quote }}
+            - name: ORDERER_GENERAL_TLS_PRIVATEKEY
+              value: {{ .Values.config.general.tls.privateKey | quote }}
+            - name: ORDERER_GENERAL_TLS_CERTIFICATE
+              value: {{ .Values.config.general.tls.certificate | quote }}
+            - name: ORDERER_GENERAL_TLS_ROOTCAS
+              value: "{{ .Values.config.general.tls.rootCAs | join "," }}"
+            - name: ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE
+              value: {{ .Values.config.general.cluster.clientCertificate | quote }}
+            - name: ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY
+              value: {{ .Values.config.general.cluster.clientPrivateKey | quote }}
+            - name: ORDERER_GENERAL_CLUSTER_ROOTCAS
+              value: "{{ .Values.config.general.cluster.rootCAs | join "," }}"
+            - name: ORDERER_GENERAL_CLUSTER_LISTENADDRESS
+              value: {{ .Values.config.general.cluster.listenAddress | quote }}
+            - name: ORDERER_GENERAL_CLUSTER_LISTENPORT
+              value: {{ .Values.config.general.cluster.listenPort | toString }}
+            - name: ORDERER_GENERAL_BOOTSTRAPMETHOD
+              value: {{ .Values.config.general.bootstrapMethod | quote }}
+            - name: ORDERER_GENERAL_BOOTSTRAPFILE
+              value: {{ .Values.config.general.bootstrapFile | quote }}
+            - name: ORDERER_GENERAL_MAXMESSAGECOUNT
+              value: {{ .Values.config.general.maxMessageCount | toString }}
+            - name: ORDERER_GENERAL_BATCHTIMEOUT
+              value: {{ .Values.config.general.batchTimeout | quote }}
+            - name: ORDERER_GENERAL_MAXBATCHSIZE
+              value: {{ .Values.config.general.maxBatchSize | quote }}
+            - name: ORDERER_GENERAL_PREFERREDMAXBYTES
+              value: {{ .Values.config.general.preferredMaxBytes | quote }}
+            - name: ORDERER_GENERAL_ABSOLUTEMAXBYTES
+              value: {{ .Values.config.general.absoluteMaxBytes | quote }}
+          ports:
+            - name: orderer
+              containerPort: {{ .Values.config.general.listenPort }}
+              protocol: TCP
+            - name: cluster
+              containerPort: {{ .Values.config.general.cluster.listenPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: orderer
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: orderer
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: msp
+              mountPath: {{ .Values.config.general.localMSPDir }}
+              readOnly: true
+            - name: tls
+              mountPath: /var/hyperledger/orderer/tls
+              readOnly: true
+            - name: genesis
+              mountPath: /var/hyperledger/orderer
+              readOnly: true
+            - name: data
+              mountPath: /var/hyperledger/production/orderer
+      volumes:
+        - name: msp
+          secret:
+            secretName: {{ .Values.secrets.msp.name }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.secrets.tls.name }}
+        - name: genesis
+          secret:
+            secretName: {{ .Values.secrets.genesis.name }}
+        - name: data
+          {{- if .Values.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.storage.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.storage.accessMode }}
+        storageClassName: {{ .Values.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.size }}
+  {{- end }}
+
