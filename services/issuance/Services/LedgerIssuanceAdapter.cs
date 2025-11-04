@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Polly;
+using Polly.Retry;
 
 namespace OIS.Issuance.Services;
 
@@ -12,18 +14,42 @@ public class LedgerIssuanceAdapter : ILedgerIssuance
 {
     private readonly ILogger<LedgerIssuanceAdapter> _logger;
     private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
     private readonly bool _useMock;
     private readonly string? _chaincodeEndpoint;
+    private readonly AsyncRetryPolicy _retryPolicy;
 
     public LedgerIssuanceAdapter(
         ILogger<LedgerIssuanceAdapter> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        HttpClient httpClient)
     {
         _logger = logger;
         _configuration = configuration;
+        _httpClient = httpClient;
         _chaincodeEndpoint = _configuration["Ledger:ChaincodeEndpoint"];
         _useMock = string.IsNullOrEmpty(_chaincodeEndpoint) || 
                    _configuration.GetValue<bool>("Ledger:UseMock", true);
+
+        if (!_useMock && !string.IsNullOrEmpty(_chaincodeEndpoint))
+        {
+            _httpClient.BaseAddress = new Uri(_chaincodeEndpoint);
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        }
+
+        // Retry policy with exponential backoff
+        _retryPolicy = Policy
+            .Handle<HttpRequestException>()
+            .Or<TaskCanceledException>()
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (exception, timeSpan, retryCount, context) =>
+                {
+                    _logger.LogWarning(
+                        "Retry {RetryCount} after {Delay}ms for {Operation}",
+                        retryCount, timeSpan.TotalMilliseconds, context.OperationKey);
+                });
 
         if (_useMock)
         {
@@ -148,97 +174,114 @@ public class LedgerIssuanceAdapter : ILedgerIssuance
         string? scheduleJson,
         CancellationToken ct)
     {
-        // TODO: Implement real Hyperledger Fabric client call
-        // This would use Fabric SDK to invoke chaincode
-        using var httpClient = new HttpClient();
-        httpClient.Timeout = TimeSpan.FromSeconds(30);
-
-        var payload = new
+        return await _retryPolicy.ExecuteAsync(async (context) =>
         {
-            id = id.ToString(),
-            assetId = assetId.ToString(),
-            issuerId = issuerId.ToString(),
-            totalAmount = totalAmount,
-            nominal = nominal,
-            issueDate = issueDate.ToString("yyyy-MM-dd"),
-            maturityDate = maturityDate.ToString("yyyy-MM-dd"),
-            scheduleJson = scheduleJson ?? ""
-        };
+            var payload = new
+            {
+                chaincode = "issuance",
+                function = "Issue",
+                args = new[]
+                {
+                    id.ToString(),
+                    assetId.ToString(),
+                    issuerId.ToString(),
+                    totalAmount.ToString(),
+                    nominal.ToString(),
+                    issueDate.ToString("yyyy-MM-dd"),
+                    maturityDate.ToString("yyyy-MM-dd"),
+                    scheduleJson ?? "{}"
+                }
+            };
 
-        var json = JsonSerializer.Serialize(payload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await httpClient.PostAsync($"{_chaincodeEndpoint}/invoke/Issue", content, ct);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.PostAsync("/chaincode/invoke", content, ct);
+            response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync(ct);
-        var result = JsonSerializer.Deserialize<ChaincodeResponse>(responseContent);
+            var responseContent = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<ChaincodeResponse>(responseContent);
 
-        if (result?.TransactionHash == null)
-        {
-            throw new InvalidOperationException("Failed to get transaction hash from ledger");
-        }
+            if (result?.TransactionHash == null)
+            {
+                throw new InvalidOperationException($"Failed to get transaction hash from ledger: {result?.Error ?? "Unknown error"}");
+            }
 
-        _logger.LogInformation("Issued issuance {IssuanceId} on ledger with txHash {TxHash}", id, result.TransactionHash);
+            _logger.LogInformation("Issued issuance {IssuanceId} on ledger with txHash {TxHash}", id, result.TransactionHash);
 
-        return result.TransactionHash;
+            return result.TransactionHash;
+        }, new Context("Issue"));
     }
 
     private async Task<string> RealCloseAsync(Guid id, CancellationToken ct)
     {
-        // TODO: Implement real Hyperledger Fabric client call
-        using var httpClient = new HttpClient();
-        httpClient.Timeout = TimeSpan.FromSeconds(30);
-
-        var payload = new { id = id.ToString() };
-        var json = JsonSerializer.Serialize(payload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        var response = await httpClient.PostAsync($"{_chaincodeEndpoint}/invoke/Close", content, ct);
-        response.EnsureSuccessStatusCode();
-
-        var responseContent = await response.Content.ReadAsStringAsync(ct);
-        var result = JsonSerializer.Deserialize<ChaincodeResponse>(responseContent);
-
-        if (result?.TransactionHash == null)
+        return await _retryPolicy.ExecuteAsync(async (context) =>
         {
-            throw new InvalidOperationException("Failed to get transaction hash from ledger");
-        }
+            var payload = new
+            {
+                chaincode = "issuance",
+                function = "Close",
+                args = new[] { id.ToString() }
+            };
 
-        _logger.LogInformation("Closed issuance {IssuanceId} on ledger with txHash {TxHash}", id, result.TransactionHash);
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        return result.TransactionHash;
+            var response = await _httpClient.PostAsync("/chaincode/invoke", content, ct);
+            response.EnsureSuccessStatusCode();
+
+            var responseContent = await response.Content.ReadAsStringAsync(ct);
+            var result = JsonSerializer.Deserialize<ChaincodeResponse>(responseContent);
+
+            if (result?.TransactionHash == null)
+            {
+                throw new InvalidOperationException($"Failed to get transaction hash from ledger: {result?.Error ?? "Unknown error"}");
+            }
+
+            _logger.LogInformation("Closed issuance {IssuanceId} on ledger with txHash {TxHash}", id, result.TransactionHash);
+
+            return result.TransactionHash;
+        }, new Context("Close"));
     }
 
     private async Task<LedgerIssuanceInfo?> RealGetAsync(Guid id, CancellationToken ct)
     {
-        // TODO: Implement real Hyperledger Fabric client call
-        using var httpClient = new HttpClient();
-        httpClient.Timeout = TimeSpan.FromSeconds(10);
-
-        var response = await httpClient.GetAsync($"{_chaincodeEndpoint}/query/Get/{id}", ct);
-        
-        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        return await _retryPolicy.ExecuteAsync(async (context) =>
         {
-            return null;
-        }
+            var payload = new
+            {
+                chaincode = "issuance",
+                function = "Get",
+                args = new[] { id.ToString() }
+            };
 
-        response.EnsureSuccessStatusCode();
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var content = await response.Content.ReadAsStringAsync(ct);
-        var issuance = JsonSerializer.Deserialize<ChaincodeIssuance>(content);
+            var response = await _httpClient.PostAsync("/chaincode/query", content, ct);
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
 
-        if (issuance == null)
-        {
-            return null;
-        }
+            response.EnsureSuccessStatusCode();
 
-        return new LedgerIssuanceInfo
-        {
-            Status = issuance.Status ?? "unknown",
-            Version = issuance.Version,
-            TransactionHash = issuance.TransactionHash
-        };
+            var responseContent = await response.Content.ReadAsStringAsync(ct);
+            var issuance = JsonSerializer.Deserialize<ChaincodeIssuance>(responseContent);
+
+            if (issuance == null)
+            {
+                return null;
+            }
+
+            return new LedgerIssuanceInfo
+            {
+                Status = issuance.Status ?? "unknown",
+                Version = issuance.Version,
+                TransactionHash = issuance.TransactionHash
+            };
+        }, new Context("Get"));
     }
 
     private static string GenerateMockTxHash()

@@ -667,6 +667,186 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /v1/audit:
+    get:
+      summary: Get audit events
+      operationId: getAuditEvents
+      tags:
+        - Audit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: actor
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by actor ID
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter by action type
+        - name: entity
+          in: query
+          schema:
+            type: string
+          description: Filter by entity type
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start datetime
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End datetime
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Page size
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Page offset
+      responses:
+        '200':
+          description: Audit events list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/audit/{id}:
+    get:
+      summary: Get audit event by ID
+      operationId: getAuditEvent
+      tags:
+        - Audit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Audit event ID
+      responses:
+        '200':
+          description: Audit event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/kyc/{investorId}/decision:
+    post:
+      summary: Make KYC decision
+      operationId: makeKycDecision
+      tags:
+        - Compliance
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Investor ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycDecisionRequest'
+      responses:
+        '200':
+          description: KYC decision made
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycDecisionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/kyc/{investorId}/documents:
+    post:
+      summary: Upload KYC documents
+      operationId: uploadKycDocuments
+      tags:
+        - Compliance
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Investor ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                documentType:
+                  type: string
+                  enum: [passport, inn, snils, address_proof, income_proof, other]
+                comment:
+                  type: string
+                  description: Optional comment
+      responses:
+        '201':
+          description: Documents uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycDocumentsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -1138,6 +1318,325 @@ components:
               type: integer
             totalInvestors:
               type: integer
+
+    BrokerClient:
+      type: object
+      required: [id, name, email, kycStatus, qualificationStatus]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Client name
+        email:
+          type: string
+          format: email
+        inn:
+          type: string
+          description: Tax ID (for legal entities)
+        type:
+          type: string
+          enum: [individual, legal_entity]
+        kycStatus:
+          type: string
+          enum: [pending, approved, rejected]
+        qualificationStatus:
+          type: string
+          enum: [none, qualified, unqualified]
+        createdAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    BrokerClientsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrokerClient'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    CreateBrokerOrderRequest:
+      type: object
+      required: [clientId, issuanceId, amount]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          exclusiveMinimum: true
+
+    BrokerOrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [pending, confirmed, failed, cancelled]
+        commission:
+          type: number
+          format: decimal
+          description: Commission amount
+        createdAt:
+          type: string
+          format: date-time
+
+    CommissionRow:
+      type: object
+      properties:
+        period:
+          type: string
+          description: Period label (YYYY-MM or YYYY-MM-DD)
+        totalAmount:
+          type: number
+          format: decimal
+          description: Total order amount
+        commissionAmount:
+          type: number
+          format: decimal
+          description: Commission earned
+        ordersCount:
+          type: integer
+          description: Number of orders
+        clientsCount:
+          type: integer
+          description: Number of unique clients
+
+    CommissionsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommissionRow'
+        total:
+          type: integer
+        totalAmount:
+          type: number
+          format: decimal
+        totalCommission:
+          type: number
+          format: decimal
+
+    FeedItem:
+      type: object
+      required: [id, type, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [order, transfer, payout, kyc, qualification]
+        title:
+          type: string
+          description: Event title
+        description:
+          type: string
+          description: Event description
+        clientId:
+          type: string
+          format: uuid
+          nullable: true
+        clientName:
+          type: string
+          nullable: true
+        issuanceId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: number
+          format: decimal
+          nullable: true
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          description: Additional event data
+          additionalProperties: true
+
+    FeedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedItem'
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+
+    AuditEvent:
+      type: object
+      required: [id, actor, action, entity, timestamp]
+      properties:
+        id:
+          type: string
+          format: uuid
+        actor:
+          type: string
+          format: uuid
+          description: User/system that performed the action
+        actorName:
+          type: string
+          description: Actor name or identifier
+        action:
+          type: string
+          description: Action type (e.g., 'create', 'update', 'delete', 'approve', 'reject')
+        entity:
+          type: string
+          description: Entity type (e.g., 'issuance', 'order', 'kyc', 'investor')
+        entityId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Entity ID
+        payload:
+          type: object
+          description: Additional event data
+          additionalProperties: true
+        ip:
+          type: string
+          format: ipv4
+          nullable: true
+          description: IP address
+        userAgent:
+          type: string
+          nullable: true
+          description: User agent string
+        timestamp:
+          type: string
+          format: date-time
+        result:
+          type: string
+          enum: [success, failure, pending]
+          nullable: true
+          description: Action result
+
+    AuditEventsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    KycDecisionRequest:
+      type: object
+      required: [status, comment]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+          description: KYC decision status
+        comment:
+          type: string
+          description: Decision comment/reason
+
+    KycDecisionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [approved, rejected]
+        comment:
+          type: string
+        decisionBy:
+          type: string
+          format: uuid
+          description: User who made the decision
+        decisionAt:
+          type: string
+          format: date-time
+
+    KycDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        documentType:
+          type: string
+          enum: [passport, inn, snils, address_proof, income_proof, other]
+        fileName:
+          type: string
+        fileSize:
+          type: integer
+          description: File size in bytes
+        mimeType:
+          type: string
+        storageUrl:
+          type: string
+          format: uri
+          description: S3/MinIO storage URL
+        uploadedAt:
+          type: string
+          format: date-time
+        uploadedBy:
+          type: string
+          format: uuid
+        comment:
+          type: string
+          nullable: true
+
+    KycDocumentsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/KycDocument'
+        total:
+          type: integer
     
     ProblemDetails:
       type: object
@@ -1177,6 +1676,13 @@ components:
     
     NotFound:
       description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    
+    Forbidden:
+      description: Forbidden
       content:
         application/json:
           schema:

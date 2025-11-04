@@ -42,6 +42,10 @@ builder.Services.AddDbContext<IssuanceDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Issuance")));
 
+// HTTP Client for Ledger Adapter
+builder.Services.AddHttpClient<LedgerIssuanceAdapter>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
 // Services
 builder.Services.AddScoped<ILedgerIssuance, LedgerIssuanceAdapter>();
 builder.Services.AddScoped<IOutboxService, OutboxService>();

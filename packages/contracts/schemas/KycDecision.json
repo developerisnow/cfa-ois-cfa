@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KycDecision",
+  "description": "Решение по KYC",
+  "type": "object",
+  "required": ["id", "investorId", "status", "comment", "decisionBy", "decisionAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "investorId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["approved", "rejected"],
+      "description": "Статус решения"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Комментарий к решению"
+    },
+    "decisionBy": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID пользователя, принявшего решение"
+    },
+    "decisionAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+

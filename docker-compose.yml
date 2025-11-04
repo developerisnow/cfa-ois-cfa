@@ -1,10 +1,98 @@
-# ... existing code ...
+version: '3.8'
+
+services:
   postgres:
-    # ... existing config ...
+    image: postgres:16-alpine
+    container_name: ois-postgres
+    environment:
+      POSTGRES_DB: ois
+      POSTGRES_USER: ois
+      POSTGRES_PASSWORD: ois_dev_password
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./ops/scripts:/scripts:ro
-    # ... rest of config ...
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ois"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ois-network
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:3.6
+    container_name: ois-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    depends_on:
+      - zookeeper
+    networks:
+      - ois-network
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ois-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - ois-network
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: ois-keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ois
+      KC_DB_PASSWORD: ois_dev_password
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    command: start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ois-network
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: ois-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - ois-network
+    restart: unless-stopped
 
   # Add backup cron service (optional, for scheduled backups)
   postgres-backup:
@@ -34,3 +122,11 @@
     networks:
       - ois-network
     restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  ois-network:
+    driver: bridge

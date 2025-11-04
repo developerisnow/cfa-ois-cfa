@@ -313,34 +313,60 @@ components:
     AuditLoggedPayload:
       type: object
       required:
-        - actorId
+        - id
+        - actor
         - action
         - entity
         - timestamp
       properties:
-        actorId:
+        id:
           type: string
           format: uuid
+          description: Audit event ID
+        actor:
+          type: string
+          format: uuid
+          description: User/system that performed the action
+        actorName:
+          type: string
+          description: Actor name or identifier
         action:
           type: string
-          enum: [create, update, delete, read, execute]
+          description: Action type (e.g., 'create', 'update', 'delete', 'approve', 'reject')
         entity:
           type: string
-          enum: [issuance, order, wallet, payout, user]
+          description: Entity type (e.g., 'issuance', 'order', 'kyc', 'investor', 'audit')
         entityId:
           type: string
           format: uuid
+          nullable: true
+          description: Entity ID
         payload:
           type: object
-          description: Additional audit data
+          description: Additional event data
+          additionalProperties: true
         ip:
           type: string
           format: ipv4
+          nullable: true
+          description: IP address
         userAgent:
           type: string
+          nullable: true
+          description: User agent string
         timestamp:
           type: string
           format: date-time
+        result:
+          type: string
+          enum: [success, failure, pending]
+          nullable: true
+          description: Action result
+        correlationId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Request correlation ID
     
     TransferCompletedPayload:
       type: object
@@ -372,23 +398,50 @@ components:
     ComplianceFlaggedPayload:
       type: object
       required:
+        - id
         - investorId
         - reason
         - severity
         - flaggedAt
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Compliance flag ID
         investorId:
           type: string
           format: uuid
+        investorName:
+          type: string
+          nullable: true
+          description: Investor name or identifier
         reason:
           type: string
-          enum: [kyc_fail, qualification_exceeded, watchlist_match, manual_review]
+          enum: [kyc_fail, qualification_exceeded, watchlist_match, manual_review, document_issue]
+          description: Reason for flagging
         severity:
           type: string
           enum: [low, medium, high, critical]
         flaggedAt:
           type: string
           format: date-time
+        flaggedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: User/system that flagged the investor
         details:
           type: object
+          description: Additional compliance flag details
+          additionalProperties: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Resolution timestamp
+        resolvedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: User who resolved the flag
 

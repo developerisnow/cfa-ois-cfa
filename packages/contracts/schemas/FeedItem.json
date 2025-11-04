@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FeedItem",
+  "description": "Элемент ленты активности брокера",
+  "type": "object",
+  "required": ["id", "type", "timestamp"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["order", "transfer", "payout", "kyc", "qualification"],
+      "description": "Тип события"
+    },
+    "title": {
+      "type": "string",
+      "description": "Заголовок события"
+    },
+    "description": {
+      "type": "string",
+      "description": "Описание события"
+    },
+    "clientId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "clientName": {
+      "type": ["string", "null"]
+    },
+    "issuanceId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "amount": {
+      "type": ["number", "null"],
+      "format": "decimal"
+    },
+    "status": {
+      "type": ["string", "null"],
+      "enum": ["pending", "completed", "failed"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Дополнительные данные события",
+      "additionalProperties": true
+    }
+  }
+}
+

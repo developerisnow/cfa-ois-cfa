@@ -1,18 +1,22 @@
 {
-  "name": "@ois/sdks",
+  "name": "@ois/api-client",
   "version": "1.0.0",
-  "description": "TypeScript SDKs for OIS services",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "description": "TypeScript API Client for OIS Gateway",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "generate": "openapi-generator-cli generate -i ../../contracts/openapi-gateway.yaml -g typescript-axios -o ./generated --additional-properties=npmName=@ois/api-client,npmVersion=1.0.0,supportsES6=true,withNodeImports=true"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "generate": "echo 'SDK is manually maintained. Use npm run build to compile TypeScript.'"
   },
   "dependencies": {
     "axios": "^1.6.0"
   },
   "devDependencies": {
-    "@openapitools/openapi-generator-cli": "^2.7.0",
-    "typescript": "^5.3.0"
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "axios": "^1.6.0"
   }
 }
-

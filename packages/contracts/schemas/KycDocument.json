@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KycDocument",
+  "description": "Документ KYC",
+  "type": "object",
+  "required": ["id", "investorId", "documentType", "fileName", "storageUrl", "uploadedAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "investorId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "documentType": {
+      "type": "string",
+      "enum": ["passport", "inn", "snils", "address_proof", "income_proof", "other"],
+      "description": "Тип документа"
+    },
+    "fileName": {
+      "type": "string",
+      "description": "Имя файла"
+    },
+    "fileSize": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Размер файла в байтах"
+    },
+    "mimeType": {
+      "type": "string",
+      "description": "MIME тип файла"
+    },
+    "storageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL в хранилище (S3/MinIO)"
+    },
+    "uploadedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "uploadedBy": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID пользователя, загрузившего документ"
+    },
+    "comment": {
+      "type": ["string", "null"],
+      "description": "Комментарий к документу"
+    }
+  }
+}
+

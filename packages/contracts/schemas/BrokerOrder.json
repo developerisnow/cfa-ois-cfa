@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BrokerOrder",
+  "description": "Заявка брокера от имени клиента",
+  "type": "object",
+  "required": ["id", "clientId", "issuanceId", "amount", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "clientId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "issuanceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "amount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "exclusiveMinimum": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "failed", "cancelled"]
+    },
+    "commission": {
+      "type": "number",
+      "format": "decimal",
+      "description": "Сумма комиссии"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "brokerId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID брокера, создавшего заявку"
+    }
+  }
+}
+

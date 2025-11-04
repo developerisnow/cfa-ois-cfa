@@ -38,6 +38,8 @@ builder.Services.AddDbContext<RegistryDbContext>(options =>
 // HTTP Clients
 builder.Services.AddHttpClient<IBankNominalService, BankNominalServiceClient>();
 builder.Services.AddHttpClient<IComplianceService, ComplianceServiceClient>();
+builder.Services.AddHttpClient<LedgerRegistryAdapter>()
+    .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
 // Services
 builder.Services.AddScoped<ILedgerRegistry, LedgerRegistryAdapter>();

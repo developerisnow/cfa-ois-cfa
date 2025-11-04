@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BrokerClient",
+  "description": "Клиент брокера",
+  "type": "object",
+  "required": ["id", "name", "email", "kycStatus", "qualificationStatus"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string",
+      "description": "Имя клиента"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "inn": {
+      "type": "string",
+      "description": "ИНН (для юридических лиц)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["individual", "legal_entity"],
+      "description": "Тип клиента"
+    },
+    "kycStatus": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected"],
+      "description": "Статус KYC"
+    },
+    "qualificationStatus": {
+      "type": "string",
+      "enum": ["none", "qualified", "unqualified"],
+      "description": "Статус квалификации инвестора"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastActivityAt": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}
+

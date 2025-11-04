@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CommissionRow",
+  "description": "Строка отчета по комиссиям брокера",
+  "type": "object",
+  "required": ["period", "totalAmount", "commissionAmount", "ordersCount"],
+  "properties": {
+    "period": {
+      "type": "string",
+      "description": "Период (YYYY-MM или YYYY-MM-DD)"
+    },
+    "totalAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Общая сумма заявок"
+    },
+    "commissionAmount": {
+      "type": "number",
+      "format": "decimal",
+      "minimum": 0,
+      "description": "Заработанная комиссия"
+    },
+    "ordersCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество заявок"
+    },
+    "clientsCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Количество уникальных клиентов"
+    }
+  }
+}
+
