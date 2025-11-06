@@ -1,0 +1,22 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: api-gateway
+  namespace: ois-cfa
+spec:
+  chart: api-gateway
+  repo: https://gitlab.com/ois-cfa/ois-cfa.git
+  targetNamespace: ois-cfa
+  valuesContent: |-
+    replicaCount: 2
+    image:
+      repository: registry.gitlab.com/ois-cfa/ois-cfa/api-gateway
+      tag: "latest"
+    ingress:
+      enabled: true
+      hosts:
+        - host: api.ois-cfa.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+

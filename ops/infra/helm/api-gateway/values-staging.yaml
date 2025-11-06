@@ -1,0 +1,35 @@
+# Staging environment values
+replicaCount: 2
+
+image:
+  tag: "staging"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: api.staging.ois-cfa.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-gateway-tls-staging
+      hosts:
+        - api.staging.ois-cfa.example.com
+
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Staging"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+

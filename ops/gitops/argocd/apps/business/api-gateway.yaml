@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-gateway
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/api-gateway
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

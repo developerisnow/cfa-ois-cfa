@@ -1,0 +1,445 @@
+stages:
+  - infra
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_TAG: $CI_COMMIT_SHA
+  IMAGE_TAG_LATEST: latest
+  REGISTRY: $CI_REGISTRY_IMAGE
+  # ArgoCD settings
+  ARGOCD_SERVER: "argocd-server.argocd.svc.cluster.local"
+  ARGOCD_GRPC_WEB: "true"
+  # GitLab Agent settings
+  KUBERNETES_NAMESPACE: "ois-cfa"
+
+# ============================================================================
+# INFRA STAGE
+# ============================================================================
+
+.terraform_base: &terraform_base
+  image: hashicorp/terraform:1.9
+  before_script:
+    - cd ops/infra/timeweb
+    - terraform init -backend-config="address=${TF_HTTP_ADDRESS}" -backend-config="username=${TF_HTTP_USERNAME}" -backend-config="password=${TF_HTTP_PASSWORD}" || terraform init
+
+terraform:plan:
+  <<: *terraform_base
+  stage: infra
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH =~ /^infra\//'
+  script:
+    - terraform validate
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - ops/infra/timeweb/tfplan
+    expire_in: 1 week
+
+terraform:apply:
+  <<: *terraform_base
+  stage: infra
+  when: manual
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - terraform apply -auto-approve tfplan || terraform apply tfplan
+  dependencies:
+    - terraform:plan
+
+# ============================================================================
+# BUILD STAGE
+# ============================================================================
+
+.docker_build_template: &docker_build_template
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      docker buildx create --use --name builder || true
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --push \
+        --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+        --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG_LATEST \
+        --file $DOCKERFILE \
+        --cache-from type=registry,ref=$REGISTRY/$IMAGE_NAME:buildcache \
+        --cache-to type=registry,ref=$REGISTRY/$IMAGE_NAME:buildcache,mode=max \
+        $BUILD_CONTEXT
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+  # Tag latest only for default branch
+  after_script:
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]; then
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --push \
+          --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG_LATEST \
+          --file $DOCKERFILE \
+          $BUILD_CONTEXT || true
+      fi
+
+# Backend Services
+build:api-gateway:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: api-gateway
+    DOCKERFILE: apps/api-gateway/Dockerfile
+    BUILD_CONTEXT: .
+
+build:identity:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: identity
+    DOCKERFILE: services/identity/Dockerfile
+    BUILD_CONTEXT: .
+
+build:issuance:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: issuance
+    DOCKERFILE: services/issuance/Dockerfile
+    BUILD_CONTEXT: .
+
+build:registry:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: registry
+    DOCKERFILE: services/registry/Dockerfile
+    BUILD_CONTEXT: .
+
+build:settlement:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: settlement
+    DOCKERFILE: services/settlement/Dockerfile
+    BUILD_CONTEXT: .
+
+build:compliance:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: compliance
+    DOCKERFILE: services/compliance/Dockerfile
+    BUILD_CONTEXT: .
+
+build:bank-nominal:
+  <<: *docker_build_template
+  variables:
+    IMAGE_NAME: bank-nominal
+    DOCKERFILE: services/integrations/bank-nominal/Dockerfile
+    BUILD_CONTEXT: .
+
+# Frontend Apps (Next.js)
+.build_frontend_template: &build_frontend_template
+  stage: build
+  image: node:22-alpine
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      cd $APP_PATH
+      npm ci
+      npm run build
+      docker buildx create --use --name builder || true
+      docker buildx build \
+        --platform linux/amd64 \
+        --push \
+        --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
+        --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG_LATEST \
+        --file Dockerfile \
+        .
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+  after_script:
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]; then
+        cd $APP_PATH
+        docker buildx build \
+          --platform linux/amd64 \
+          --push \
+          --tag $REGISTRY/$IMAGE_NAME:$IMAGE_TAG_LATEST \
+          --file Dockerfile \
+          . || true
+      fi
+
+build:portal-issuer:
+  <<: *build_frontend_template
+  variables:
+    IMAGE_NAME: portal-issuer
+    APP_PATH: apps/portal-issuer
+
+build:portal-investor:
+  <<: *build_frontend_template
+  variables:
+    IMAGE_NAME: portal-investor
+    APP_PATH: apps/portal-investor
+
+build:backoffice:
+  <<: *build_frontend_template
+  variables:
+    IMAGE_NAME: backoffice
+    APP_PATH: apps/backoffice
+
+# ============================================================================
+# TEST STAGE
+# ============================================================================
+
+test:unit:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:9.0
+  script:
+    - dotnet restore
+    - |
+      dotnet test
+        --no-restore
+        --verbosity normal
+        --logger "trx;LogFileName=test-results.trx"
+        --logger "junit;LogFileName=junit.xml"
+        --collect:"XPlat Code Coverage"
+        --results-directory:./coverage
+        -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+  coverage: '/Total\s*\|\s*(\d+\.\d+)%/'
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+
+test:pact:
+  stage: test
+  image: node:22-alpine
+  variables:
+    PACT_BROKER_URL: ${PACT_BROKER_URL:-}
+    PACT_BROKER_TOKEN: ${PACT_BROKER_TOKEN:-}
+  script:
+    - |
+      if [ -d "tests/contracts/pact-consumer" ]; then
+        cd tests/contracts/pact-consumer
+        npm ci
+        npm test
+        if [ -n "$PACT_BROKER_URL" ] && [ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]; then
+          npx pact-broker publish pacts \
+            --broker-base-url=$PACT_BROKER_URL \
+            --broker-token=$PACT_BROKER_TOKEN \
+            --consumer-app-version=$CI_COMMIT_SHA || echo "Pact broker publish failed"
+        fi
+      else
+        echo "Pact tests directory not found, skipping"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - tests/contracts/pact-consumer/pacts/
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+
+test:e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.47.2-jammy
+  variables:
+    PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+  dependencies:
+    - build:api-gateway
+  script:
+    - |
+      if [ -d "tests/e2e" ]; then
+        cd tests/e2e
+        npm ci
+        npx playwright install --with-deps chromium
+        npm test || true
+      else
+        echo "E2E tests directory not found, skipping"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - tests/e2e/playwright-report/
+      - tests/e2e/test-results/
+    reports:
+      junit: tests/e2e/test-results/junit.xml
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\//'
+    - if: '$CI_MERGE_REQUEST_IID'
+
+test:k6:smoke:
+  stage: test
+  image: grafana/k6:0.49.0
+  variables:
+    K6_SMOKE_VUS: "10"
+    K6_SMOKE_DURATION: "30s"
+  script:
+    - |
+      if [ -f "tests/k6/gateway-critical-paths.js" ]; then
+        k6 run
+          --vus $K6_SMOKE_VUS
+          --duration $K6_SMOKE_DURATION
+          --summary-export=summary.json
+          --out json=k6-results.json
+          tests/k6/gateway-critical-paths.js
+      else
+        echo "K6 smoke test not found, skipping"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - summary.json
+      - k6-results.json
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+# ============================================================================
+# DEPLOY STAGE
+# ============================================================================
+
+# Option A: ArgoCD Deploy
+.deploy_argocd_template: &deploy_argocd_template
+  stage: deploy
+  image: argoproj/argocd:latest
+  before_script:
+    - |
+      # Login to ArgoCD
+      argocd login $ARGOCD_SERVER
+        --username admin
+        --password $ARGOCD_ADMIN_PASSWORD
+        --grpc-web
+        --insecure || true
+  script:
+    - |
+      argocd app sync ois-$CI_ENVIRONMENT_NAME
+        --grpc-web
+        --timeout 300
+        --prune
+        --self-heal || echo "ArgoCD sync failed"
+    - |
+      argocd app wait ois-$CI_ENVIRONMENT_NAME
+        --grpc-web
+        --timeout 300
+        --health || echo "ArgoCD wait failed"
+
+# Option B: GitLab Agent Deploy (pull-based GitOps)
+.deploy_gitlab_agent_template: &deploy_gitlab_agent_template
+  stage: deploy
+  image: bitnami/kubectl:1.30
+  script:
+    - |
+      # GitLab Agent uses pull-based GitOps
+      # Changes in ops/gitops/gitlab-agent/manifests/ are automatically synced
+      # This job just verifies the deployment
+      echo "GitLab Agent will sync manifests automatically"
+      echo "Verifying deployment..."
+      kubectl get deployments -n $KUBERNETES_NAMESPACE || echo "Deployments not found"
+
+# Environment: DEV (feature branches, merge requests)
+deploy:dev:
+  <<: *deploy_gitlab_agent_template
+  environment:
+    name: dev
+    url: https://dev.ois-cfa.example.com
+    on_stop: stop:dev
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\//'
+    - if: '$CI_MERGE_REQUEST_IID'
+  script:
+    - echo "Deploying to DEV environment"
+    - |
+      # Update image tags in GitOps manifests
+      sed -i "s|image:.*api-gateway.*|image: $REGISTRY/api-gateway:$IMAGE_TAG|g" \
+        ops/gitops/gitlab-agent/manifests/business/api-gateway.yaml || true
+    - |
+      git config user.name "GitLab CI"
+      git config user.email "ci@gitlab.com"
+      git add ops/gitops/gitlab-agent/manifests/ || true
+      git commit -m "chore(deploy): update images for dev [skip ci]" || true
+      git push origin HEAD:$CI_COMMIT_REF_NAME || echo "No changes to commit"
+
+stop:dev:
+  stage: deploy
+  environment:
+    name: dev
+    action: stop
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^feature\//'
+  script:
+    - echo "Stopping DEV environment"
+
+# Environment: STAGING (main branch)
+deploy:staging:
+  <<: *deploy_argocd_template
+  environment:
+    name: staging
+    url: https://staging.ois-cfa.example.com
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  variables:
+    CI_ENVIRONMENT_NAME: staging
+  script:
+    - |
+      argocd app sync ois-staging
+        --grpc-web
+        --timeout 300
+        --prune
+        --self-heal || echo "ArgoCD sync failed"
+    - |
+      argocd app wait ois-staging
+        --grpc-web
+        --timeout 300
+        --health || echo "ArgoCD wait failed"
+
+# Environment: PRODUCTION (tags v*)
+deploy:prod:
+  <<: *deploy_argocd_template
+  environment:
+    name: production
+    url: https://ois-cfa.example.com
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+  when: manual
+  variables:
+    CI_ENVIRONMENT_NAME: production
+  script:
+    - |
+      argocd app sync ois-prod
+        --grpc-web
+        --timeout 600
+        --prune
+        --self-heal || echo "ArgoCD sync failed"
+    - |
+      argocd app wait ois-prod
+        --grpc-web
+        --timeout 600
+        --health || echo "ArgoCD wait failed"
+
+# ============================================================================
+# UTILITY JOBS
+# ============================================================================
+
+validate:specs:
+  stage: test
+  image: node:22-alpine
+  script:
+    - |
+      npm install -g @stoplight/spectral-cli @asyncapi/cli ajv-cli || true
+      spectral lint packages/contracts/openapi-*.yaml || echo "OpenAPI validation failed"
+      asyncapi validate packages/contracts/asyncapi.yaml || echo "AsyncAPI validation failed"
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+

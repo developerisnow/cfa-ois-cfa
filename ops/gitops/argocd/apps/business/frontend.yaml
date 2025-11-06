@@ -1,0 +1,108 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portal-issuer
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/portal-issuer
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portal-investor
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/portal-investor
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: broker-portal
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/broker-portal
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backoffice
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/backoffice
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+

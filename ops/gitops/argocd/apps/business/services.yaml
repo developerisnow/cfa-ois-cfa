@@ -1,0 +1,162 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: identity
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/identity
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: issuance
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/issuance
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: registry
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/registry
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: settlement
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/settlement
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: compliance
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/compliance
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bank-nominal
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: business
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/bank-nominal
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ois-cfa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+

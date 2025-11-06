@@ -1,0 +1,37 @@
+# Production environment values
+replicaCount: 3
+
+image:
+  tag: "prod"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: api.ois-cfa.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-gateway-tls-prod
+      hosts:
+        - api.ois-cfa.example.com
+
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Production"
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+

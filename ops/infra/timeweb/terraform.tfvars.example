@@ -1,0 +1,31 @@
+# Timeweb Cloud Configuration
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored and should not be committed
+
+twc_token = "your-timeweb-cloud-api-token-here"
+
+# Cluster configuration
+cluster_name     = "ois-cfa-k8s"
+cluster_location = "ru-1" # ru-1 (Moscow), ru-2 (St. Petersburg), ru-3 (Kazan)
+cluster_version  = "1.28"
+
+# Node group configuration
+node_group_name      = "ois-cfa-nodes"
+node_group_preset_id = 1 # Adjust based on your requirements (see Timeweb Cloud docs)
+node_count           = 3
+node_disk_size       = 50
+
+# Network configuration
+vpc_enabled = true
+vpc_name    = "ois-cfa-vpc"
+
+# Security
+firewall_enabled = true
+
+# GitLab Terraform State Backend (optional, can be set via env vars)
+# tf_http_address      = "https://gitlab.com/api/v4/projects/PROJECT_ID/terraform/state/STATE_NAME"
+# tf_http_lock_address = "https://gitlab.com/api/v4/projects/PROJECT_ID/terraform/state/STATE_NAME/lock"
+# tf_http_unlock_address = "https://gitlab.com/api/v4/projects/PROJECT_ID/terraform/state/STATE_NAME/lock"
+# tf_http_username     = "your-gitlab-username"
+# tf_http_password     = "your-gitlab-token"
+

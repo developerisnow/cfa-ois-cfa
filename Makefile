@@ -137,5 +137,132 @@ generate-sdks: ## Generate SDKs from OpenAPI specs
 	openapi-generator-cli generate -i packages/contracts/openapi-gateway.yaml -g typescript-fetch -o packages/sdks/typescript-gateway
 	@echo "SDKs generated in packages/sdks/"
 
+# Terraform targets for Timeweb Cloud
+TF_DIR := ops/infra/timeweb
+
+tf:init: ## Initialize Terraform (Timeweb Cloud)
+	@echo "Initializing Terraform..."
+	cd $(TF_DIR) && terraform init
+
+tf:validate: ## Validate Terraform configuration
+	@echo "Validating Terraform configuration..."
+	cd $(TF_DIR) && terraform validate
+
+tf:plan: ## Plan Terraform changes
+	@echo "Planning Terraform changes..."
+	cd $(TF_DIR) && terraform plan
+
+tf:apply: ## Apply Terraform configuration
+	@echo "Applying Terraform configuration..."
+	cd $(TF_DIR) && terraform apply
+
+tf:apply-auto: ## Apply Terraform configuration (auto-approve)
+	@echo "Applying Terraform configuration (auto-approve)..."
+	cd $(TF_DIR) && terraform apply -auto-approve
+
+tf:destroy: ## Destroy Terraform infrastructure
+	@echo "Destroying Terraform infrastructure..."
+	cd $(TF_DIR) && terraform destroy
+
+tf:output: ## Show Terraform outputs
+	@echo "Terraform outputs:"
+	cd $(TF_DIR) && terraform output
+
+tf:kubeconfig: ## Export kubeconfig from Terraform
+	@echo "Exporting kubeconfig..."
+	cd $(TF_DIR) && terraform output -raw kubeconfig > kubeconfig.yaml
+	@echo "Kubeconfig saved to $(TF_DIR)/kubeconfig.yaml"
+
+tf:refresh: ## Refresh Terraform state
+	@echo "Refreshing Terraform state..."
+	cd $(TF_DIR) && terraform refresh
+
+# Timeweb Cloud CLI targets
+twc:install: ## Install Timeweb Cloud CLI (twc)
+	@echo "Installing Timeweb Cloud CLI..."
+	./tools/timeweb/install.sh
+
+twc:cluster-list: ## List Timeweb Cloud Kubernetes clusters
+	@echo "Listing clusters..."
+	@which twc > /dev/null || (echo "Error: twc not installed. Run: make twc:install" && exit 1)
+	twc k8s cluster list
+
+twc:kubeconfig: ## Export kubeconfig using twc CLI
+	@echo "Exporting kubeconfig..."
+	@which twc > /dev/null || (echo "Error: twc not installed. Run: make twc:install" && exit 1)
+	@if [ -z "$$TWC_TOKEN" ]; then \
+		echo "Error: TWC_TOKEN not set. Export it first: export TWC_TOKEN='your-token'"; \
+		exit 1; \
+	fi
+	./tools/timeweb/kubeconfig-export.sh ois-cfa-k8s
+
+twc:verify: ## Verify twc CLI configuration
+	@echo "Verifying twc CLI configuration..."
+	@which twc > /dev/null || (echo "Error: twc not installed. Run: make twc:install" && exit 1)
+	@if [ -z "$$TWC_TOKEN" ]; then \
+		echo "Warning: TWC_TOKEN not set. Set it with: export TWC_TOKEN='your-token'"; \
+	fi
+	twc k8s cluster list || echo "Error: twc configuration failed. Check TWC_TOKEN."
+
+# GitOps targets (ArgoCD)
+argocd:install: ## Install ArgoCD via Helm
+	@echo "Installing ArgoCD..."
+	@which helm > /dev/null || (echo "Error: helm not installed" && exit 1)
+	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+	helm repo add argo https://argoproj.github.io/argo-helm
+	helm repo update
+	helm install argocd argo/argo-cd \
+		--namespace argocd \
+		--values ops/gitops/argocd/helm/values.yaml \
+		--wait
+	@echo "ArgoCD installed. Get admin password:"
+	@echo "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+
+argocd:uninstall: ## Uninstall ArgoCD
+	@echo "Uninstalling ArgoCD..."
+	helm uninstall argocd --namespace argocd || true
+	kubectl delete namespace argocd || true
+
+argocd:password: ## Get ArgoCD admin password
+	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
+
+argocd:bootstrap: ## Bootstrap ArgoCD with app-of-apps
+	@echo "Bootstrapping ArgoCD..."
+	kubectl apply -f ops/gitops/argocd/bootstrap/namespace.yaml
+	kubectl apply -f ops/gitops/argocd/config/projects.yaml
+	kubectl apply -f ops/gitops/argocd/config/rbac.yaml
+	kubectl apply -f ops/gitops/argocd/bootstrap/app-of-apps.yaml
+	@echo "ArgoCD bootstrapped. Check status: kubectl get applications -n argocd"
+
+argocd:status: ## Show ArgoCD applications status
+	@echo "ArgoCD Applications Status:"
+	@kubectl get applications -n argocd
+
+# GitOps targets (GitLab Agent)
+gitlab-agent:install: ## Install GitLab Kubernetes Agent
+	@echo "Installing GitLab Agent..."
+	@if [ -z "$$AGENT_TOKEN" ]; then \
+		echo "Error: AGENT_TOKEN not set. Get it from GitLab UI:"; \
+		echo "  Infrastructure → Kubernetes clusters → Add cluster → GitLab Agent"; \
+		exit 1; \
+	fi
+	@which helm > /dev/null || (echo "Error: helm not installed" && exit 1)
+	kubectl create namespace gitlab-agent --dry-run=client -o yaml | kubectl apply -f -
+	helm repo add gitlab https://charts.gitlab.io
+	helm repo update
+	helm install gitlab-agent gitlab/gitlab-agent \
+		--namespace gitlab-agent \
+		--create-namespace \
+		--set config.token=$$AGENT_TOKEN \
+		--set config.kasAddress=wss://gitlab.com/-/kubernetes-agent/
+	@echo "GitLab Agent installed. Check status: kubectl get pods -n gitlab-agent"
+
+gitlab-agent:status: ## Show GitLab Agent status
+	@echo "GitLab Agent Status:"
+	@kubectl get pods -n gitlab-agent
+	@echo ""
+	@echo "Agent logs:"
+	@kubectl logs -n gitlab-agent -l app=gitlab-agent --tail=20 || true
+
 .DEFAULT_GOAL := help
 
