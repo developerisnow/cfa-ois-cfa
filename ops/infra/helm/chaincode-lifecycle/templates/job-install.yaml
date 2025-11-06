@@ -1,0 +1,96 @@
+{{- range .Values.chaincode }}
+{{- $chaincode := . }}
+{{- range $.Values.peers }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-install-{{ $chaincode.name }}-{{ $chaincode.version }}-{{ .name }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "chaincode-lifecycle.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode-install
+    chaincode: {{ $chaincode.name }}
+    version: {{ $chaincode.version }}
+    peer: {{ .name }}
+spec:
+  ttlSecondsAfterFinished: {{ $.Values.job.ttlSecondsAfterFinished }}
+  backoffLimit: {{ $.Values.job.backoffLimit }}
+  activeDeadlineSeconds: {{ $.Values.job.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "chaincode-lifecycle.selectorLabels" $ | nindent 8 }}
+        chaincode: {{ $chaincode.name }}
+        peer: {{ .name }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: chaincode-lifecycle
+      containers:
+        - name: install
+          image: hyperledger/fabric-tools:2.5
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Installing chaincode {{ $chaincode.name }} v{{ $chaincode.version }} on {{ .name }}"
+              
+              # Wait for peer to be ready
+              until peer node status; do
+                echo "Waiting for peer {{ .name }} to be ready..."
+                sleep 5
+              done
+              
+              # Install chaincode
+              IMAGE_NAME="{{ $.Values.imageRegistry }}/{{ $.Values.imageNamespace }}/{{ $chaincode.name }}:{{ $chaincode.version }}"
+              echo "Installing chaincode from image: $IMAGE_NAME"
+              
+              peer lifecycle chaincode install $IMAGE_NAME || {
+                echo "Failed to install chaincode"
+                exit 1
+              }
+              
+              # Query installed chaincode to get package ID
+              PACKAGE_ID=$(peer lifecycle chaincode queryinstalled | grep -A 1 "{{ $chaincode.name }}" | grep "Package ID" | awk '{print $3}')
+              echo "Package ID: $PACKAGE_ID"
+              echo "$PACKAGE_ID" > /tmp/package-id.txt
+          env:
+            - name: CORE_PEER_LOCALMSPID
+              value: {{ .mspId | quote }}
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: "/etc/hyperledger/fabric/tls/ca.crt"
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: {{ $.Values.organization.mspPath | quote }}
+            - name: CORE_PEER_ADDRESS
+              value: "{{ .service }}.{{ $.Values.namespace }}.svc.cluster.local:{{ .port }}"
+          volumeMounts:
+            - name: msp
+              mountPath: {{ $.Values.organization.mspPath }}
+              readOnly: true
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+              readOnly: true
+            - name: package-id
+              mountPath: /tmp
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: msp
+          secret:
+            secretName: {{ $.Values.secrets.msp.name }}
+        - name: tls
+          secret:
+            secretName: {{ $.Values.secrets.tls.name }}
+        - name: package-id
+          emptyDir: {}
+{{- end }}
+{{- end }}
+

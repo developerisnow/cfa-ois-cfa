@@ -1,0 +1,22 @@
+# Development environment values for fabric-peer
+replicaCount: 2  # Minimum for HA
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+couchdb:
+  storage:
+    createPerReplica: false  # Shared PVC for dev
+    size: 20Gi
+
+storage:
+  size: 50Gi
+
+secrets:
+  type: "sealed-secrets"
+

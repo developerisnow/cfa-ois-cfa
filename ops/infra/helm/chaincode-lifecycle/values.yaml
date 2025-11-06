@@ -1,0 +1,65 @@
+# Chaincode lifecycle management values
+namespace: fabric-network
+
+# Orderer configuration
+orderer:
+  service: fabric-orderer
+  port: 7050
+  tls:
+    enabled: true
+    caCert: "/etc/hyperledger/fabric/orderer-tlsca.crt"
+
+# Peer configuration
+peers:
+  - name: peer0
+    service: fabric-peer
+    port: 7051
+    mspId: "OisDevMSP"
+  - name: peer1
+    service: fabric-peer
+    port: 7051
+    mspId: "OisDevMSP"
+
+# Organization MSP
+organization:
+  mspId: "OisDevMSP"
+  mspPath: "/etc/hyperledger/fabric/msp"
+
+# Chaincode definitions
+chaincode:
+  - name: issuance
+    version: "1.0"
+    sequence: 1
+    packageId: ""  # Will be set after install
+    channel: "cfa-main"
+    path: "github.com/chaincode/issuance"
+    lang: "golang"
+    initRequired: false
+  - name: registry
+    version: "1.0"
+    sequence: 1
+    packageId: ""  # Will be set after install
+    channel: "cfa-main"
+    path: "github.com/chaincode/registry"
+    lang: "golang"
+    initRequired: false
+
+# Image registry
+imageRegistry: registry.gitlab.com/ois-cfa/ois-cfa
+imageNamespace: fabric-chaincode
+
+# Secrets
+secrets:
+  msp:
+    name: fabric-peer-msp
+  tls:
+    name: fabric-peer-tls
+  ordererTls:
+    name: fabric-orderer-tls
+
+# Job configuration
+job:
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+

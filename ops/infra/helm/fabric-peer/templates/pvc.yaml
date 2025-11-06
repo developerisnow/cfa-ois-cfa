@@ -12,21 +12,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.size }}
----
-{{- if .Values.couchdb.storage.enabled }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "fabric-peer.fullname" . }}-couchdb-data
-  labels:
-    {{- include "fabric-peer.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.couchdb.storage.accessMode }}
-  storageClassName: {{ .Values.couchdb.storage.storageClass }}
-  resources:
-    requests:
-      storage: {{ .Values.couchdb.storage.size }}
 {{- end }}
-{{- end }}
+
+{{- /* CouchDB PVCs are in pvc-couchdb.yaml */ }}
 

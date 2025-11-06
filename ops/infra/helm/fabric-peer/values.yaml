@@ -1,5 +1,7 @@
 # Default values for fabric-peer
-replicaCount: 2
+# High Availability: minimum 2 peers per organization
+# For production: use 3+ peers for better fault tolerance
+replicaCount: 3  # 2 for dev, 3+ for prod
 
 image:
   repository: hyperledger/fabric-peer
@@ -133,6 +135,13 @@ secrets:
   tls:
     name: "fabric-peer-tls"
     key: "tls"
+  # Secrets rotation (Vault only)
+  rotation:
+    enabled: false
+    schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
+    vaultAddr: "https://vault.example.com"
+    vaultNamespace: "fabric"
+    vaultRole: "fabric-peer-rotation"
 
 # ServiceMonitor for Prometheus
 serviceMonitor:

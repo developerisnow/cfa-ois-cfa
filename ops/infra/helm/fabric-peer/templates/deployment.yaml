@@ -160,8 +160,15 @@ spec:
           {{- end }}
         - name: couchdb-data
           {{- if .Values.couchdb.storage.enabled }}
+          {{- if .Values.couchdb.storage.createPerReplica }}
+          # Note: For Deployment, use pod name hash; for StatefulSet use pod index
+          # This requires initContainer or use StatefulSet for peer
+          persistentVolumeClaim:
+            claimName: {{ include "fabric-peer.fullname" . }}-couchdb-data-shared
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ include "fabric-peer.fullname" . }}-couchdb-data
+          {{- end }}
           {{- else }}
           emptyDir: {}
           {{- end }}
