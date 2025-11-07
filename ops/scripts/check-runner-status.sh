@@ -14,14 +14,24 @@ echo ""
 KUBECONFIG_FILE="${KUBECONFIG:-}"
 if [ -z "${KUBECONFIG_FILE}" ] && [ -f "${PROJECT_ROOT}/ops/infra/timeweb/kubeconfig.yaml" ]; then
     KUBECONFIG_FILE="${PROJECT_ROOT}/ops/infra/timeweb/kubeconfig.yaml"
-    export KUBECONFIG="${KUBECONFIG_FILE}"
+elif [ -n "${KUBECONFIG_FILE}" ] && [ ! -f "${KUBECONFIG_FILE}" ]; then
+    # If relative path, try to resolve it
+    if [ ! "${KUBECONFIG_FILE}" = /* ]; then
+        ABS_PATH="${PROJECT_ROOT}/${KUBECONFIG_FILE}"
+        if [ -f "${ABS_PATH}" ]; then
+            KUBECONFIG_FILE="${ABS_PATH}"
+        fi
+    fi
 fi
 
-if [ -z "${KUBECONFIG_FILE}" ]; then
-    echo "⚠ Warning: KUBECONFIG not set"
+if [ -z "${KUBECONFIG_FILE}" ] || [ ! -f "${KUBECONFIG_FILE}" ]; then
+    echo "⚠ Warning: KUBECONFIG not set or file not found"
     echo "Set it with: export KUBECONFIG=\$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
     echo "Or run: make setup-kubeconfig"
     echo ""
+    if [ -z "${KUBECONFIG_FILE}" ]; then
+        exit 1
+    fi
 else
     export KUBECONFIG="${KUBECONFIG_FILE}"
     echo "✓ Using KUBECONFIG: ${KUBECONFIG_FILE}"

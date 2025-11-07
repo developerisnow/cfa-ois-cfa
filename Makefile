@@ -372,7 +372,8 @@ gitlab-runner-update-token: ## Update GitLab Runner registration token (requires
 		exit 1; \
 	}; \
 	echo "Updating GitLab Runner token..."; \
-	sed "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+	sed -e "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+		-e "s/token = \".*\"/token = \"$$RUNNER_TOKEN\"/g" \
 		ops/infra/k8s/gitlab-runner/configmap.yaml | \
 		KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
 	echo "Restarting pods to apply new token..."; \
