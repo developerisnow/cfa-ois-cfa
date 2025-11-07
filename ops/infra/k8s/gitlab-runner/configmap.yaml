@@ -12,8 +12,11 @@ data:
     [[runners]]
       name = "ois-cfa-runner"
       url = "https://git.telex.global"
-      token = "__REPLACE_WITH_RUNNER_TOKEN__"
+      token = "cPDzzzSGwnm3MRfocHyx"
       executor = "kubernetes"
+      # Force re-registration: uncomment to force runner to re-register
+      # This will cause runner to ignore saved authentication token
+      # locked = false
       # No tags specified - can run any job
       # If you need tags, add: tags = ["docker", "kubernetes", "kubectl"]
       [runners.kubernetes]
@@ -38,6 +41,7 @@ data:
             name = "docker-sock"
             mount_path = "/var/run/docker.sock"
             host_path = "/var/run/docker.sock"
+            mount_propagation = "None"
         # Persistent volumes for build cache
         [runners.kubernetes.pod_annotations]
           "prometheus.io/scrape" = "true"

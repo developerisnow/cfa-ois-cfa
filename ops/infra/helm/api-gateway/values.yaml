@@ -38,14 +38,14 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
   hosts:
-    - host: api.ois-cfa.example.com
+    - host: api.cfa.capital
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: api-gateway-tls
       hosts:
-        - api.ois-cfa.example.com
+        - api.cfa.capital
 
 resources:
   limits:

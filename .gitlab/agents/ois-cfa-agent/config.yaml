@@ -1,0 +1,45 @@
+# GitLab Agent configuration for OIS-CFA
+# Place this file at: .gitlab/agents/ois-cfa-agent/config.yaml
+
+gitops:
+  manifest_projects:
+    # System manifests (order: 1)
+    - id: ois-cfa/ois-cfa
+      default_namespace: default
+      paths:
+        - glob: 'ops/gitops/gitlab-agent/manifests/system/**'
+      sync_policy:
+        order: 1
+        prune: true
+        self_heal: true
+
+    # Platform manifests (order: 2, depends on system)
+    - id: ois-cfa/ois-cfa
+      default_namespace: default
+      paths:
+        - glob: 'ops/gitops/gitlab-agent/manifests/platform/**'
+      sync_policy:
+        order: 2
+        prune: true
+        self_heal: true
+        depends_on:
+          - 'ops/gitops/gitlab-agent/manifests/system/**'
+
+    # Business manifests (order: 3, depends on platform)
+    - id: ois-cfa/ois-cfa
+      default_namespace: default
+      paths:
+        - glob: 'ops/gitops/gitlab-agent/manifests/business/**'
+      sync_policy:
+        order: 3
+        prune: true
+        self_heal: true
+        depends_on:
+          - 'ops/gitops/gitlab-agent/manifests/platform/**'
+
+# CI/CD access (optional)
+ci_access:
+  projects:
+    - id: ois-cfa/ois-cfa
+      default_namespace: default
+

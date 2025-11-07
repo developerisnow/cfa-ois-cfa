@@ -392,6 +392,9 @@ setup-kubeconfig: ## Setup kubeconfig for Kubernetes cluster
 check-runner-status: ## Check GitLab Runner status and configuration
 	@./ops/scripts/check-runner-status.sh
 
+install-helm: ## Install Helm package manager
+	@./ops/scripts/install-helm.sh
+
 gitlab-runner-scale: ## Scale GitLab Runner replicas (usage: make gitlab-runner-scale REPLICAS=5)
 	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
 	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
@@ -417,15 +420,34 @@ gitlab-agent-install: ## Install GitLab Kubernetes Agent
 		echo "  Infrastructure → Kubernetes clusters → Add cluster → GitLab Agent"; \
 		exit 1; \
 	fi
-	@which helm > /dev/null || (echo "Error: helm not installed" && exit 1)
-	kubectl create namespace gitlab-agent --dry-run=client -o yaml | kubectl apply -f -
-	helm repo add gitlab https://charts.gitlab.io
-	helm repo update
-	helm install gitlab-agent gitlab/gitlab-agent \
+	@HELM_CMD=""; \
+	export PATH="$${PATH}:$${HOME}/.local/bin"; \
+	if command -v helm &> /dev/null; then \
+		HELM_CMD="helm"; \
+	elif [ -f "$${HOME}/.local/bin/helm" ]; then \
+		HELM_CMD="$${HOME}/.local/bin/helm"; \
+	else \
+		echo "Error: helm not installed"; \
+		echo "Install helm: make install-helm"; \
+		echo "Or: ./ops/scripts/install-helm.sh"; \
+		exit 1; \
+	fi; \
+	KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl create namespace gitlab-agent --dry-run=client -o yaml | KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
+	$$HELM_CMD repo add gitlab https://charts.gitlab.io || true; \
+	$$HELM_CMD repo update; \
+	$$HELM_CMD install gitlab-agent gitlab/gitlab-agent \
 		--namespace gitlab-agent \
 		--create-namespace \
 		--set config.token=$$AGENT_TOKEN \
-		--set config.kasAddress=wss://gitlab.com/-/kubernetes-agent/
+		--set config.kasAddress=wss://git.telex.global/-/kubernetes-agent/ || \
+	$$HELM_CMD upgrade gitlab-agent gitlab/gitlab-agent \
+		--namespace gitlab-agent \
+		--set config.token=$$AGENT_TOKEN \
+		--set config.kasAddress=wss://git.telex.global/-/kubernetes-agent/
 	@echo "GitLab Agent installed. Check status: kubectl get pods -n gitlab-agent"
 
 gitlab-agent-status: ## Show GitLab Agent status

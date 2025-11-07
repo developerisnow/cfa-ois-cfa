@@ -7,14 +7,14 @@ image:
 ingress:
   enabled: true
   hosts:
-    - host: api.ois-cfa.example.com
+    - host: api.cfa.capital
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: api-gateway-tls-prod
       hosts:
-        - api.ois-cfa.example.com
+        - api.cfa.capital
 
 env:
   - name: ASPNETCORE_ENVIRONMENT

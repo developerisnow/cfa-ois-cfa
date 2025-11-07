@@ -352,7 +352,8 @@ deploy:dev:
   <<: *deploy_gitlab_agent_template
   environment:
     name: dev
-    url: https://dev.ois-cfa.example.com
+    url: http://217.25.93.83
+    deployment_tier: development
     on_stop: stop:dev
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^feature\//'

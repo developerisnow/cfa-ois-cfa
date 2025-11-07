@@ -64,4 +64,7 @@ spec:
         - name: config
           configMap:
             name: gitlab-runner-config
+            items:
+              - key: config.toml
+                path: config.toml
 
