@@ -452,23 +452,18 @@ debug:deploy:
   variables:
     KUBECONFIG: "${KUBECONFIG:-}"
   before_script:
-    # Check if kubeconfig is available
     - |
       if [ -z "${KUBECONFIG:-}" ]; then
-        echo "Warning: KUBECONFIG not set. Trying to use default locations..."
         if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
           export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
-          echo "Using kubeconfig from: ${KUBECONFIG}"
         elif [ -f "${HOME}/.kube/config" ]; then
           export KUBECONFIG="${HOME}/.kube/config"
-          echo "Using kubeconfig from: ${KUBECONFIG}"
         else
-          echo "Error: KUBECONFIG not found. Please set KUBECONFIG variable or ensure kubeconfig.yaml exists."
-          echo "To setup kubeconfig: make setup-kubeconfig"
+          echo "Error: KUBECONFIG not found. Set KUBECONFIG variable or ensure kubeconfig.yaml exists."
           exit 1
         fi
       fi
-    - kubectl cluster-info || (echo "Error: Cannot connect to cluster. Check KUBECONFIG." && exit 1)
+    - 'kubectl cluster-info || (echo "Error: Cannot connect to cluster. Check KUBECONFIG." && exit 1)'
   script:
     - kubectl apply -f ops/debug/namespace.yaml
     - kubectl apply -f ops/debug/serviceaccount.yaml
@@ -501,7 +496,7 @@ debug:collect-logs:
           exit 1
         fi
       fi
-    - kubectl cluster-info || exit 1
+    - 'kubectl cluster-info || exit 1'
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/logs-collect.sh $NAMESPACES || \
@@ -545,7 +540,7 @@ debug:events:
           exit 1
         fi
       fi
-    - kubectl cluster-info || exit 1
+    - 'kubectl cluster-info || exit 1'
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/events-dump.sh || \
@@ -586,7 +581,7 @@ debug:argo-status:
           exit 1
         fi
       fi
-    - kubectl cluster-info || exit 1
+    - 'kubectl cluster-info || exit 1'
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/argo-status.sh || \
@@ -628,7 +623,7 @@ k8s:healthcheck:
           exit 1
         fi
       fi
-    - kubectl cluster-info || exit 1
+    - 'kubectl cluster-info || exit 1'
   script:
     - |
       # Install required tools
