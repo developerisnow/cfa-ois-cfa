@@ -542,3 +542,35 @@ debug:argo-status:
     - if: '$CI_PIPELINE_SOURCE == "web"'
   when: manual
 
+# Kubernetes health check job
+k8s:healthcheck:
+  stage: test
+  image: bitnami/kubectl:1.30
+  script:
+    - |
+      # Install required tools
+      apt-get update && apt-get install -y curl jq || apk add --no-cache curl jq || true
+    - |
+      # Run health check
+      ./ops/scripts/k8s-healthcheck.sh || true
+    - |
+      # Copy reports to artifacts
+      mkdir -p artifacts
+      cp /tmp/artifacts/healthcheck-*.html artifacts/ || true
+      cp /tmp/artifacts/healthcheck-*.json artifacts/ || true
+      ls -la artifacts/
+  artifacts:
+    when: always
+    paths:
+      - artifacts/healthcheck-*.html
+      - artifacts/healthcheck-*.json
+    expire_in: 1 week
+    reports:
+      # GitLab will show the HTML report in the UI
+      html: artifacts/healthcheck-*.html
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  when: manual
+

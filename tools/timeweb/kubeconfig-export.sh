@@ -22,12 +22,16 @@ if ! command -v twc &> /dev/null; then
     fi
 fi
 
-# Check if TWC_TOKEN is set
+# Check if TWC_TOKEN is set or twc is configured
 if [ -z "${TWC_TOKEN:-}" ]; then
-    echo "Error: TWC_TOKEN environment variable is not set."
-    echo "Set it with: export TWC_TOKEN='your-token-here'"
-    echo "Or configure twc: twc config set token <your-token>"
-    exit 1
+    # Check if twc can work without explicit token (may be configured via twc config)
+    if ! twc k8s list &>/dev/null; then
+        echo "Error: TWC_TOKEN environment variable is not set and twc config is not configured."
+        echo "Set it with: export TWC_TOKEN='your-token-here'"
+        echo "Or configure twc: twc config set token <your-token>"
+        exit 1
+    fi
+    # twc is configured, continue without TWC_TOKEN
 fi
 
 echo "Exporting kubeconfig for cluster: ${CLUSTER_NAME}"
@@ -35,12 +39,21 @@ echo "Output file: ${OUTPUT_FILE}"
 
 # Get cluster ID by name
 echo "Finding cluster ID..."
-CLUSTER_ID=$(twc k8s cluster list --format json | jq -r ".[] | select(.name == \"${CLUSTER_NAME}\") | .id")
+
+# Try with jq first (if available)
+if command -v jq &> /dev/null; then
+    CLUSTER_ID=$(twc k8s list --output json 2>/dev/null | jq -r ".clusters[]? | select(.name == \"${CLUSTER_NAME}\") | .id" 2>/dev/null || echo "")
+else
+    # Fallback: parse table output
+    CLUSTER_ID=$(twc k8s list 2>/dev/null | grep -E "^\s*[0-9]+\s+${CLUSTER_NAME}\s+" | awk '{print $1}' | head -1 || echo "")
+fi
 
 if [ -z "${CLUSTER_ID}" ] || [ "${CLUSTER_ID}" == "null" ]; then
     echo "Error: Cluster '${CLUSTER_NAME}' not found."
     echo "Available clusters:"
-    twc k8s cluster list
+    twc k8s list
+    echo ""
+    echo "Tip: Install jq for better parsing: sudo apt install jq"
     exit 1
 fi
 
@@ -48,7 +61,12 @@ echo "Found cluster ID: ${CLUSTER_ID}"
 
 # Export kubeconfig
 echo "Exporting kubeconfig..."
-twc k8s cluster get-kubeconfig "${CLUSTER_ID}" > "${OUTPUT_FILE}"
+if ! twc k8s kubeconfig "${CLUSTER_ID}" > "${OUTPUT_FILE}" 2>&1; then
+    echo "Error: Failed to export kubeconfig"
+    echo "Cluster ID: ${CLUSTER_ID}"
+    echo "Check twc CLI version and permissions"
+    exit 1
+fi
 
 if [ $? -eq 0 ]; then
     echo "✓ Kubeconfig exported successfully to ${OUTPUT_FILE}"

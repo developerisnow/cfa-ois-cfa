@@ -184,3 +184,45 @@ data:
     done
     
     echo "Status saved to: ${OUTPUT_FILE}"
+  
+  k8s-healthcheck.sh: |
+    #!/bin/bash
+    # Kubernetes Cluster Health Check (for debug toolbox)
+    # This is a simplified version that runs inside the debug pod
+    
+    set -euo pipefail
+    
+    OUTPUT_DIR="${OUTPUT_DIR:-/tmp/k8s-healthcheck}"
+    ARTIFACTS_DIR="${ARTIFACTS_DIR:-/tmp/artifacts}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    
+    mkdir -p "${OUTPUT_DIR}"
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    echo "=== Kubernetes Cluster Health Check ==="
+    echo "Timestamp: ${TIMESTAMP}"
+    echo ""
+    
+    # Run the main healthcheck script if available
+    if [ -f "/scripts/k8s-healthcheck.sh" ]; then
+        /scripts/k8s-healthcheck.sh
+    else
+        echo "Full healthcheck script not available in debug pod"
+        echo "Running basic checks..."
+        
+        # Basic checks
+        echo "Nodes:"
+        kubectl get nodes || true
+        
+        echo ""
+        echo "System pods:"
+        kubectl get pods -n kube-system || true
+        
+        echo ""
+        echo "Ingress controller:"
+        kubectl get pods -n ingress-nginx || echo "Ingress namespace not found"
+        
+        echo ""
+        echo "Cert-Manager:"
+        kubectl get pods -n cert-manager || echo "Cert-Manager namespace not found"
+    fi

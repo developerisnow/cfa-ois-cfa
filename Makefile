@@ -181,7 +181,7 @@ twc-install: ## Install Timeweb Cloud CLI (twc)
 twc-cluster-list: ## List Timeweb Cloud Kubernetes clusters
 	@echo "Listing clusters..."
 	@which twc > /dev/null || (echo "Error: twc not installed. Run: make twc-install" && exit 1)
-	twc k8s cluster list
+	@export PATH="${HOME}/.local/bin:${PATH}" && twc k8s list
 
 twc-kubeconfig: ## Export kubeconfig using twc CLI
 	@echo "Exporting kubeconfig..."
@@ -195,10 +195,11 @@ twc-kubeconfig: ## Export kubeconfig using twc CLI
 twc-verify: ## Verify twc CLI configuration
 	@echo "Verifying twc CLI configuration..."
 	@which twc > /dev/null || (echo "Error: twc not installed. Run: make twc-install" && exit 1)
-	@if [ -z "$$TWC_TOKEN" ]; then \
+	@export PATH="${HOME}/.local/bin:${PATH}" && \
+	if [ -z "$$TWC_TOKEN" ]; then \
 		echo "Warning: TWC_TOKEN not set. Set it with: export TWC_TOKEN='your-token'"; \
-	fi
-	twc k8s cluster list || echo "Error: twc configuration failed. Check TWC_TOKEN."
+	fi && \
+	twc k8s list || echo "Error: twc configuration failed. Check TWC_TOKEN."
 
 # GitOps targets (ArgoCD)
 argocd-install: ## Install ArgoCD via Helm
@@ -233,6 +234,176 @@ argocd-bootstrap: ## Bootstrap ArgoCD with app-of-apps
 argocd-status: ## Show ArgoCD applications status
 	@echo "ArgoCD Applications Status:"
 	@kubectl get applications -n argocd
+
+# GitLab Runner targets
+gitlab-runner-install: ## Install GitLab Runner in Kubernetes
+	@echo "Installing GitLab Runner..."
+	@if [ -z "$$RUNNER_TOKEN" ]; then \
+		echo "Error: RUNNER_TOKEN not set. Get it from GitLab UI:"; \
+		echo "  Settings → CI/CD → Runners → Registration token"; \
+		echo "  Or run: make gitlab-runner-get-token"; \
+		exit 1; \
+	fi
+	@which kubectl > /dev/null || (echo "Error: kubectl not installed" && exit 1)
+	@echo "Checking kubeconfig..."
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+		echo "KUBECONFIG not set, using $$KUBECONFIG_FILE"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Kubeconfig not configured."; \
+		echo ""; \
+		echo "To configure kubeconfig:"; \
+		echo "  1. Run: make setup-kubeconfig"; \
+		echo "  2. Or manually: export KUBECONFIG=\$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+		echo "  3. Verify: kubectl get nodes"; \
+		echo ""; \
+		echo "Or see: docs/ops/timeweb/kubeconfig.md"; \
+		exit 1; \
+	}
+	@echo "Applying GitLab Runner manifests..."
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/namespace.yaml; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/rbac.yaml; \
+	sed "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+		ops/infra/k8s/gitlab-runner/configmap.yaml | KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/deployment.yaml; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/service.yaml
+	@echo "GitLab Runner installed. Waiting for pods..."
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl wait --for=condition=Ready pod -l app=gitlab-runner -n gitlab-runner --timeout=120s || echo "Pods may still be starting"
+	@echo "Check status: make gitlab-runner-status"
+
+gitlab-runner-status: ## Show GitLab Runner status
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Run: make setup-kubeconfig"; \
+		exit 1; \
+	}; \
+	echo "GitLab Runner Status:"; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl get pods -n gitlab-runner; \
+	echo ""; \
+	echo "Runner logs (last 20 lines):"; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl logs -n gitlab-runner -l app=gitlab-runner --tail=20 || true
+	@echo ""
+	@echo "Check runners in GitLab UI:"
+	@echo "  Settings → CI/CD → Runners"
+
+gitlab-runner-logs: ## Show GitLab Runner logs
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Run: make setup-kubeconfig"; \
+		exit 1; \
+	}; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl logs -n gitlab-runner -l app=gitlab-runner -f
+
+gitlab-runner-restart: ## Restart GitLab Runner deployment
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Run: make setup-kubeconfig"; \
+		exit 1; \
+	}; \
+	echo "Restarting GitLab Runner..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl rollout restart deployment/gitlab-runner -n gitlab-runner; \
+	echo "Waiting for rollout..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl rollout status deployment/gitlab-runner -n gitlab-runner
+
+gitlab-runner-uninstall: ## Uninstall GitLab Runner
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Warning: kubectl cannot connect to cluster. Skipping uninstall."; \
+		exit 0; \
+	}; \
+	echo "Uninstalling GitLab Runner..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete deployment gitlab-runner -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete service gitlab-runner -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete configmap gitlab-runner-config -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete rolebinding gitlab-runner -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete role gitlab-runner -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete serviceaccount gitlab-runner -n gitlab-runner || true; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl delete namespace gitlab-runner || true; \
+	echo "GitLab Runner uninstalled"
+
+gitlab-runner-get-token: ## Show instructions to get GitLab Runner registration token
+	@echo "To get GitLab Runner registration token:"
+	@echo "1. Open GitLab UI: https://git.telex.global/npk/ois-cfa/-/settings/ci_cd"
+	@echo "2. Expand 'Runners' section"
+	@echo "3. Copy 'Registration token'"
+	@echo ""
+	@echo "Or use group/instance runner token:"
+	@echo "  Settings → CI/CD → Runners → Expand 'Runners' → Registration token"
+	@echo ""
+	@echo "After getting token, update runner:"
+	@echo "  export RUNNER_TOKEN='your-token'"
+	@echo "  make gitlab-runner-update-token"
+
+gitlab-runner-update-token: ## Update GitLab Runner registration token (requires RUNNER_TOKEN)
+	@if [ -z "$$RUNNER_TOKEN" ]; then \
+		echo "Error: RUNNER_TOKEN not set"; \
+		echo "Get token: make gitlab-runner-get-token"; \
+		echo "Then: export RUNNER_TOKEN='your-token'"; \
+		exit 1; \
+	fi
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Run: make setup-kubeconfig"; \
+		exit 1; \
+	}; \
+	echo "Updating GitLab Runner token..."; \
+	sed "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+		ops/infra/k8s/gitlab-runner/configmap.yaml | \
+		KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
+	echo "Restarting pods to apply new token..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl rollout restart deployment/gitlab-runner -n gitlab-runner; \
+	echo "Waiting for rollout..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl rollout status deployment/gitlab-runner -n gitlab-runner --timeout=120s || echo "Rollout may still be in progress"; \
+	echo ""; \
+	echo "✓ Token updated. Check status: make gitlab-runner-status"
+
+check-kubeconfig: ## Check if kubeconfig is configured
+	@./ops/scripts/check-kubeconfig.sh
+
+setup-kubeconfig: ## Setup kubeconfig for Kubernetes cluster
+	@./ops/scripts/setup-kubeconfig.sh
+
+gitlab-runner-scale: ## Scale GitLab Runner replicas (usage: make gitlab-runner-scale REPLICAS=5)
+	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
+	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \
+		KUBECONFIG_FILE="$$(pwd)/ops/infra/timeweb/kubeconfig.yaml"; \
+	fi; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl cluster-info &>/dev/null || { \
+		echo "Error: kubectl cannot connect to cluster. Run: make setup-kubeconfig"; \
+		exit 1; \
+	}; \
+	if [ -z "$$REPLICAS" ]; then \
+		echo "Error: REPLICAS not set. Usage: make gitlab-runner-scale REPLICAS=5"; \
+		exit 1; \
+	fi; \
+	echo "Scaling GitLab Runner to $$REPLICAS replicas..."; \
+	KUBECONFIG="$$KUBECONFIG_FILE" kubectl scale deployment gitlab-runner -n gitlab-runner --replicas=$$REPLICAS; \
+	echo "Scaled to $$REPLICAS replicas"
 
 # GitOps targets (GitLab Agent)
 gitlab-agent-install: ## Install GitLab Kubernetes Agent
@@ -304,6 +475,21 @@ debug-remove: ## Remove debug toolbox
 	kubectl delete clusterrolebinding debug-toolbox || true
 	kubectl delete clusterrole debug-toolbox || true
 	@echo "Debug toolbox removed"
+
+# Kubernetes health check targets
+k8s-healthcheck: ## Run Kubernetes cluster health check
+	@echo "Running Kubernetes cluster health check..."
+	@./ops/scripts/k8s-healthcheck.sh
+	@echo "Health check report generated in artifacts/"
+
+k8s-healthcheck-debug: ## Run health check from debug toolbox pod
+	@echo "Running health check from debug toolbox..."
+	@kubectl exec -n tools debug-toolbox -- /scripts/k8s-healthcheck.sh || \
+		(echo "Debug pod not found, deploying..." && \
+		 make debug-deploy && \
+		 kubectl cp ops/scripts/k8s-healthcheck.sh tools/debug-toolbox:/scripts/k8s-healthcheck.sh && \
+		 kubectl exec -n tools debug-toolbox -- chmod +x /scripts/k8s-healthcheck.sh && \
+		 kubectl exec -n tools debug-toolbox -- /scripts/k8s-healthcheck.sh)
 
 .DEFAULT_GOAL := help
 

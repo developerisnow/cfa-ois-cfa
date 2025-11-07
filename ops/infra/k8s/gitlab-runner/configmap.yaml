@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-runner-config
+  namespace: gitlab-runner
+data:
+  config.toml: |
+    concurrent = 10
+    check_interval = 3
+    log_level = "info"
+
+    [[runners]]
+      name = "ois-cfa-runner"
+      url = "https://git.telex.global"
+      token = "__REPLACE_WITH_RUNNER_TOKEN__"
+      executor = "kubernetes"
+      [runners.kubernetes]
+        namespace = "gitlab-runner"
+        image = "alpine:latest"
+        privileged = true
+        cpu_limit = "2"
+        memory_limit = "4Gi"
+        cpu_request = "500m"
+        memory_request = "1Gi"
+        service_cpu_limit = "1"
+        service_memory_limit = "2Gi"
+        service_cpu_request = "100m"
+        service_memory_request = "256Mi"
+        helper_cpu_limit = "500m"
+        helper_memory_limit = "1Gi"
+        helper_cpu_request = "100m"
+        helper_memory_request = "128Mi"
+        # Docker-in-Docker support
+        [runners.kubernetes.volumes]
+          [[runners.kubernetes.volumes.host_path]]
+            name = "docker-sock"
+            mount_path = "/var/run/docker.sock"
+            host_path = "/var/run/docker.sock"
+        # Persistent volumes for build cache
+        [runners.kubernetes.pod_annotations]
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port" = "9252"
+          "prometheus.io/path" = "/metrics"
+        # Node selector (optional)
+        # [runners.kubernetes.node_selector]
+        #   "kubernetes.io/os" = "linux"
+        # Tolerations (optional)
+        # [[runners.kubernetes.tolerations]]
+        #   key = "gitlab-runner"
+        #   operator = "Equal"
+        #   value = "true"
+        #   effect = "NoSchedule"
+      [runners.cache]
+        Type = "s3"
+        ServerAddress = "s3.amazonaws.com"
+        BucketName = "__REPLACE_WITH_S3_BUCKET__"
+        BucketLocation = "us-east-1"
+        Insecure = false
+        Shared = true
+        # Optional: S3 credentials via environment variables
+        # [runners.cache.s3]
+        #   ServerAddress = "s3.amazonaws.com"
+        #   AccessKey = "__REPLACE_WITH_ACCESS_KEY__"
+        #   SecretKey = "__REPLACE_WITH_SECRET_KEY__"
+

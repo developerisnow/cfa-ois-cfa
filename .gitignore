@@ -85,3 +85,5 @@ packages/sdks/**/node_modules/
 .cursor/
 tasks/
 artefact/
+ARCHIVE/
+artifacts/
