@@ -565,9 +565,8 @@ k8s:healthcheck:
       - artifacts/healthcheck-*.html
       - artifacts/healthcheck-*.json
     expire_in: 1 week
-    reports:
-      # GitLab will show the HTML report in the UI
-      html: artifacts/healthcheck-*.html
+    # Note: HTML reports are saved as regular artifacts
+    # Download and open healthcheck-report-*.html in browser to view
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_MERGE_REQUEST_IID'
