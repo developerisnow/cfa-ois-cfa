@@ -1,0 +1,186 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: debug-scripts
+  namespace: tools
+  labels:
+    app: debug-toolbox
+data:
+  install-tools.sh: |
+    #!/bin/bash
+    # Install additional tools in debug pod
+    
+    set -euo pipefail
+    
+    echo "=== Installing debug tools ==="
+    
+    # Install jq
+    if ! command -v jq &> /dev/null; then
+      apt-get update && apt-get install -y jq || \
+      apk add jq || \
+      yum install -y jq || \
+      curl -L https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64 -o /usr/local/bin/jq && chmod +x /usr/local/bin/jq
+    fi
+    
+    # Install GitLab CLI (glab)
+    if ! command -v glab &> /dev/null; then
+      GLAB_VERSION="1.33.0"
+      curl -L "https://github.com/profclems/glab/releases/download/v${GLAB_VERSION}/glab_${GLAB_VERSION}_Linux_x86_64.tar.gz" -o /tmp/glab.tar.gz
+      tar -xzf /tmp/glab.tar.gz -C /tmp
+      mv /tmp/bin/glab /usr/local/bin/glab
+      chmod +x /usr/local/bin/glab
+      rm -rf /tmp/glab.tar.gz /tmp/bin
+    fi
+    
+    # Configure glab if token is available
+    if [ -n "${GITLAB_TOKEN:-}" ] && [ -n "${GITLAB_HOST:-}" ]; then
+      glab auth login --token "${GITLAB_TOKEN}" --hostname "${GITLAB_HOST}" || true
+    fi
+    
+    # Install yq
+    if ! command -v yq &> /dev/null; then
+      YQ_VERSION="v4.40.5"
+      curl -L "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" -o /usr/local/bin/yq
+      chmod +x /usr/local/bin/yq
+    fi
+    
+    echo "Tools installation completed"
+  
+  logs-collect.sh: |
+    #!/bin/bash
+    # Collect logs from pods in specified namespaces
+    # Usage: ./logs-collect.sh [namespace1] [namespace2] ...
+    
+    set -euo pipefail
+    
+    OUTPUT_DIR="${OUTPUT_DIR:-/tmp/logs-collect}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    ARTIFACTS_DIR="${ARTIFACTS_DIR:-/tmp/artifacts}"
+    
+    # Default namespaces if not provided
+    NAMESPACES="${@:-fabric-network ois-cfa argocd keycloak monitoring}"
+    
+    echo "=== Collecting logs ==="
+    echo "Namespaces: ${NAMESPACES}"
+    echo "Output directory: ${OUTPUT_DIR}"
+    
+    mkdir -p "${OUTPUT_DIR}"
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    for namespace in ${NAMESPACES}; do
+      echo ""
+      echo "Processing namespace: ${namespace}"
+      
+      if ! kubectl get namespace "${namespace}" &>/dev/null; then
+        echo "Warning: Namespace ${namespace} does not exist, skipping"
+        continue
+      fi
+      
+      NS_DIR="${OUTPUT_DIR}/${namespace}"
+      mkdir -p "${NS_DIR}"
+      
+      PODS=$(kubectl get pods -n "${namespace}" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+      
+      if [ -z "${PODS}" ]; then
+        echo "No pods found in namespace ${namespace}"
+        continue
+      fi
+      
+      for pod in ${PODS}; do
+        echo "  Collecting logs for pod: ${pod}"
+        kubectl logs -n "${namespace}" "${pod}" --all-containers=true --timestamps=true > "${NS_DIR}/${pod}.log" 2>&1 || true
+        kubectl describe pod -n "${namespace}" "${pod}" > "${NS_DIR}/${pod}.describe.txt" 2>&1 || true
+        kubectl get pod -n "${namespace}" "${pod}" -o yaml > "${NS_DIR}/${pod}.yaml" 2>&1 || true
+      done
+      
+      kubectl get events -n "${namespace}" --sort-by='.lastTimestamp' > "${NS_DIR}/events.txt" 2>&1 || true
+      kubectl get all -n "${namespace}" > "${NS_DIR}/resources.txt" 2>&1 || true
+    done
+    
+    ARCHIVE_NAME="logs-${TIMESTAMP}.tar.gz"
+    cd "${OUTPUT_DIR}"
+    tar -czf "${ARTIFACTS_DIR}/${ARCHIVE_NAME}" . 2>/dev/null || cp -r "${OUTPUT_DIR}"/* "${ARTIFACTS_DIR}/" || true
+    
+    echo "Logs collected: ${ARTIFACTS_DIR}/${ARCHIVE_NAME}"
+  
+  events-dump.sh: |
+    #!/bin/bash
+    # Dump all Kubernetes events sorted by timestamp
+    
+    set -euo pipefail
+    
+    OUTPUT_FILE="${1:-/tmp/events.txt}"
+    ARTIFACTS_DIR="${ARTIFACTS_DIR:-/tmp/artifacts}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    
+    echo "=== Dumping Kubernetes events ==="
+    mkdir -p "$(dirname "${OUTPUT_FILE}")"
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    kubectl get events -A --sort-by='.lastTimestamp' > "${OUTPUT_FILE}" 2>&1 || exit 1
+    
+    echo "Total events: $(wc -l < "${OUTPUT_FILE}" | tr -d ' ')"
+    echo "Warning events: $(grep -c "Warning" "${OUTPUT_FILE}" || echo "0")"
+    
+    cp "${OUTPUT_FILE}" "${ARTIFACTS_DIR}/events-${TIMESTAMP}.txt"
+    echo "Events dumped: ${ARTIFACTS_DIR}/events-${TIMESTAMP}.txt"
+  
+  argo-status.sh: |
+    #!/bin/bash
+    # Check ArgoCD applications status
+    
+    set -euo pipefail
+    
+    ARTIFACTS_DIR="${ARTIFACTS_DIR:-/tmp/artifacts}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    OUTPUT_FILE="${ARTIFACTS_DIR}/argocd-status-${TIMESTAMP}.txt"
+    
+    echo "=== ArgoCD Status Check ==="
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    if ! kubectl get namespace argocd &>/dev/null; then
+      echo "ArgoCD is not installed" > "${OUTPUT_FILE}"
+      exit 1
+    fi
+    
+    echo "=== ArgoCD Applications ===" | tee "${OUTPUT_FILE}"
+    kubectl get applications -n argocd -o wide | tee -a "${OUTPUT_FILE}"
+    
+    echo "" | tee -a "${OUTPUT_FILE}"
+    echo "=== Detailed Status ===" | tee -a "${OUTPUT_FILE}"
+    for app in $(kubectl get applications -n argocd -o jsonpath='{.items[*].metadata.name}'); do
+      echo "" | tee -a "${OUTPUT_FILE}"
+      echo "Application: ${app}" | tee -a "${OUTPUT_FILE}"
+      kubectl get application "${app}" -n argocd -o yaml | tee -a "${OUTPUT_FILE}" || true
+    done
+    
+    echo "Status saved to: ${OUTPUT_FILE}"
+  
+  agent-status.sh: |
+    #!/bin/bash
+    # Check GitLab Agent status
+    
+    set -euo pipefail
+    
+    ARTIFACTS_DIR="${ARTIFACTS_DIR:-/tmp/artifacts}"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    OUTPUT_FILE="${ARTIFACTS_DIR}/gitlab-agent-status-${TIMESTAMP}.txt"
+    
+    echo "=== GitLab Agent Status Check ==="
+    mkdir -p "${ARTIFACTS_DIR}"
+    
+    if ! kubectl get namespace gitlab-agent &>/dev/null; then
+      echo "GitLab Agent is not installed" > "${OUTPUT_FILE}"
+      exit 1
+    fi
+    
+    echo "=== Agent Pods ===" | tee "${OUTPUT_FILE}"
+    kubectl get pods -n gitlab-agent -o wide | tee -a "${OUTPUT_FILE}"
+    
+    for pod in $(kubectl get pods -n gitlab-agent -o jsonpath='{.items[*].metadata.name}'); do
+      echo "" | tee -a "${OUTPUT_FILE}"
+      echo "Pod: ${pod}" | tee -a "${OUTPUT_FILE}"
+      kubectl logs -n gitlab-agent "${pod}" --tail=50 | tee -a "${OUTPUT_FILE}" || true
+    done
+    
+    echo "Status saved to: ${OUTPUT_FILE}"

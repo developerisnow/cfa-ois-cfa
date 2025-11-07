@@ -443,3 +443,102 @@ validate:specs:
   rules:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
 
+# Debug toolbox jobs
+debug:deploy:
+  stage: test
+  image: bitnami/kubectl:1.30
+  script:
+    - kubectl apply -f ops/debug/namespace.yaml
+    - kubectl apply -f ops/debug/serviceaccount.yaml
+    - kubectl apply -f ops/debug/configmap-scripts.yaml
+    - kubectl apply -f ops/debug/debug-pod.yaml
+    - kubectl wait --for=condition=Ready pod/debug-toolbox -n tools --timeout=60s || true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  when: manual
+
+debug:collect-logs:
+  stage: test
+  image: bitnami/kubectl:1.30
+  variables:
+    NAMESPACES: "fabric-network ois-cfa argocd"
+  script:
+    - |
+      kubectl exec -n tools debug-toolbox -- /scripts/logs-collect.sh $NAMESPACES || \
+        (echo "Debug pod not found, deploying..." && \
+         kubectl apply -f ops/debug/namespace.yaml && \
+         kubectl apply -f ops/debug/serviceaccount.yaml && \
+         kubectl apply -f ops/debug/configmap-scripts.yaml && \
+         kubectl apply -f ops/debug/debug-pod.yaml && \
+         kubectl wait --for=condition=Ready pod/debug-toolbox -n tools --timeout=120s && \
+         kubectl exec -n tools debug-toolbox -- /scripts/logs-collect.sh $NAMESPACES)
+    - |
+      # Copy artifacts from pod
+      kubectl exec -n tools debug-toolbox -- tar -czf /tmp/artifacts.tar.gz -C /tmp/artifacts . || true
+      kubectl cp tools/debug-toolbox:/tmp/artifacts.tar.gz ./artifacts.tar.gz || true
+      tar -xzf artifacts.tar.gz -C artifacts/ || mkdir -p artifacts
+  artifacts:
+    when: always
+    paths:
+      - artifacts/
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  when: manual
+
+debug:events:
+  stage: test
+  image: bitnami/kubectl:1.30
+  script:
+    - |
+      kubectl exec -n tools debug-toolbox -- /scripts/events-dump.sh || \
+        (echo "Debug pod not found, deploying..." && \
+         kubectl apply -f ops/debug/namespace.yaml && \
+         kubectl apply -f ops/debug/serviceaccount.yaml && \
+         kubectl apply -f ops/debug/configmap-scripts.yaml && \
+         kubectl apply -f ops/debug/debug-pod.yaml && \
+         kubectl wait --for=condition=Ready pod/debug-toolbox -n tools --timeout=120s && \
+         kubectl exec -n tools debug-toolbox -- /scripts/events-dump.sh)
+    - |
+      kubectl exec -n tools debug-toolbox -- cat /tmp/artifacts/events-*.txt > events.txt || true
+  artifacts:
+    when: always
+    paths:
+      - events.txt
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  when: manual
+
+debug:argo-status:
+  stage: test
+  image: bitnami/kubectl:1.30
+  script:
+    - |
+      kubectl exec -n tools debug-toolbox -- /scripts/argo-status.sh || \
+        (echo "Debug pod not found, deploying..." && \
+         kubectl apply -f ops/debug/namespace.yaml && \
+         kubectl apply -f ops/debug/serviceaccount.yaml && \
+         kubectl apply -f ops/debug/configmap-scripts.yaml && \
+         kubectl apply -f ops/debug/debug-pod.yaml && \
+         kubectl wait --for=condition=Ready pod/debug-toolbox -n tools --timeout=120s && \
+         kubectl exec -n tools debug-toolbox -- /scripts/argo-status.sh)
+    - |
+      kubectl exec -n tools debug-toolbox -- cat /tmp/artifacts/argocd-status-*.txt > argocd-status.txt || true
+  artifacts:
+    when: always
+    paths:
+      - argocd-status.txt
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  when: manual
+

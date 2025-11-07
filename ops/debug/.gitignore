@@ -1,0 +1,11 @@
+# Secrets (never commit)
+secret-gitlab-token.yaml
+*.secret.yaml
+*.token.yaml
+
+# Artifacts
+artifacts/
+*.tar.gz
+*.log
+*.txt
+
