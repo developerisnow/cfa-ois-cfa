@@ -388,6 +388,9 @@ check-kubeconfig: ## Check if kubeconfig is configured
 setup-kubeconfig: ## Setup kubeconfig for Kubernetes cluster
 	@./ops/scripts/setup-kubeconfig.sh
 
+check-runner-status: ## Check GitLab Runner status and configuration
+	@./ops/scripts/check-runner-status.sh
+
 gitlab-runner-scale: ## Scale GitLab Runner replicas (usage: make gitlab-runner-scale REPLICAS=5)
 	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
 	if [ -z "$$KUBECONFIG_FILE" ] && [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then \

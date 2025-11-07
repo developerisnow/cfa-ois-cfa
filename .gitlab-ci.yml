@@ -447,12 +447,36 @@ validate:specs:
 debug:deploy:
   stage: test
   image: bitnami/kubectl:1.30
+  # No specific tags required - can run on any runner
+  # If runner requires tags, add: tags: [docker, kubernetes]
+  variables:
+    KUBECONFIG: "${KUBECONFIG:-}"
+  before_script:
+    # Check if kubeconfig is available
+    - |
+      if [ -z "${KUBECONFIG:-}" ]; then
+        echo "Warning: KUBECONFIG not set. Trying to use default locations..."
+        if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
+          export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
+          echo "Using kubeconfig from: ${KUBECONFIG}"
+        elif [ -f "${HOME}/.kube/config" ]; then
+          export KUBECONFIG="${HOME}/.kube/config"
+          echo "Using kubeconfig from: ${KUBECONFIG}"
+        else
+          echo "Error: KUBECONFIG not found. Please set KUBECONFIG variable or ensure kubeconfig.yaml exists."
+          echo "To setup kubeconfig: make setup-kubeconfig"
+          exit 1
+        fi
+      fi
+    - kubectl cluster-info || (echo "Error: Cannot connect to cluster. Check KUBECONFIG." && exit 1)
   script:
     - kubectl apply -f ops/debug/namespace.yaml
     - kubectl apply -f ops/debug/serviceaccount.yaml
     - kubectl apply -f ops/debug/configmap-scripts.yaml
     - kubectl apply -f ops/debug/debug-pod.yaml
     - kubectl wait --for=condition=Ready pod/debug-toolbox -n tools --timeout=60s || true
+    - echo "Debug toolbox deployed successfully"
+    - kubectl get pods -n tools
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_MERGE_REQUEST_IID'
@@ -464,6 +488,20 @@ debug:collect-logs:
   image: bitnami/kubectl:1.30
   variables:
     NAMESPACES: "fabric-network ois-cfa argocd"
+    KUBECONFIG: "${KUBECONFIG:-}"
+  before_script:
+    - |
+      if [ -z "${KUBECONFIG:-}" ]; then
+        if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
+          export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
+        elif [ -f "${HOME}/.kube/config" ]; then
+          export KUBECONFIG="${HOME}/.kube/config"
+        else
+          echo "Error: KUBECONFIG not found"
+          exit 1
+        fi
+      fi
+    - kubectl cluster-info || exit 1
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/logs-collect.sh $NAMESPACES || \
@@ -493,6 +531,21 @@ debug:collect-logs:
 debug:events:
   stage: test
   image: bitnami/kubectl:1.30
+  variables:
+    KUBECONFIG: "${KUBECONFIG:-}"
+  before_script:
+    - |
+      if [ -z "${KUBECONFIG:-}" ]; then
+        if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
+          export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
+        elif [ -f "${HOME}/.kube/config" ]; then
+          export KUBECONFIG="${HOME}/.kube/config"
+        else
+          echo "Error: KUBECONFIG not found"
+          exit 1
+        fi
+      fi
+    - kubectl cluster-info || exit 1
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/events-dump.sh || \
@@ -519,6 +572,21 @@ debug:events:
 debug:argo-status:
   stage: test
   image: bitnami/kubectl:1.30
+  variables:
+    KUBECONFIG: "${KUBECONFIG:-}"
+  before_script:
+    - |
+      if [ -z "${KUBECONFIG:-}" ]; then
+        if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
+          export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
+        elif [ -f "${HOME}/.kube/config" ]; then
+          export KUBECONFIG="${HOME}/.kube/config"
+        else
+          echo "Error: KUBECONFIG not found"
+          exit 1
+        fi
+      fi
+    - kubectl cluster-info || exit 1
   script:
     - |
       kubectl exec -n tools debug-toolbox -- /scripts/argo-status.sh || \
@@ -546,6 +614,21 @@ debug:argo-status:
 k8s:healthcheck:
   stage: test
   image: bitnami/kubectl:1.30
+  variables:
+    KUBECONFIG: "${KUBECONFIG:-}"
+  before_script:
+    - |
+      if [ -z "${KUBECONFIG:-}" ]; then
+        if [ -f "ops/infra/timeweb/kubeconfig.yaml" ]; then
+          export KUBECONFIG="$(pwd)/ops/infra/timeweb/kubeconfig.yaml"
+        elif [ -f "${HOME}/.kube/config" ]; then
+          export KUBECONFIG="${HOME}/.kube/config"
+        else
+          echo "Error: KUBECONFIG not found"
+          exit 1
+        fi
+      fi
+    - kubectl cluster-info || exit 1
   script:
     - |
       # Install required tools

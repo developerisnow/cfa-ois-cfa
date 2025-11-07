@@ -28,8 +28,8 @@ spec:
               value: "https://git.telex.global"
             - name: RUNNER_EXECUTOR
               value: "kubernetes"
-            - name: RUNNER_TAG_LIST
-              value: "kubernetes,docker,kubectl,dotnet,node"
+            # RUNNER_TAG_LIST removed - tags are configured in config.toml
+            # If tags are needed, add them in config.toml: tags = ["docker", "kubernetes"]
             - name: RUNNER_REQUESTED_CONCURRENT_BUILDS
               value: "10"
             - name: RUNNER_OUTPUT_LIMIT
