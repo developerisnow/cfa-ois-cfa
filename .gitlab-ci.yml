@@ -451,18 +451,18 @@ smoke:runner:
   tags:
     - kubernetes
   script:
-    - echo "=== GitLab Runner Smoke Test ==="
-    - echo "Runner: $CI_RUNNER_ID"
-    - echo "Job: $CI_JOB_ID"
-    - echo "Pipeline: $CI_PIPELINE_ID"
-    - echo ""
-    - echo "✓ Runner successfully picked up this job"
-    - echo "✓ Job is executing"
-    - echo ""
-    - echo "Environment:"
+    - 'echo "=== GitLab Runner Smoke Test ==="'
+    - 'echo "Runner: $CI_RUNNER_ID"'
+    - 'echo "Job: $CI_JOB_ID"'
+    - 'echo "Pipeline: $CI_PIPELINE_ID"'
+    - 'echo " "'
+    - 'echo "✓ Runner successfully picked up this job"'
+    - 'echo "✓ Job is executing"'
+    - 'echo " "'
+    - 'echo "Environment:"'
     - 'env | grep -E "CI_|GITLAB" | sort'
-    - echo ""
-    - echo "✅ Smoke test passed: Runner is working!"
+    - 'echo " "'
+    - 'echo "✅ Smoke test passed: Runner is working!"'
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
     - if: '$CI_MERGE_REQUEST_IID'
