@@ -8,12 +8,17 @@ data:
     concurrent = 10
     check_interval = 3
     log_level = "info"
+    # State file must be in writable location (not ConfigMap)
+    state_file = "/home/gitlab-runner/.runner_system_id"
 
     [[runners]]
       name = "ois-cfa-runner"
       url = "https://git.telex.global"
-      token = "cPDzzzSGwnm3MRfocHyx"
+      token = "__REPLACE_WITH_RUNNER_TOKEN__"
       executor = "kubernetes"
+      # Fix long polling issues
+      request_concurrency = 3
+      environment = ["FF_USE_ADAPTIVE_REQUEST_CONCURRENCY=true"]
       # Force re-registration: uncomment to force runner to re-register
       # This will cause runner to ignore saved authentication token
       # locked = false

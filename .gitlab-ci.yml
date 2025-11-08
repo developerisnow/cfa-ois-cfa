@@ -444,6 +444,31 @@ validate:specs:
   rules:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
 
+# Smoke test: verify runner works
+smoke:runner:
+  stage: test
+  image: alpine:latest
+  tags:
+    - kubernetes
+  script:
+    - echo "=== GitLab Runner Smoke Test ==="
+    - echo "Runner: $CI_RUNNER_ID"
+    - echo "Job: $CI_JOB_ID"
+    - echo "Pipeline: $CI_PIPELINE_ID"
+    - echo ""
+    - echo "✓ Runner successfully picked up this job"
+    - echo "✓ Job is executing"
+    - echo ""
+    - echo "Environment:"
+    - env | grep -E "CI_|GITLAB" | sort
+    - echo ""
+    - echo "✅ Smoke test passed: Runner is working!"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_MERGE_REQUEST_IID'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  allow_failure: false
+
 # Debug toolbox jobs
 debug:deploy:
   stage: test

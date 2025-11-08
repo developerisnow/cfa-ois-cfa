@@ -269,7 +269,8 @@ gitlab-runner-install: ## Install GitLab Runner in Kubernetes
 	fi; \
 	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/namespace.yaml; \
 	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/rbac.yaml; \
-	sed "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+	sed -e "s/__REPLACE_WITH_GLRT_TOKEN__/$$RUNNER_TOKEN/g" \
+		-e "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
 		ops/infra/k8s/gitlab-runner/configmap.yaml | KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
 	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/deployment.yaml; \
 	KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f ops/infra/k8s/gitlab-runner/service.yaml
@@ -356,11 +357,11 @@ gitlab-runner-get-token: ## Show instructions to get GitLab Runner registration 
 	@echo "  export RUNNER_TOKEN='your-token'"
 	@echo "  make gitlab-runner-update-token"
 
-gitlab-runner-update-token: ## Update GitLab Runner registration token (requires RUNNER_TOKEN)
+gitlab-runner-update-token: ## Update GitLab Runner authentication token (requires RUNNER_TOKEN=glrt-...)
 	@if [ -z "$$RUNNER_TOKEN" ]; then \
 		echo "Error: RUNNER_TOKEN not set"; \
 		echo "Get token: make gitlab-runner-get-token"; \
-		echo "Then: export RUNNER_TOKEN='your-token'"; \
+		echo "Then: export RUNNER_TOKEN='glrt-...' (Authentication Token)"; \
 		exit 1; \
 	fi
 	@KUBECONFIG_FILE="$${KUBECONFIG:-}"; \
@@ -372,7 +373,7 @@ gitlab-runner-update-token: ## Update GitLab Runner registration token (requires
 		exit 1; \
 	}; \
 	echo "Updating GitLab Runner token..."; \
-	sed -e "s/__REPLACE_WITH_RUNNER_TOKEN__/$$RUNNER_TOKEN/g" \
+	sed -e "s/__REPLACE_WITH_GLRT_TOKEN__/$$RUNNER_TOKEN/g" \
 		-e "s/token = \".*\"/token = \"$$RUNNER_TOKEN\"/g" \
 		ops/infra/k8s/gitlab-runner/configmap.yaml | \
 		KUBECONFIG="$$KUBECONFIG_FILE" kubectl apply -f -; \
@@ -382,6 +383,16 @@ gitlab-runner-update-token: ## Update GitLab Runner registration token (requires
 	KUBECONFIG="$$KUBECONFIG_FILE" kubectl rollout status deployment/gitlab-runner -n gitlab-runner --timeout=120s || echo "Rollout may still be in progress"; \
 	echo ""; \
 	echo "✓ Token updated. Check status: make gitlab-runner-status"
+
+gitlab-runner-fix-403: ## Fix GitLab Runner 403 Forbidden (requires RUNNER_TOKEN=glrt-...)
+	@if [ -z "$$RUNNER_TOKEN" ]; then \
+		echo "Error: RUNNER_TOKEN not set"; \
+		echo "Get Authentication Token (glrt-...):"; \
+		echo "  https://git.telex.global/npk/ois-cfa/-/settings/ci_cd → Runners"; \
+		echo "Then: export RUNNER_TOKEN='glrt-...' && make gitlab-runner-fix-403"; \
+		exit 1; \
+	fi
+	@./ops/ci/patch_runner_fix_403.sh
 
 check-kubeconfig: ## Check if kubeconfig is configured
 	@./ops/scripts/check-kubeconfig.sh

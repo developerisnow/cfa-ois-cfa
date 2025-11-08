@@ -37,6 +37,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/gitlab-runner
+            - name: runner-home
+              mountPath: /home/gitlab-runner
           resources:
             requests:
               cpu: 100m
@@ -44,22 +46,20 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          livenessProbe:
-            httpGet:
-              path: /metrics
-              port: 9252
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /metrics
-              port: 9252
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+          # Health checks disabled - runner doesn't listen on port 9252 by default
+          # To enable metrics, add listen_address = ":9252" to config.toml
+          # livenessProbe:
+          #   httpGet:
+          #     path: /metrics
+          #     port: 9252
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /metrics
+          #     port: 9252
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
       volumes:
         - name: config
           configMap:
@@ -67,4 +67,6 @@ spec:
             items:
               - key: config.toml
                 path: config.toml
+        - name: runner-home
+          emptyDir: {}
 
