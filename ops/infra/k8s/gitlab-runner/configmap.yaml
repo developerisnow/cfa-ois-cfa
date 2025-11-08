@@ -5,7 +5,7 @@ metadata:
   namespace: gitlab-runner
 data:
   config.toml: |
-    concurrent = 3
+    concurrent = 2
     check_interval = 3
     log_level = "info"
     # State file must be in writable location (not ConfigMap)
@@ -28,18 +28,18 @@ data:
         namespace = "gitlab-runner"
         image = "alpine:latest"
         privileged = true
-        cpu_limit = "2"
-        memory_limit = "2Gi"
-        cpu_request = "500m"
-        memory_request = "512Mi"
-        service_cpu_limit = "1"
-        service_memory_limit = "1Gi"
-        service_cpu_request = "100m"
-        service_memory_request = "128Mi"
-        helper_cpu_limit = "500m"
-        helper_memory_limit = "512Mi"
-        helper_cpu_request = "100m"
-        helper_memory_request = "64Mi"
+        cpu_limit = "1"
+        memory_limit = "1Gi"
+        cpu_request = "200m"
+        memory_request = "256Mi"
+        service_cpu_limit = "500m"
+        service_memory_limit = "512Mi"
+        service_cpu_request = "50m"
+        service_memory_request = "64Mi"
+        helper_cpu_limit = "200m"
+        helper_memory_limit = "256Mi"
+        helper_cpu_request = "50m"
+        helper_memory_request = "32Mi"
         # Docker-in-Docker support
         [runners.kubernetes.volumes]
           [[runners.kubernetes.volumes.host_path]]

@@ -337,7 +337,7 @@ test:k6:smoke:
 # Option B: GitLab Agent Deploy (pull-based GitOps)
 .deploy_gitlab_agent_template: &deploy_gitlab_agent_template
   stage: deploy
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   script:
     - |
       # GitLab Agent uses pull-based GitOps
@@ -472,7 +472,7 @@ smoke:runner:
 # Debug toolbox jobs
 debug:deploy:
   stage: test
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   # No specific tags required - can run on any runner
   # If runner requires tags, add: tags: [docker, kubernetes]
   variables:
@@ -506,7 +506,7 @@ debug:deploy:
 
 debug:collect-logs:
   stage: test
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   variables:
     NAMESPACES: "fabric-network ois-cfa argocd"
     KUBECONFIG: "${KUBECONFIG:-}"
@@ -551,7 +551,7 @@ debug:collect-logs:
 
 debug:events:
   stage: test
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   variables:
     KUBECONFIG: "${KUBECONFIG:-}"
   before_script:
@@ -592,7 +592,7 @@ debug:events:
 
 debug:argo-status:
   stage: test
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   variables:
     KUBECONFIG: "${KUBECONFIG:-}"
   before_script:
@@ -634,7 +634,7 @@ debug:argo-status:
 # Kubernetes health check job
 k8s:healthcheck:
   stage: test
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   variables:
     KUBECONFIG: "${KUBECONFIG:-}"
   before_script:
