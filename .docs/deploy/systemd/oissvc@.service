@@ -1,0 +1,14 @@
+[Unit]
+Description=OIS-CFA .NET Service %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=%h/ois-cfa/services/%i
+ExecStart=/usr/bin/dotnet run --no-launch-profile
+Restart=on-failure
+Environment=ASPNETCORE_URLS=http://127.0.0.1:0
+# To pin port: set ASPNETCORE_URLS=http://127.0.0.1:56110 (example)
+
+[Install]
+WantedBy=multi-user.target
