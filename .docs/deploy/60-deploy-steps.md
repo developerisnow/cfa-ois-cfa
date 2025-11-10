@@ -15,6 +15,14 @@
 - Option B: containerized (if enabled):
   - `docker compose -f docker-compose.yml -f .docs/deploy/compose/apps.override.yml --env-file .env.deployment up -d`
 
+3) External deploy pack (single Compose)
+- Alternative: use standalone compose project at `/home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed`
+- Steps there:
+  - `cp /home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed/.env.example .env` (or edit existing)
+  - `docker compose -f /home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed/docker-compose.yml build`
+  - `docker compose -f /home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed/docker-compose.yml up -d`
+  - Adjust absolute repo paths if running on another host
+
 3) Verify
 - Health: `GET /health` for each service
 - Gateway `/` redirects to swagger
