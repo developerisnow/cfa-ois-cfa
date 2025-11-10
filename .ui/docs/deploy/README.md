@@ -18,3 +18,5 @@ Quick nav:
 
 Artifacts generated elsewhere:
 - Reposcan: `reposcan/README.md` with snapshot, C4 and ER diagrams for system context.
+
+Bootstrap script: .docs/deploy/50-bootstrap-deploy.sh
