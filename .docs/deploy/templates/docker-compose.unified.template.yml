@@ -1,0 +1,195 @@
+version: '3.8'
+
+networks:
+  ois-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ois-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${HOST_POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./ops/scripts:/scripts:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ois-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "${HOST_ZOOKEEPER_PORT:-52181}:2181"
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  kafka:
+    image: apache/kafka:3.6
+    container_name: ois-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:${HOST_KAFKA_PORT:-59092}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    ports:
+      - "${HOST_KAFKA_PORT:-59092}:9092"
+    depends_on: [ zookeeper ]
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: ois-keycloak
+    environment:
+      KEYCLOAK_ADMIN: ${KC_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    command: start-dev
+    ports:
+      - "${HOST_KEYCLOAK_PORT:-58080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: ois-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "${HOST_MINIO_API_PORT:-59000}:9000"
+      - "${HOST_MINIO_CONSOLE_PORT:-59001}:9001"
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  postgres-backup:
+    image: postgres:16-alpine
+    container_name: ois-postgres-backup
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./ops/scripts:/scripts:ro
+    command: >
+      sh -c "apk add --no-cache postgresql-client gzip bash && chmod +x /scripts/backup.sh && while true; do /scripts/backup.sh /backups; sleep 86400; done"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [ ois-network ]
+    restart: unless-stopped
+
+  identity:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: services/identity/Dockerfile
+    container_name: ois-identity
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "${SERVICE_IDENTITY_PORT:-6504}:5000"
+    depends_on: [ postgres ]
+    networks: [ ois-network ]
+
+  registry:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: services/registry/Dockerfile
+    container_name: ois-registry
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "${SERVICE_REGISTRY_PORT:-6506}:5000"
+    depends_on: [ postgres ]
+    networks: [ ois-network ]
+
+  issuance:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: services/issuance/Dockerfile
+    container_name: ois-issuance
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Kafka__BootstrapServers: kafka:9092
+    ports:
+      - "${SERVICE_ISSUANCE_PORT:-6505}:5000"
+    depends_on: [ postgres, kafka ]
+    networks: [ ois-network ]
+
+  settlement:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: services/settlement/Dockerfile
+    container_name: ois-settlement
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "${SERVICE_SETTLEMENT_PORT:-6507}:5000"
+    depends_on: [ postgres ]
+    networks: [ ois-network ]
+
+  compliance:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: services/compliance/Dockerfile
+    container_name: ois-compliance
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    ports:
+      - "${SERVICE_COMPLIANCE_PORT:-6508}:5000"
+    depends_on: [ postgres ]
+    networks: [ ois-network ]
+
+  api-gateway:
+    build:
+      context: ${OIS_CFA_REPO_DIR}
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: ois-api-gateway
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+    ports:
+      - "${SERVICE_APIGW_PORT:-6580}:5000"
+    depends_on: [ identity, registry, issuance, settlement, compliance ]
+    networks: [ ois-network ]
