@@ -1,0 +1,24 @@
+# Binaries & media
+**/*.{png,jpg,jpeg,gif,webp,ico,psd,ai,sketch,mp4,mp3,avi,mov,zip,tgz,tar,7z}
+**/*.{pdf,drawio}
+# Builds & caches
+**/node_modules/** **/.next/** **/.turbo/** **/.vercel/** **/dist/** **/build/** **/.cache/** **/coverage/** **/.nyc_output/** **/*.map
+# Locks
+**/package-lock.json **/yarn.lock **/pnpm-lock.yaml
+# IDE/OS/misc
+.vscode/** .idea/** *.code-workspace .DS_Store Thumbs.db **/*.log **/*.tmp **/*.bak
+# Secrets
+**/.env* **/*.{pem,key,crt,pfx}
+# .NET
+**/bin/** **/obj/** **/.vs/** **/*.csproj.user
+# Test snapshots
+**/__snapshots__/** **/*.snap
+# Helm (optional noise)
+ops/infra/helm/**/templates/**
+!ops/infra/helm/**/templates/deployment.yaml
+!ops/infra/helm/**/templates/service.yaml
+!ops/infra/helm/**/templates/ingress.yaml
+# Keep (signal)
+!.gitignore !README.md !Makefile !docker-compose.yml
+!**/src/**
+!**/*.{cs,go,ts,tsx,js,jsx,py,rs,md,yml,yaml,toml,json}
