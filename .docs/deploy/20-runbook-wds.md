@@ -74,4 +74,15 @@ curl -sf http://localhost:${SERVICE_APIGW_PORT}/health
 - Update `.docs/deploy/CHANGELOG.md`
 
 Notes
+
+## Bootstrap external deploy (eywa1)
+Use the script to scaffold a deploy folder outside the repo (no services started):
+
+```bash
+bash .docs/deploy/50-bootstrap-deploy.sh \
+  /home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed \
+  /home/user/__Repositories/yury-customer/prj_Cifra-rwa-exachange-assets/repositories/customer-gitlab/ois-cfa
+# Then inspect .env and run preflight/compose when approved
+```
+
 - For TLS and hostnames, place a reverse proxy in front of these ports or configure Keycloak accordingly.
