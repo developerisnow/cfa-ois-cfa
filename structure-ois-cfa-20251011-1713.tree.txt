@@ -1,0 +1,611 @@
+ois-cfa (agents) ❯ du                                                             17:13:59
+208K     ┌── contracts          │███░                                                │   4%
+300K   ┌─┴ packages             │████                                                │   6%
+208K   │ ┌── infra              │███░                                                │   4%
+344K   ├─┴ ops                  │████                                                │   7%
+404K   ├── services             │█████                                               │   8%
+272K   │ ┌── architecture       │███░░░░░░░░░░░░░░░                                  │   6%
+908K   │ │ ┌── kniga_cfa.pdf    │██████████░░░░░░░░                                  │  19%
+924K   │ ├─┴ source             │██████████░░░░░░░░                                  │  19%
+1.6M   ├─┴ docs                 │██████████████████                                  │  34%
+240K   │   ┌── package-lock.json│███▒░░░░░░░░░░░░░░░░░                               │   5%
+344K   │ ┌─┴ broker-portal      │████░░░░░░░░░░░░░░░░░                               │   7%
+240K   │ │ ┌── package-lock.json│███▒░░░░░░░░░░░░░░░░░                               │   5%
+356K   │ ├─┴ backoffice         │████░░░░░░░░░░░░░░░░░                               │   7%
+244K   │ │ ┌── package-lock.json│███▒░░░░░░░░░░░░░░░░░                               │   5%
+356K   │ ├─┴ portal-issuer      │████░░░░░░░░░░░░░░░░░                               │   7%
+300K   │ │ ┌── package-lock.json│████▒░░░░░░░░░░░░░░░░                               │   6%
+400K   │ ├─┴ shared-ui          │█████░░░░░░░░░░░░░░░░                               │   8%
+300K   │ │ ┌── package-lock.json│████▒░░░░░░░░░░░░░░░░                               │   6%
+416K   │ ├─┴ portal-investor    │█████░░░░░░░░░░░░░░░░                               │   9%
+1.9M   ├─┴ apps                 │█████████████████████                               │  40%
+4.7M ┌─┴ .                      │███████████████████████████████████████████████████ │ 100%
+ois-cfa (agents) ❯   
+.
+├── apps
+│   ├── _theme
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tailwind-preset.js
+│   │   └── tokens.css
+│   ├── api-gateway
+│   │   ├── api-gateway.csproj
+│   │   ├── appsettings.json
+│   │   ├── Dockerfile
+│   │   └── Program.cs
+│   ├── backoffice
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── README.md
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── api
+│   │   │   │   │   └── auth
+│   │   │   │   │       └── [...nextauth]
+│   │   │   │   │           └── route.ts
+│   │   │   │   ├── audit
+│   │   │   │   │   ├── [id]
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── auth
+│   │   │   │   │   └── signin
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   ├── kyc
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── payouts
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── providers.tsx
+│   │   │   │   └── qualification
+│   │   │   │       └── page.tsx
+│   │   │   ├── lib
+│   │   │   │   ├── api-client.ts
+│   │   │   │   └── auth.ts
+│   │   │   ├── middleware.ts
+│   │   │   └── types
+│   │   │       └── next-auth.d.ts
+│   │   ├── tailwind.config.ts
+│   │   └── tsconfig.json
+│   ├── broker-portal
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── api
+│   │   │   │   │   └── auth
+│   │   │   │   │       └── [...nextauth]
+│   │   │   │   │           └── route.ts
+│   │   │   │   ├── auth
+│   │   │   │   │   └── signin
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── clients
+│   │   │   │   │   ├── [id]
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── dashboard
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── feed
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── orders
+│   │   │   │   │   └── new
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── providers.tsx
+│   │   │   ├── lib
+│   │   │   │   ├── api-client.ts
+│   │   │   │   └── auth.ts
+│   │   │   ├── middleware.ts
+│   │   │   └── types
+│   │   │       └── next-auth.d.ts
+│   │   ├── tailwind.config.ts
+│   │   └── tsconfig.json
+│   ├── portal-investor
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── README.md
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── api
+│   │   │   │   │   └── auth
+│   │   │   │   │       └── [...nextauth]
+│   │   │   │   │           └── route.ts
+│   │   │   │   ├── auth
+│   │   │   │   │   └── signin
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── catalog
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   ├── history
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── issuances
+│   │   │   │   │   └── [id]
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── orders
+│   │   │   │   │   └── new
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── portfolio
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── providers.tsx
+│   │   │   ├── lib
+│   │   │   │   ├── api-client.ts
+│   │   │   │   └── auth.ts
+│   │   │   ├── middleware.ts
+│   │   │   └── types
+│   │   │       └── next-auth.d.ts
+│   │   ├── tailwind.config.ts
+│   │   └── tsconfig.json
+│   ├── portal-issuer
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── README.md
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── api
+│   │   │   │   │   └── auth
+│   │   │   │   │       └── [...nextauth]
+│   │   │   │   │           └── route.ts
+│   │   │   │   ├── auth
+│   │   │   │   │   └── signin
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── dashboard
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   ├── issuances
+│   │   │   │   │   ├── [id]
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── create
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── providers.tsx
+│   │   │   │   └── reports
+│   │   │   │       └── page.tsx
+│   │   │   ├── lib
+│   │   │   │   ├── api-client.ts
+│   │   │   │   └── auth.ts
+│   │   │   ├── middleware.ts
+│   │   │   └── types
+│   │   │       └── next-auth.d.ts
+│   │   ├── tailwind.config.ts
+│   │   └── tsconfig.json
+│   └── shared-ui
+│       ├── package-lock.json
+│       ├── package.json
+│       ├── README.md
+│       ├── src
+│       │   ├── components
+│       │   │   ├── charts
+│       │   │   │   ├── BarChart.tsx
+│       │   │   │   ├── ChartContainer.tsx
+│       │   │   │   ├── LineChart.tsx
+│       │   │   │   └── PieChart.tsx
+│       │   │   ├── data
+│       │   │   │   ├── DataTable.tsx
+│       │   │   │   ├── KPIGrid.tsx
+│       │   │   │   └── StatCard.tsx
+│       │   │   ├── feedback
+│       │   │   │   ├── EmptyState.tsx
+│       │   │   │   └── Skeleton.tsx
+│       │   │   ├── forms
+│       │   │   │   └── OrderForm.tsx
+│       │   │   ├── layout
+│       │   │   │   ├── AppShell.tsx
+│       │   │   │   └── PageHeader.tsx
+│       │   │   ├── theme
+│       │   │   │   └── ThemeProvider.tsx
+│       │   │   ├── timeline
+│       │   │   │   ├── AuditLog.tsx
+│       │   │   │   └── Timeline.tsx
+│       │   │   └── widgets
+│       │   │       └── MiniTicker.tsx
+│       │   ├── index.ts
+│       │   └── utils
+│       │       └── cn.ts
+│       ├── tailwind.config.ts
+│       └── tsconfig.json
+├── ARCHIVE
+│   ├── assumptions.md
+│   └── build-log.md
+├── chaincode
+│   ├── issuance
+│   │   ├── go.mod
+│   │   ├── issuance_test.go
+│   │   ├── issuance.go
+│   │   └── README.md
+│   └── registry
+│       ├── go.mod
+│       ├── README.md
+│       ├── registry_test.go
+│       └── registry.go
+├── docker-compose.yml
+├── docs
+│   ├── 00-Дорожная-карта-проекта.md
+│   ├── 00-Проверка-готовности-ЦБ.md
+│   ├── 00-Структура-проекта-создана.md
+│   ├── apps
+│   │   ├── backoffice.md
+│   │   ├── portal-investor.md
+│   │   └── portal-issuer.md
+│   ├── architecture
+│   │   ├── 10-HighLevel-Architecture.md
+│   │   ├── 11-Sequence-ESIA-OIDC.md
+│   │   ├── 12-DataModel.md
+│   │   ├── 13-HLF-Network-Design.md
+│   │   ├── 14-NonFunctional-Targets.md
+│   │   ├── api
+│   │   │   ├── openapi-bank-nominal.yaml
+│   │   │   ├── openapi-edo.yaml
+│   │   │   └── openapi-esia.yaml
+│   │   ├── c4
+│   │   │   ├── C1-Context.drawio
+│   │   │   ├── C2-Containers.drawio
+│   │   │   ├── C3-Components.drawio
+│   │   │   └── C4-Code.drawio
+│   │   ├── contracts
+│   │   │   ├── RulesIS-skeleton.md
+│   │   │   └── SystemDescription-skeleton.md
+│   │   ├── dfd
+│   │   │   ├── DFD-L0.drawio
+│   │   │   ├── DFD-L1-Emission.drawio
+│   │   │   └── DFD-L2-Settlement-EDO.drawio
+│   │   ├── infra
+│   │   │   ├── Backup-Topology.drawio
+│   │   │   ├── DRP-Topology.drawio
+│   │   │   └── Network-Zones.drawio
+│   │   ├── ontology
+│   │   │   ├── ois-ontology.jsonld
+│   │   │   └── ois-ontology.ttl
+│   │   ├── security
+│   │   │   ├── GOST-57580-Mapping.md
+│   │   │   └── STO-BR-Checklist.md
+│   │   ├── threat
+│   │   │   ├── Mitigations-Map.md
+│   │   │   ├── STRIDE-Context.md
+│   │   │   └── STRIDE-Dataflow.drawio
+│   │   └── uml
+│   │       ├── UML-Activity-Complaints.puml
+│   │       ├── UML-Activity-KYC-AML.puml
+│   │       ├── UML-Activity-KYCAML.puml
+│   │       ├── UML-Class-Domain.puml
+│   │       ├── UML-Component.puml
+│   │       ├── UML-Deployment.puml
+│   │       ├── UML-Package.puml
+│   │       ├── UML-Sequence-EDO.puml
+│   │       ├── UML-Sequence-Emission.puml
+│   │       ├── UML-Sequence-ESIA.puml
+│   │       ├── UML-Sequence-Payout.puml
+│   │       ├── UML-Sequence-Purchase.puml
+│   │       ├── UML-State-CFA-Lifecycle.puml
+│   │       └── UML-UseCases.puml
+│   ├── assumptions.md
+│   ├── dlt
+│   │   ├── dev-network.md
+│   │   └── k8s-deploy.md
+│   ├── glossary.md
+│   ├── legal
+│   │   ├── 01-Заявление-в-ЦБ.md
+│   │   ├── 01-ПравилаИС-template.md
+│   │   ├── 02-ОписаниеИС-template.md
+│   │   ├── 03-Матрица-соответствия_259ФЗ-746П.md
+│   │   ├── 04-Структура-владения.md
+│   │   ├── 05-Руководители.md
+│   │   ├── 06-Учредительные-документы.md
+│   │   ├── 07-Реестр-пользователей.md
+│   │   └── 08-Артефакты-для-ЦБ-746П.md
+│   ├── README-ARCH.md
+│   ├── security
+│   │   ├── 04-ПолитикаИБ.md
+│   │   ├── 05-ПолитикаНепрерывности-DRP.md
+│   │   ├── 20-ГОСТ57580-Чеклист.md
+│   │   └── 21-СТОБР-Чеклист.md
+│   ├── services
+│   │   ├── compliance.md
+│   │   ├── issuance.md
+│   │   ├── registry.md
+│   │   └── settlement.md
+│   ├── source
+│   │   ├── Описание ИС vs Правила ИС.md
+│   │   └── kniga_cfa.pdf
+│   ├── sources
+│   │   └── sources.md
+│   ├── testing
+│   │   ├── 30-Perf-Test-Plan.md
+│   │   └── 31-DR-Drill-Runbook.md
+│   └── ui
+│       └── design-system.md
+├── Makefile
+├── ops
+│   ├── CODEOWNERS
+│   ├── CONTRIBUTING.md
+│   ├── fabric
+│   │   ├── configtx.yaml
+│   │   ├── crypto-config.yaml
+│   │   ├── dev-down.sh
+│   │   ├── dev-reset.sh
+│   │   ├── dev-up.sh
+│   │   ├── docker-compose.yml
+│   │   ├── README.md
+│   │   └── scripts
+│   │       ├── approve-chaincode.sh
+│   │       ├── chaincode-api.sh
+│   │       ├── create-channel.sh
+│   │       ├── health-check.sh
+│   │       ├── install-chaincode.sh
+│   │       └── invoke-example.sh
+│   ├── infra
+│   │   ├── grafana-dashboards.json
+│   │   ├── helm
+│   │   │   ├── chaincode-build
+│   │   │   │   ├── Chart.yaml
+│   │   │   │   ├── templates
+│   │   │   │   │   ├── _helpers.tpl
+│   │   │   │   │   ├── ingress.yaml
+│   │   │   │   │   ├── job-approve.yaml
+│   │   │   │   │   ├── job-build.yaml
+│   │   │   │   │   ├── job-commit.yaml
+│   │   │   │   │   ├── job-install.yaml
+│   │   │   │   │   └── job-rollback.yaml
+│   │   │   │   └── values.yaml
+│   │   │   ├── fabric-ca
+│   │   │   │   ├── Chart.yaml
+│   │   │   │   ├── templates
+│   │   │   │   │   ├── _helpers.tpl
+│   │   │   │   │   ├── deployment.yaml
+│   │   │   │   │   ├── ingress.yaml
+│   │   │   │   │   ├── networkpolicy.yaml
+│   │   │   │   │   ├── pvc.yaml
+│   │   │   │   │   ├── service.yaml
+│   │   │   │   │   ├── serviceaccount.yaml
+│   │   │   │   │   └── servicemonitor.yaml
+│   │   │   │   ├── values.prod.yaml
+│   │   │   │   └── values.yaml
+│   │   │   ├── fabric-orderer
+│   │   │   │   ├── Chart.yaml
+│   │   │   │   ├── templates
+│   │   │   │   │   ├── _helpers.tpl
+│   │   │   │   │   ├── deployment.yaml
+│   │   │   │   │   ├── ingress.yaml
+│   │   │   │   │   ├── networkpolicy.yaml
+│   │   │   │   │   ├── pvc.yaml
+│   │   │   │   │   ├── service-headless.yaml
+│   │   │   │   │   ├── service.yaml
+│   │   │   │   │   ├── serviceaccount.yaml
+│   │   │   │   │   └── servicemonitor.yaml
+│   │   │   │   ├── values.prod.yaml
+│   │   │   │   └── values.yaml
+│   │   │   └── fabric-peer
+│   │   │       ├── Chart.yaml
+│   │   │       ├── templates
+│   │   │       │   ├── _helpers.tpl
+│   │   │       │   ├── deployment.yaml
+│   │   │       │   ├── ingress.yaml
+│   │   │       │   ├── networkpolicy.yaml
+│   │   │       │   ├── pvc.yaml
+│   │   │       │   ├── service.yaml
+│   │   │       │   ├── serviceaccount.yaml
+│   │   │       │   └── servicemonitor.yaml
+│   │   │       ├── values.prod.yaml
+│   │   │       └── values.yaml
+│   │   ├── k8s
+│   │   │   ├── ingress.yaml
+│   │   │   ├── namespace.yaml
+│   │   │   ├── nlb-service.yaml
+│   │   │   └── storageclass.yaml
+│   │   ├── otel-collector-config.yaml
+│   │   └── prometheus.yml
+│   ├── scripts
+│   │   ├── backup.sh
+│   │   ├── restore.md
+│   │   └── test-restore.sh
+│   └── SECURITY.md
+├── packages
+│   ├── contracts
+│   │   ├── asyncapi.yaml
+│   │   ├── openapi-compliance.yaml
+│   │   ├── openapi-gateway.yaml
+│   │   ├── openapi-identity.yaml
+│   │   ├── openapi-integrations-bank.yaml
+│   │   ├── openapi-integrations-edo.yaml
+│   │   ├── openapi-integrations-esia.yaml
+│   │   ├── openapi-issuance.yaml
+│   │   ├── openapi-registry.yaml
+│   │   ├── openapi-settlement.yaml
+│   │   ├── README.md
+│   │   └── schemas
+│   │       ├── AuditEvent.json
+│   │       ├── BrokerClient.json
+│   │       ├── BrokerOrder.json
+│   │       ├── CFA.json
+│   │       ├── CommissionRow.json
+│   │       ├── Complaint.json
+│   │       ├── FeedItem.json
+│   │       ├── Holding.json
+│   │       ├── Issuance.json
+│   │       ├── IssuerReportRow.json
+│   │       ├── KycDecision.json
+│   │       ├── KycDocument.json
+│   │       ├── KycResult.json
+│   │       ├── MarketIssuanceCard.json
+│   │       ├── Order.json
+│   │       ├── Payout.json
+│   │       ├── PayoutBatch.json
+│   │       ├── PayoutItem.json
+│   │       ├── QualificationResult.json
+│   │       ├── ReconciliationReport.json
+│   │       ├── RegistryTx.json
+│   │       ├── TxHistoryItem.json
+│   │       └── Wallet.json
+│   ├── domain
+│   │   ├── domain.csproj
+│   │   ├── domain.Tests
+│   │   │   ├── IssuanceIdTests.cs
+│   │   │   ├── IssuanceStatusTests.cs
+│   │   │   ├── MoneyTests.cs
+│   │   │   └── ScheduleItemTests.cs
+│   │   ├── domain.Tests.csproj
+│   │   ├── IssuanceId.cs
+│   │   ├── IssuanceStatus.cs
+│   │   ├── Money.cs
+│   │   └── ScheduleItem.cs
+│   └── sdks
+│       └── ts
+│           ├── openapi-generator-config.json
+│           ├── openapitools.json
+│           ├── package-lock.json
+│           ├── package.json
+│           ├── README.md
+│           ├── src
+│           │   ├── api-client.ts
+│           │   └── index.ts
+│           └── tsconfig.json
+├── README.md
+├── services
+│   ├── compliance
+│   │   ├── appsettings.json
+│   │   ├── compliance.csproj
+│   │   ├── compliance.Tests
+│   │   │   ├── compliance.Tests.csproj
+│   │   │   └── QualificationPolicyTests.cs
+│   │   ├── ComplianceDbContext.cs
+│   │   ├── Dockerfile
+│   │   ├── DTOs
+│   │   │   ├── ComplaintResponse.cs
+│   │   │   ├── InvestorStatusResponse.cs
+│   │   │   ├── KycResult.cs
+│   │   │   └── QualificationResult.cs
+│   │   ├── Migrations
+│   │   │   └── 20250104000000_InitialCreate.cs
+│   │   ├── Program.cs
+│   │   └── Services
+│   │       ├── ComplianceService.cs
+│   │       ├── IWatchlistsService.cs
+│   │       └── QualificationPolicyService.cs
+│   ├── fabric-gateway
+│   │   ├── FabricGatewayService.cs
+│   │   └── Program.cs
+│   ├── identity
+│   │   ├── appsettings.json
+│   │   ├── Dockerfile
+│   │   ├── identity.csproj
+│   │   └── Program.cs
+│   ├── integrations
+│   │   ├── bank-nominal
+│   │   │   ├── appsettings.json
+│   │   │   ├── bank-nominal.csproj
+│   │   │   ├── Dockerfile
+│   │   │   ├── Program.cs
+│   │   │   └── README.md
+│   │   ├── edo-connector
+│   │   │   └── README.md
+│   │   └── esia-adapter
+│   │       └── README.md
+│   ├── issuance
+│   │   ├── appsettings.json
+│   │   ├── Dockerfile
+│   │   ├── DTOs
+│   │   │   ├── CreateIssuanceRequest.cs
+│   │   │   └── IssuanceResponse.cs
+│   │   ├── issuance.csproj
+│   │   ├── issuance.Tests
+│   │   │   └── IssuanceServiceTests.cs
+│   │   ├── issuance.Tests.csproj
+│   │   ├── IssuanceDbContext.cs
+│   │   ├── Migrations
+│   │   │   └── 20250101000000_InitialCreate.cs
+│   │   ├── Program.cs
+│   │   ├── Services
+│   │   │   ├── ILedgerIssuance.cs
+│   │   │   ├── IssuanceService.cs
+│   │   │   ├── LedgerIssuanceAdapter.cs
+│   │   │   └── OutboxService.cs
+│   │   └── Validators
+│   │       └── CreateIssuanceRequestValidator.cs
+│   ├── registry
+│   │   ├── appsettings.json
+│   │   ├── Dockerfile
+│   │   ├── DTOs
+│   │   │   ├── CreateOrderRequest.cs
+│   │   │   ├── OrderResponse.cs
+│   │   │   ├── RedeemRequest.cs
+│   │   │   ├── RedeemResponse.cs
+│   │   │   └── WalletResponse.cs
+│   │   ├── Migrations
+│   │   │   └── 20250102000000_InitialCreate.cs
+│   │   ├── Program.cs
+│   │   ├── registry.csproj
+│   │   ├── registry.Tests
+│   │   │   ├── ErrorMappingTests.cs
+│   │   │   ├── IdempotencyTests.cs
+│   │   │   ├── OutboxPublishTests.cs
+│   │   │   └── registry.Tests.csproj
+│   │   ├── RegistryDbContext.cs
+│   │   ├── Services
+│   │   │   ├── IBankNominalService.cs
+│   │   │   ├── IComplianceService.cs
+│   │   │   ├── ILedgerRegistry.cs
+│   │   │   └── RegistryService.cs
+│   │   └── Validators
+│   │       └── CreateOrderRequestValidator.cs
+│   └── settlement
+│       ├── appsettings.json
+│       ├── Dockerfile
+│       ├── DTOs
+│       │   ├── PayoutsReportResponse.cs
+│       │   └── SettlementResponse.cs
+│       ├── Migrations
+│       │   └── 20250103000000_InitialCreate.cs
+│       ├── Program.cs
+│       ├── Services
+│       │   ├── IBankNominalClient.cs
+│       │   ├── IIssuanceClient.cs
+│       │   ├── IRegistryClient.cs
+│       │   └── SettlementService.cs
+│       ├── settlement.csproj
+│       ├── settlement.Tests
+│       │   ├── IdempotencyTests.cs
+│       │   └── settlement.Tests.csproj
+│       └── SettlementDbContext.cs
+├── structure-ois-cfa-20251011-1713.tree.md
+└── tests
+    ├── contracts
+    │   ├── pact-consumer
+    │   │   ├── gateway-to-issuance.test.ts
+    │   │   ├── gateway-to-registry.test.ts
+    │   │   └── package.json
+    │   └── pact-provider
+    │       └── registry-provider-verification.cs
+    ├── e2e
+    │   ├── helpers
+    │   │   └── test-data.ts
+    │   ├── package.json
+    │   ├── playwright.config.ts
+    │   ├── README.md
+    │   └── tests
+    │       ├── ledger-integration.spec.ts
+    │       └── lifecycle.spec.ts
+    ├── k6
+    │   ├── gateway-critical-paths.js
+    │   └── payouts-report.js
+    └── load
+        └── README.md
+
+163 directories, 422 files
