@@ -141,6 +141,66 @@
         "Kafka"
       ],
       "c4_level": "Component"
+    },
+    "IssuanceService": {
+      "name": "Issuance Service (app layer)",
+      "description": "Create/publish issuances; outbox + Kafka",
+      "technology": "C#",
+      "dependencies": [
+        "LedgerIssuanceAdapter",
+        "IssuanceDbContext",
+        "OutboxService"
+      ],
+      "c4_level": "Component"
+    },
+    "LedgerIssuanceAdapter": {
+      "name": "Ledger Issuance Adapter",
+      "description": "Invoke chaincode for issuance",
+      "technology": "C# HttpClient",
+      "dependencies": [
+        "Fabric peer endpoint",
+        "issuance chaincode"
+      ],
+      "c4_level": "Component"
+    },
+    "SettlementService": {
+      "name": "Settlement Service (domain)",
+      "description": "Batch payout and reconciliation; idempotent",
+      "technology": "C#",
+      "dependencies": [
+        "RegistryClient",
+        "IssuanceClient",
+        "BankNominalClient",
+        "SettlementDbContext"
+      ],
+      "c4_level": "Component"
+    },
+    "RegistryClient": {
+      "name": "Registry HTTP Client",
+      "description": "Typed client to Registry APIs",
+      "technology": "C# HttpClient",
+      "dependencies": [
+        "Registry API"
+      ],
+      "c4_level": "Component"
+    },
+    "IssuanceClient": {
+      "name": "Issuance HTTP Client",
+      "description": "Typed client to Issuance APIs",
+      "technology": "C# HttpClient",
+      "dependencies": [
+        "Issuance API"
+      ],
+      "c4_level": "Component"
+    },
+    "BankNominalClient": {
+      "name": "Bank Nominal Client",
+      "description": "HTTP client to bank nominal service (stub)",
+      "technology": "C# HttpClient",
+      "dependencies": [
+        "Bank Nominal Stub API"
+      ],
+      "c4_level": "Component"
     }
   },
   "domain_glossary": {
@@ -298,6 +358,76 @@
           "resolved_at (timestamptz)",
           "idem_key (varchar(255))"
         ]
+      },
+      "transactions": {
+        "description": "Ledger of off-ledger transactions linked to orders",
+        "columns": [
+          "id (uuid, pk)",
+          "order_id (uuid, fk orders.id)",
+          "amount (numeric)",
+          "type (varchar)",
+          "created_at (timestamptz)"
+        ]
+      },
+      "outbox_messages": {
+        "description": "Outbox pattern table for reliable events",
+        "columns": [
+          "id (uuid, pk)",
+          "aggregate (varchar)",
+          "type (varchar)",
+          "payload (jsonb)",
+          "created_at (timestamptz)",
+          "processed_at (timestamptz?)"
+        ]
+      },
+      "issuances": {
+        "description": "Issuance definitions and lifecycle state",
+        "columns": [
+          "id (uuid, pk)",
+          "name (varchar)",
+          "status (varchar)",
+          "published_at (timestamptz?)"
+        ]
+      },
+      "payout_batches": {
+        "description": "Settlement payout batches",
+        "columns": [
+          "id (uuid, pk)",
+          "run_date (date)",
+          "status (varchar)",
+          "created_at (timestamptz)"
+        ]
+      },
+      "payout_items": {
+        "description": "Items within payout batches",
+        "columns": [
+          "id (uuid, pk)",
+          "batch_id (uuid, fk payout_batches.id)",
+          "investor_id (uuid)",
+          "amount (numeric)",
+          "bank_ref (varchar)",
+          "status (varchar)"
+        ]
+      },
+      "reconciliation_logs": {
+        "description": "Bank reconciliation logs",
+        "columns": [
+          "id (uuid, pk)",
+          "item_id (uuid, fk payout_items.id)",
+          "status (varchar)",
+          "details (text)",
+          "created_at (timestamptz)"
+        ]
+      },
+      "users": {
+        "description": "Identity users (dev stub)",
+        "columns": [
+          "id (uuid, pk)",
+          "email (varchar)",
+          "role (varchar)",
+          "status (varchar)",
+          "created_at (timestamptz)"
+        ]
       }
     },
     "relationships": [
@@ -312,6 +442,30 @@
         "to": "holdings",
         "type": "Many-to-One",
         "description": "Order updates holdings upon settlement"
+      },
+      {
+        "from": "orders",
+        "to": "transactions",
+        "type": "One-to-Many",
+        "description": "Order generates one or more transactions"
+      },
+      {
+        "from": "holdings",
+        "to": "issuances",
+        "type": "Many-to-One",
+        "description": "Holding is scoped to an issuance"
+      },
+      {
+        "from": "payout_items",
+        "to": "payout_batches",
+        "type": "Many-to-One",
+        "description": "Items belong to a batch"
+      },
+      {
+        "from": "reconciliation_logs",
+        "to": "payout_items",
+        "type": "Many-to-One",
+        "description": "Reconciliation per payout item"
       }
     ]
   },
@@ -722,6 +876,44 @@
         "zookeeper:",
         "keycloak:",
         "minio:"
+      ]
+    },
+    {
+      "path": "services/registry/RegistryDbContext.cs",
+      "role": "data_schema",
+      "anchors": [
+        "DbSet<WalletEntity>",
+        "DbSet<HoldingEntity>",
+        "DbSet<OrderEntity>",
+        "DbSet<TransactionEntity>",
+        "DbSet<OutboxMessage>"
+      ]
+    },
+    {
+      "path": "services/issuance/IssuanceDbContext.cs",
+      "role": "data_schema",
+      "anchors": [
+        "DbSet<IssuanceEntity>",
+        "DbSet<OutboxMessage>"
+      ]
+    },
+    {
+      "path": "services/compliance/ComplianceDbContext.cs",
+      "role": "data_schema",
+      "anchors": [
+        "DbSet<InvestorComplianceEntity>",
+        "DbSet<ComplaintEntity>",
+        "DbSet<OutboxMessage>"
+      ]
+    },
+    {
+      "path": "services/settlement/SettlementDbContext.cs",
+      "role": "data_schema",
+      "anchors": [
+        "DbSet<PayoutBatchEntity>",
+        "DbSet<PayoutItemEntity>",
+        "DbSet<ReconciliationLogEntity>",
+        "DbSet<OutboxMessage>"
       ]
     }
   ]
