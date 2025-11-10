@@ -1,7 +1,7 @@
 {
   "meta": {
     "project": "ois-cfa",
-    "generated_at": "2025-11-10T16:18:40Z",
+    "generated_at": "2025-11-10T16:24:38Z",
     "source": [
       "/home/user/__Repositories/yury-customer/prj_Cifra-rwa-exachange-assets/repositories/customer-gitlab/ois-cfa"
     ],
@@ -291,6 +291,71 @@
           "source": "settlement",
           "destination": "Bank Nominal Stub",
           "description": "Trigger reserve/payouts"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "registry",
+          "description": "Proxy to Registry"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "compliance",
+          "description": "Proxy to Compliance"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "issuance",
+          "description": "Proxy to Issuance"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "settlement",
+          "description": "Proxy to Settlement"
+        },
+        {
+          "source": "issuance",
+          "destination": "Kafka",
+          "description": "Emit issuance events"
+        },
+        {
+          "source": "issuance",
+          "destination": "Hyperledger Fabric",
+          "description": "Invoke issuance chaincode"
+        },
+        {
+          "source": "registry",
+          "destination": "Hyperledger Fabric",
+          "description": "Invoke registry chaincode"
+        },
+        {
+          "source": "fabric-gateway",
+          "destination": "Hyperledger Fabric",
+          "description": "Gateway to peers/orderer"
+        },
+        {
+          "source": "identity",
+          "destination": "Keycloak",
+          "description": "OIDC provider"
+        },
+        {
+          "source": "compliance",
+          "destination": "PostgreSQL",
+          "description": "EF Core DB"
+        },
+        {
+          "source": "registry",
+          "destination": "PostgreSQL",
+          "description": "EF Core DB"
+        },
+        {
+          "source": "issuance",
+          "destination": "PostgreSQL",
+          "description": "EF Core DB"
+        },
+        {
+          "source": "settlement",
+          "destination": "PostgreSQL",
+          "description": "EF Core DB"
         }
       ],
       "c4_level": "Container"
@@ -647,6 +712,166 @@
           "method": "POST",
           "path": "/nominal/payouts/batch",
           "description": "Batch payouts (idempotent)",
+          "authentication": "service"
+        }
+      ]
+    },
+    {
+      "name": "Registry API",
+      "prefix": "/v1",
+      "description": "Orders, wallets, issuance redeem",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/v1/orders",
+          "description": "Create order",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/orders/{id}",
+          "description": "Get order by id",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/wallets/{investorId}",
+          "description": "Get investor wallet",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/issuances/{id}/redeem",
+          "description": "Redeem issuance",
+          "authentication": "jwt"
+        }
+      ]
+    },
+    {
+      "name": "Gateway API",
+      "prefix": "/",
+      "description": "Aggregated routes proxied via YARP",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "description": "Health check",
+          "authentication": "none"
+        },
+        {
+          "method": "POST",
+          "path": "/issuances",
+          "description": "Create issuance",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/issuances/{id}",
+          "description": "Get issuance",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/issuances/{id}/publish",
+          "description": "Publish issuance",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/issuances/{id}/close",
+          "description": "Close issuance",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/orders",
+          "description": "Create order",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/{id}",
+          "description": "Get order by id",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/wallets/{investorId}",
+          "description": "Get investor wallet",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/issuances/{id}/redeem",
+          "description": "Redeem issuance",
+          "authentication": "jwt"
+        }
+      ]
+    },
+    {
+      "name": "Identity OpenID",
+      "prefix": "/",
+      "description": "OIDC endpoints",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/.well-known/openid-configuration",
+          "description": "OIDC discovery",
+          "authentication": "none"
+        },
+        {
+          "method": "GET",
+          "path": "/authorize",
+          "description": "Authorization endpoint",
+          "authentication": "none"
+        },
+        {
+          "method": "POST",
+          "path": "/token",
+          "description": "Token endpoint",
+          "authentication": "basic/client"
+        },
+        {
+          "method": "GET",
+          "path": "/userinfo",
+          "description": "User info",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/users",
+          "description": "List users",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/users/{id}",
+          "description": "Get user by id",
+          "authentication": "jwt"
+        }
+      ]
+    },
+    {
+      "name": "Bank Integrations",
+      "prefix": "/nominal",
+      "description": "Nominal account operations",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/nominal/accounts/{accountId}",
+          "description": "Get account",
+          "authentication": "service"
+        },
+        {
+          "method": "POST",
+          "path": "/nominal/accounts",
+          "description": "Create account",
+          "authentication": "service"
+        },
+        {
+          "method": "POST",
+          "path": "/nominal/transfer",
+          "description": "Transfer funds",
           "authentication": "service"
         }
       ]
