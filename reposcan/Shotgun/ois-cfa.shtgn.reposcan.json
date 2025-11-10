@@ -927,6 +927,87 @@
         "DbSet<ReconciliationLogEntity>",
         "DbSet<OutboxMessage>"
       ]
+    },
+    {
+      "path": "packages/contracts/openapi-gateway.yaml",
+      "role": "api",
+      "anchors": [
+        "openapi:",
+        "paths:",
+        "/health"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-registry.yaml",
+      "role": "api",
+      "anchors": [
+        "/v1/orders",
+        "/v1/wallets/{investorId}"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-issuance.yaml",
+      "role": "api",
+      "anchors": [
+        "/v1/issuances",
+        "/v1/issuances/{id}"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-compliance.yaml",
+      "role": "api",
+      "anchors": [
+        "/v1/compliance/kyc/check",
+        "/v1/complaints"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-settlement.yaml",
+      "role": "api",
+      "anchors": [
+        "/v1/settlement/run",
+        "/v1/reports/payouts"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-identity.yaml",
+      "role": "api",
+      "anchors": [
+        "/.well-known/openid-configuration",
+        "/users"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-integrations-bank.yaml",
+      "role": "api",
+      "anchors": [
+        "/nominal/reserve",
+        "/nominal/payouts/batch"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-integrations-esia.yaml",
+      "role": "api",
+      "anchors": [
+        "ESIA",
+        "OIDC"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-integrations-edo.yaml",
+      "role": "api",
+      "anchors": [
+        "EDO",
+        "Diadoc|SBIS|1C"
+      ]
+    },
+    {
+      "path": "packages/contracts/asyncapi.yaml",
+      "role": "api",
+      "anchors": [
+        "channels:",
+        "protocol: kafka"
+      ]
     }
   ]
 }
