@@ -1008,6 +1008,40 @@
         "channels:",
         "protocol: kafka"
       ]
+    },
+    {
+      "path": "ops/infra/helm/fabric-peer/values.yaml",
+      "role": "deployment",
+      "anchors": [
+        "peer:",
+        "couchdb:",
+        "ServiceMonitor:"
+      ]
+    },
+    {
+      "path": "ops/infra/helm/fabric-orderer/values.yaml",
+      "role": "deployment",
+      "anchors": [
+        "orderer:",
+        "tls:"
+      ]
+    },
+    {
+      "path": "ops/infra/helm/fabric-ca/values.yaml",
+      "role": "deployment",
+      "anchors": [
+        "fabric-ca-server:",
+        "ingress:"
+      ]
+    },
+    {
+      "path": "ops/infra/helm/chaincode-build/values.yaml",
+      "role": "deployment",
+      "anchors": [
+        "chaincode:",
+        "repository:",
+        "tag:"
+      ]
     }
   ]
 }
