@@ -1,7 +1,7 @@
 {
   "meta": {
     "project": "ois-cfa",
-    "generated_at": "2025-11-10T16:07:20Z",
+    "generated_at": "2025-11-10T16:18:40Z",
     "source": [
       "/home/user/__Repositories/yury-customer/prj_Cifra-rwa-exachange-assets/repositories/customer-gitlab/ois-cfa"
     ],
@@ -92,6 +92,12 @@
       "name": "Chaincode: Registry",
       "description": "On-ledger transfers and balances for CFA holdings",
       "technology": "Go + Fabric Contract API",
+      "c4_level": "Container"
+    },
+    "portal-broker": {
+      "name": "Broker Portal",
+      "description": "Broker-facing UI",
+      "technology": "Next.js/React/TypeScript",
       "c4_level": "Container"
     }
   },
@@ -193,6 +199,26 @@
           "source": "fabric-gateway",
           "destination": "Fabric Peer",
           "description": "Invoke/query chaincode"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "issuance",
+          "description": "Reverse proxy to service APIs"
+        },
+        {
+          "source": "settlement",
+          "destination": "issuance",
+          "description": "Fetch issuances for settlement"
+        },
+        {
+          "source": "settlement",
+          "destination": "registry",
+          "description": "Read holdings/wallets for settlement"
+        },
+        {
+          "source": "settlement",
+          "destination": "Bank Nominal Stub",
+          "description": "Trigger reserve/payouts"
         }
       ],
       "c4_level": "Container"
@@ -395,6 +421,69 @@
           "authentication": "jwt"
         }
       ]
+    },
+    {
+      "name": "Issuance API",
+      "prefix": "/v1",
+      "description": "Create, fetch, publish issuances",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/issuances",
+          "description": "Create issuance",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/issuances/{id}",
+          "description": "Get issuance by id",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/issuances/{id}/publish",
+          "description": "Publish issuance",
+          "authentication": "jwt"
+        }
+      ]
+    },
+    {
+      "name": "Settlement API",
+      "prefix": "/v1",
+      "description": "Run settlement and reports",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/settlement/run",
+          "description": "Run settlement batch",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/reports/payouts",
+          "description": "Payouts report",
+          "authentication": "jwt"
+        }
+      ]
+    },
+    {
+      "name": "Bank Nominal Stub API",
+      "prefix": "/",
+      "description": "Mock bank nominal reserve and batch payouts",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/nominal/reserve",
+          "description": "Reserve funds (idempotent)",
+          "authentication": "service"
+        },
+        {
+          "method": "POST",
+          "path": "/nominal/payouts/batch",
+          "description": "Batch payouts (idempotent)",
+          "authentication": "service"
+        }
+      ]
     }
   ],
   "external_services": {
@@ -447,6 +536,16 @@
       "type": "observability",
       "description": "Dashboards",
       "technology": "Grafana"
+    },
+    "Minio": {
+      "type": "object-storage",
+      "description": "S3-compatible storage (artifacts/docs)",
+      "technology": "MinIO"
+    },
+    "Zookeeper": {
+      "type": "coordination",
+      "description": "Kafka dependency (metadata/coordination)",
+      "technology": "Apache Zookeeper"
     }
   },
   "sources": [
@@ -585,6 +684,44 @@
         "AddReverseProxy",
         "AddRateLimiter",
         "MapGet(/ -> /swagger)"
+      ]
+    },
+    {
+      "path": "services/issuance/Program.cs",
+      "role": "api",
+      "anchors": [
+        "/v1/issuances",
+        "/v1/issuances/{id}",
+        "/v1/issuances/{id}/publish",
+        "MapPrometheusScrapingEndpoint"
+      ]
+    },
+    {
+      "path": "services/settlement/Program.cs",
+      "role": "api",
+      "anchors": [
+        "/v1/settlement/run",
+        "/v1/reports/payouts",
+        "ISettlementService"
+      ]
+    },
+    {
+      "path": "services/integrations/bank-nominal/Program.cs",
+      "role": "api",
+      "anchors": [
+        "/nominal/reserve",
+        "/nominal/payouts/batch",
+        "Idempotency-Key"
+      ]
+    },
+    {
+      "path": "docker-compose.yml",
+      "role": "deployment",
+      "anchors": [
+        "kafka:",
+        "zookeeper:",
+        "keycloak:",
+        "minio:"
       ]
     }
   ]
