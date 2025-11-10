@@ -100,49 +100,100 @@
       "name": "Registry Service (app layer)",
       "description": "Handles orders, wallets, holdings; applies idempotency and integrates with outbox",
       "technology": "C#",
-      "dependencies": ["LedgerRegistryAdapter", "ComplianceServiceClient", "BankNominalServiceClient", "RegistryDbContext"],
+      "dependencies": [
+        "LedgerRegistryAdapter",
+        "ComplianceServiceClient",
+        "BankNominalServiceClient",
+        "RegistryDbContext"
+      ],
       "c4_level": "Component"
     },
     "LedgerRegistryAdapter": {
       "name": "Ledger Registry Adapter",
       "description": "HTTP client to Fabric gateway for chaincode invoke/query",
       "technology": "C# HttpClient",
-      "dependencies": ["Fabric peer endpoint", "registry chaincode"],
+      "dependencies": [
+        "Fabric peer endpoint",
+        "registry chaincode"
+      ],
       "c4_level": "Component"
     },
     "ComplianceService": {
       "name": "Compliance Service (domain)",
       "description": "KYC checks, qualification evaluation, complaints register; ensures idempotency via headers",
       "technology": "C#",
-      "dependencies": ["ComplianceDbContext"],
+      "dependencies": [
+        "ComplianceDbContext"
+      ],
       "c4_level": "Component"
     },
     "OutboxService": {
       "name": "Outbox Publisher",
       "description": "Publishes domain events to Kafka topics (asyncapi defined)",
       "technology": "C# + Confluent.Kafka",
-      "dependencies": ["Kafka"],
+      "dependencies": [
+        "Kafka"
+      ],
       "c4_level": "Component"
     }
   },
   "domain_glossary": {
-    "CFA": { "description": "Цифровые финансовые активы", "c4_level": "Context" },
-    "NominalAccount": { "description": "Банковский номинальный счёт оператора", "c4_level": "Context" },
-    "AnalyticalLedger": { "description": "Субсчета по эмитентам/инвесторам/выпускам", "c4_level": "Context" },
-    "ESIA": { "description": "Гос. идентификация (OIDC)", "c4_level": "Context" },
-    "EDO": { "description": "ЮЗДО (Диадок/СБИС/1С)", "c4_level": "Context" }
+    "CFA": {
+      "description": "Цифровые финансовые активы",
+      "c4_level": "Context"
+    },
+    "NominalAccount": {
+      "description": "Банковский номинальный счёт оператора",
+      "c4_level": "Context"
+    },
+    "AnalyticalLedger": {
+      "description": "Субсчета по эмитентам/инвесторам/выпускам",
+      "c4_level": "Context"
+    },
+    "ESIA": {
+      "description": "Гос. идентификация (OIDC)",
+      "c4_level": "Context"
+    },
+    "EDO": {
+      "description": "ЮЗДО (Диадок/СБИС/1С)",
+      "c4_level": "Context"
+    }
   },
   "deployment_topology": {
     "kubernetes": {
       "name": "Kubernetes + Helm",
       "description": "Helm charts for Fabric (orderer/peer/ca) and chaincode build/install; services and frontends deployed as K8s deployments with ingress and ServiceMonitor",
       "relationships": [
-        { "source": "api-gateway", "destination": "registry", "description": "Reverse proxy to service APIs" },
-        { "source": "api-gateway", "destination": "compliance", "description": "Reverse proxy to service APIs" },
-        { "source": "registry", "destination": "PostgreSQL", "description": "EF Core storage" },
-        { "source": "compliance", "destination": "PostgreSQL", "description": "EF Core storage" },
-        { "source": "issuance", "destination": "Kafka", "description": "Publish issuance events" },
-        { "source": "fabric-gateway", "destination": "Fabric Peer", "description": "Invoke/query chaincode" }
+        {
+          "source": "api-gateway",
+          "destination": "registry",
+          "description": "Reverse proxy to service APIs"
+        },
+        {
+          "source": "api-gateway",
+          "destination": "compliance",
+          "description": "Reverse proxy to service APIs"
+        },
+        {
+          "source": "registry",
+          "destination": "PostgreSQL",
+          "description": "EF Core storage"
+        },
+        {
+          "source": "compliance",
+          "destination": "PostgreSQL",
+          "description": "EF Core storage"
+        },
+        {
+          "source": "issuance",
+          "destination": "Kafka",
+          "description": "Publish issuance events"
+        },
+        {
+          "source": "fabric-gateway",
+          "destination": "Fabric Peer",
+          "description": "Invoke/query chaincode"
+        }
       ],
       "c4_level": "Container"
     },
@@ -150,7 +201,11 @@
       "name": "Docker Compose (dev Fabric)",
       "description": "Local dev fabric: orderer, 2 peers with CouchDB, CA",
       "relationships": [
-        { "source": "orderer.example.com", "destination": "peer0/peer1", "description": "Fabric ordering" }
+        {
+          "source": "orderer.example.com",
+          "destination": "peer0/peer1",
+          "description": "Fabric ordering"
+        }
       ],
       "c4_level": "Container"
     }
@@ -160,28 +215,78 @@
     "tables": {
       "wallets": {
         "description": "Balances per owner (investor/issuer)",
-        "columns": ["id (uuid, pk)", "owner_type (varchar(50), not null)", "owner_id (uuid, not null)", "balance (numeric(20,8))", "blocked (numeric(20,8))", "updated_at (timestamptz)"]
+        "columns": [
+          "id (uuid, pk)",
+          "owner_type (varchar(50), not null)",
+          "owner_id (uuid, not null)",
+          "balance (numeric(20,8))",
+          "blocked (numeric(20,8))",
+          "updated_at (timestamptz)"
+        ]
       },
       "holdings": {
         "description": "Investor holdings per issuance",
-        "columns": ["id (uuid, pk)", "investor_id (uuid)", "issuance_id (uuid)", "quantity (numeric(20,8))", "updated_at (timestamptz)"]
+        "columns": [
+          "id (uuid, pk)",
+          "investor_id (uuid)",
+          "issuance_id (uuid)",
+          "quantity (numeric(20,8))",
+          "updated_at (timestamptz)"
+        ]
       },
       "orders": {
         "description": "Investor orders with idempotency and DLT link",
-        "columns": ["id (uuid, pk)", "investor_id (uuid)", "issuance_id (uuid)", "amount (numeric(20,8))", "status (varchar(50))", "idem_key (varchar(255))", "wallet_id (uuid?)", "dlt_tx_hash (varchar(64))", "created_at (timestamptz)"]
+        "columns": [
+          "id (uuid, pk)",
+          "investor_id (uuid)",
+          "issuance_id (uuid)",
+          "amount (numeric(20,8))",
+          "status (varchar(50))",
+          "idem_key (varchar(255))",
+          "wallet_id (uuid?)",
+          "dlt_tx_hash (varchar(64))",
+          "created_at (timestamptz)"
+        ]
       },
       "investors_compliance": {
         "description": "KYC/qualification snapshot per investor",
-        "columns": ["investor_id (uuid, pk)", "kyc (varchar(50))", "qualification_tier (varchar(50))", "qual_limit (numeric(20,8))", "qual_used (numeric(20,8))", "updated_at (timestamptz)"]
+        "columns": [
+          "investor_id (uuid, pk)",
+          "kyc (varchar(50))",
+          "qualification_tier (varchar(50))",
+          "qual_limit (numeric(20,8))",
+          "qual_used (numeric(20,8))",
+          "updated_at (timestamptz)"
+        ]
       },
       "complaints": {
         "description": "Customer complaints with SLA and idempotency",
-        "columns": ["id (uuid, pk)", "investor_id (uuid)", "category (varchar(50))", "text (text)", "status (varchar(50))", "sla_due (timestamptz)", "created_at (timestamptz)", "resolved_at (timestamptz)", "idem_key (varchar(255))"]
+        "columns": [
+          "id (uuid, pk)",
+          "investor_id (uuid)",
+          "category (varchar(50))",
+          "text (text)",
+          "status (varchar(50))",
+          "sla_due (timestamptz)",
+          "created_at (timestamptz)",
+          "resolved_at (timestamptz)",
+          "idem_key (varchar(255))"
+        ]
       }
     },
     "relationships": [
-      { "from": "holdings", "to": "wallets", "type": "Many-to-One", "description": "Holder has wallet per investor" },
-      { "from": "orders", "to": "holdings", "type": "Many-to-One", "description": "Order updates holdings upon settlement" }
+      {
+        "from": "holdings",
+        "to": "wallets",
+        "type": "Many-to-One",
+        "description": "Holder has wallet per investor"
+      },
+      {
+        "from": "orders",
+        "to": "holdings",
+        "type": "Many-to-One",
+        "description": "Order updates holdings upon settlement"
+      }
     ]
   },
   "api_endpoints": [
@@ -190,10 +295,30 @@
       "prefix": "/v1",
       "description": "Orders, wallets, holdings endpoints",
       "endpoints": [
-        { "method": "POST", "path": "/orders", "description": "Place order (Idempotency-Key header)", "authentication": "jwt" },
-        { "method": "GET", "path": "/orders/{id}", "description": "Get order by id", "authentication": "jwt" },
-        { "method": "GET", "path": "/wallets/{investorId}", "description": "Get investor wallet", "authentication": "jwt" },
-        { "method": "POST", "path": "/issuances/{id}/redeem", "description": "Redeem issuance for investor", "authentication": "jwt" }
+        {
+          "method": "POST",
+          "path": "/orders",
+          "description": "Place order (Idempotency-Key header)",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/{id}",
+          "description": "Get order by id",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/wallets/{investorId}",
+          "description": "Get investor wallet",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/issuances/{id}/redeem",
+          "description": "Redeem issuance for investor",
+          "authentication": "jwt"
+        }
       ]
     },
     {
@@ -201,10 +326,30 @@
       "prefix": "/v1",
       "description": "KYC, qualification, complaints",
       "endpoints": [
-        { "method": "POST", "path": "/compliance/kyc/check", "description": "Perform KYC check", "authentication": "jwt" },
-        { "method": "POST", "path": "/compliance/qualification/evaluate", "description": "Evaluate investor qualification", "authentication": "jwt" },
-        { "method": "POST", "path": "/complaints", "description": "Create complaint (idempotent)", "authentication": "jwt" },
-        { "method": "GET", "path": "/complaints/{id}", "description": "Get complaint by id", "authentication": "jwt" }
+        {
+          "method": "POST",
+          "path": "/compliance/kyc/check",
+          "description": "Perform KYC check",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/compliance/qualification/evaluate",
+          "description": "Evaluate investor qualification",
+          "authentication": "jwt"
+        },
+        {
+          "method": "POST",
+          "path": "/complaints",
+          "description": "Create complaint (idempotent)",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/complaints/{id}",
+          "description": "Get complaint by id",
+          "authentication": "jwt"
+        }
       ]
     },
     {
@@ -212,31 +357,235 @@
       "prefix": "/",
       "description": "YARP reverse proxy; see OpenAPI contracts",
       "endpoints": [
-        { "method": "GET", "path": "/health", "description": "Health check", "authentication": "none" }
+        {
+          "method": "GET",
+          "path": "/health",
+          "description": "Health check",
+          "authentication": "none"
+        }
+      ]
+    },
+    {
+      "name": "Identity API",
+      "prefix": "/",
+      "description": "OIDC discovery, user info, user registry",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/.well-known/openid-configuration",
+          "description": "OIDC discovery",
+          "authentication": "none"
+        },
+        {
+          "method": "GET",
+          "path": "/userinfo",
+          "description": "OIDC user info (stub)",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/users",
+          "description": "List users (stub)",
+          "authentication": "jwt"
+        },
+        {
+          "method": "GET",
+          "path": "/users/{id}",
+          "description": "Get user by id (stub)",
+          "authentication": "jwt"
+        }
       ]
     }
   ],
   "external_services": {
-    "PostgreSQL": { "type": "db", "description": "Primary relational storage for services", "technology": "PostgreSQL" },
-    "Kafka": { "type": "queue", "description": "Event streaming for issuance/outbox", "technology": "Kafka" },
-    "Hyperledger Fabric": { "type": "platform", "description": "DLT network for CFA state (orderer/peers/CA)", "technology": "Fabric 2.5" },
-    "CouchDB": { "type": "db", "description": "State database for Fabric peers", "technology": "CouchDB 3.3" },
-    "ESIA": { "type": "third-party", "description": "Government OIDC identity", "technology": "OIDC" },
-    "EDO": { "type": "third-party", "description": "Legal e-doc exchange (Diadoc/SBIS/1C)", "technology": "HTTP APIs" }
+    "PostgreSQL": {
+      "type": "db",
+      "description": "Primary relational storage for services",
+      "technology": "PostgreSQL"
+    },
+    "Kafka": {
+      "type": "queue",
+      "description": "Event streaming for issuance/outbox",
+      "technology": "Kafka"
+    },
+    "Hyperledger Fabric": {
+      "type": "platform",
+      "description": "DLT network for CFA state (orderer/peers/CA)",
+      "technology": "Fabric 2.5"
+    },
+    "CouchDB": {
+      "type": "db",
+      "description": "State database for Fabric peers",
+      "technology": "CouchDB 3.3"
+    },
+    "ESIA": {
+      "type": "third-party",
+      "description": "Government OIDC identity",
+      "technology": "OIDC"
+    },
+    "EDO": {
+      "type": "third-party",
+      "description": "Legal e-doc exchange (Diadoc/SBIS/1C)",
+      "technology": "HTTP APIs"
+    },
+    "Keycloak": {
+      "type": "identity",
+      "description": "OIDC provider for auth flows",
+      "technology": "Keycloak / OIDC"
+    },
+    "OpenTelemetry": {
+      "type": "observability",
+      "description": "Tracing/metrics instrumentation",
+      "technology": "OTel SDK"
+    },
+    "Prometheus": {
+      "type": "observability",
+      "description": "Metrics scraping",
+      "technology": "Prometheus"
+    },
+    "Grafana": {
+      "type": "observability",
+      "description": "Dashboards",
+      "technology": "Grafana"
+    }
   },
   "sources": [
-    { "path": "apps/api-gateway/Program.cs", "role": "api", "anchors": ["AddReverseProxy", "MapReverseProxy", "MapGet(/ -> /swagger)"] },
-    { "path": "services/registry/Program.cs", "role": "api", "anchors": ["UseNpgsql(DefaultConnection)", "MapGroup /v1", "MapPost /orders"] },
-    { "path": "services/compliance/Program.cs", "role": "api", "anchors": ["UseNpgsql(DefaultConnection)", "MapPost /compliance/kyc/check", "MapPost /compliance/qualification/evaluate"] },
-    { "path": "services/issuance/appsettings.json", "role": "deployment", "anchors": ["Kafka:BootstrapServers", "Fabric:PeerEndpoint", "Ledger:ChaincodeEndpoint"] },
-    { "path": "ops/fabric/docker-compose.yml", "role": "deployment", "anchors": ["orderer.example.com", "peer0.ois-dev.example.com", "couchdb0"] },
-    { "path": "ops/infra/helm/fabric-peer/templates/deployment.yaml", "role": "deployment", "anchors": ["app.kubernetes.io/component: peer", "ServiceMonitor", "topologyKey"] },
-    { "path": "packages/contracts/openapi-gateway.yaml", "role": "api", "anchors": ["openapi: 3.1.0", "servers:", "paths:/health"] },
-    { "path": "packages/contracts/asyncapi.yaml", "role": "api", "anchors": ["channels:", "ois.issuance.published", "protocol: kafka"] },
-    { "path": "chaincode/issuance/issuance.go", "role": "component", "anchors": ["Issue(...)", "Close(...)", "contractapi"] },
-    { "path": "chaincode/registry/registry.go", "role": "component", "anchors": ["Transfer(...)", "Holder", "PutState"] },
-    { "path": "docs/architecture/10-HighLevel-Architecture.md", "role": "context", "anchors": ["High-Level Architecture", "Frontends", "Services", "DLT"] },
-    { "path": "docs/architecture/12-DataModel.md", "role": "data_schema", "anchors": ["МОДЕЛЬ ДАННЫХ", "ОСНОВНЫЕ СУЩНОСТИ", "Связи"] },
-    { "path": "docs/glossary.md", "role": "context", "anchors": ["ОИС", "ЦФА", "Номинальный счёт", "ЕСИА"] }
+    {
+      "path": "apps/api-gateway/Program.cs",
+      "role": "api",
+      "anchors": [
+        "AddReverseProxy",
+        "MapReverseProxy",
+        "MapGet(/ -> /swagger)"
+      ]
+    },
+    {
+      "path": "services/registry/Program.cs",
+      "role": "api",
+      "anchors": [
+        "UseNpgsql(DefaultConnection)",
+        "MapGroup /v1",
+        "MapPost /orders"
+      ]
+    },
+    {
+      "path": "services/compliance/Program.cs",
+      "role": "api",
+      "anchors": [
+        "UseNpgsql(DefaultConnection)",
+        "MapPost /compliance/kyc/check",
+        "MapPost /compliance/qualification/evaluate"
+      ]
+    },
+    {
+      "path": "services/issuance/appsettings.json",
+      "role": "deployment",
+      "anchors": [
+        "Kafka:BootstrapServers",
+        "Fabric:PeerEndpoint",
+        "Ledger:ChaincodeEndpoint"
+      ]
+    },
+    {
+      "path": "ops/fabric/docker-compose.yml",
+      "role": "deployment",
+      "anchors": [
+        "orderer.example.com",
+        "peer0.ois-dev.example.com",
+        "couchdb0"
+      ]
+    },
+    {
+      "path": "ops/infra/helm/fabric-peer/templates/deployment.yaml",
+      "role": "deployment",
+      "anchors": [
+        "app.kubernetes.io/component: peer",
+        "ServiceMonitor",
+        "topologyKey"
+      ]
+    },
+    {
+      "path": "packages/contracts/openapi-gateway.yaml",
+      "role": "api",
+      "anchors": [
+        "openapi: 3.1.0",
+        "servers:",
+        "paths:/health"
+      ]
+    },
+    {
+      "path": "packages/contracts/asyncapi.yaml",
+      "role": "api",
+      "anchors": [
+        "channels:",
+        "ois.issuance.published",
+        "protocol: kafka"
+      ]
+    },
+    {
+      "path": "chaincode/issuance/issuance.go",
+      "role": "component",
+      "anchors": [
+        "Issue(...)",
+        "Close(...)",
+        "contractapi"
+      ]
+    },
+    {
+      "path": "chaincode/registry/registry.go",
+      "role": "component",
+      "anchors": [
+        "Transfer(...)",
+        "Holder",
+        "PutState"
+      ]
+    },
+    {
+      "path": "docs/architecture/10-HighLevel-Architecture.md",
+      "role": "context",
+      "anchors": [
+        "High-Level Architecture",
+        "Frontends",
+        "Services",
+        "DLT"
+      ]
+    },
+    {
+      "path": "docs/architecture/12-DataModel.md",
+      "role": "data_schema",
+      "anchors": [
+        "МОДЕЛЬ ДАННЫХ",
+        "ОСНОВНЫЕ СУЩНОСТИ",
+        "Связи"
+      ]
+    },
+    {
+      "path": "docs/glossary.md",
+      "role": "context",
+      "anchors": [
+        "ОИС",
+        "ЦФА",
+        "Номинальный счёт",
+        "ЕСИА"
+      ]
+    },
+    {
+      "path": "services/identity/Program.cs",
+      "role": "api",
+      "anchors": [
+        "/.well-known/openid-configuration",
+        "/userinfo",
+        "/users"
+      ]
+    },
+    {
+      "path": "apps/api-gateway/Program.cs",
+      "role": "deployment",
+      "anchors": [
+        "AddReverseProxy",
+        "AddRateLimiter",
+        "MapGet(/ -> /swagger)"
+      ]
+    }
   ]
 }
