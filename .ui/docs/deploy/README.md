@@ -17,6 +17,6 @@ Quick nav:
 - DoD: `90-DoD.md`
 
 Artifacts generated elsewhere:
-- Reposcan: `reposcan/README.md` with snapshot, C4 and ER diagrams for system context.
+- Reposcan: `.ui/reposcan/README.md` with snapshot, C4 and ER diagrams for system context.
 
-Bootstrap script: .docs/deploy/50-bootstrap-deploy.sh
+Bootstrap script: .ui/docs/deploy/50-bootstrap-deploy.sh

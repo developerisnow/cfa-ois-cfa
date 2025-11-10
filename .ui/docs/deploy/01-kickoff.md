@@ -23,7 +23,7 @@ Roles
 Inputs
 - Repo: `ois-cfa` (branch `agents`)
 - Contracts: `packages/contracts/*`
-- Docs: `reposcan/Runbooks` and this `.docs/deploy`
+- Docs: `.ui/reposcan/Runbooks` and this `.ui/docs/deploy`
 
 Risks
 - Port conflicts on active server

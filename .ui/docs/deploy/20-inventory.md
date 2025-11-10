@@ -3,8 +3,8 @@
 Use `bin/check_resources.sh` and `bin/check_ports.sh` on the target server.
 
 Commands
-- `./.docs/deploy/bin/check_resources.sh > ./.docs/deploy/_out/resources.md`
-- `./.docs/deploy/bin/check_ports.sh > ./.docs/deploy/_out/ports.md`
+- `./.ui/docs/deploy/bin/check_resources.sh > ./.ui/docs/deploy/_out/resources.md`
+- `./.ui/docs/deploy/bin/check_ports.sh > ./.ui/docs/deploy/_out/ports.md`
 
 Captures
 - CPU, memory, disk

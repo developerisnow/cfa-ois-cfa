@@ -8,22 +8,22 @@ mkdir -p "$TARGET_DIR"/logs
 cd "$TARGET_DIR"
 
 # Copy unified compose template
-cp -f "$REPO_DIR/.docs/deploy/templates/docker-compose.unified.template.yml" ./docker-compose.yml
+cp -f "$REPO_DIR/.ui/docs/deploy/templates/docker-compose.unified.template.yml" ./docker-compose.yml
 
 # Create .env with ports and secrets if absent
 if [ ! -f .env ]; then
   echo "OIS_CFA_REPO_DIR=$REPO_DIR" > .env
-  cat "$REPO_DIR/.docs/deploy/22-env.ports.example" >> .env
+  cat "$REPO_DIR/.ui/docs/deploy/22-env.ports.example" >> .env
   echo "" >> .env
-  if [ -f "$REPO_DIR/.docs/deploy/23-env.secrets.example" ]; then
+  if [ -f "$REPO_DIR/.ui/docs/deploy/23-env.secrets.example" ]; then
     # Evaluate openssl substitutions only if openssl available
     if command -v openssl >/dev/null 2>&1; then
-      eval "$(sed -n '1,999p' "$REPO_DIR/.docs/deploy/23-env.secrets.example" | sed 's/^/export /')" >/dev/null 2>&1 || true
+      eval "$(sed -n '1,999p' "$REPO_DIR/.ui/docs/deploy/23-env.secrets.example" | sed 's/^/export /')" >/dev/null 2>&1 || true
       sed -e "s#\$(openssl rand -hex 16 2>/dev/null || echo ois_dev_password)#$(openssl rand -hex 16 2>/dev/null || echo ois_dev_password)#" \
           -e "s#\$(openssl rand -hex 12 2>/dev/null || echo admin)#$(openssl rand -hex 12 2>/dev/null || echo admin)#" \
-          "$REPO_DIR/.docs/deploy/23-env.secrets.example" >> .env
+          "$REPO_DIR/.ui/docs/deploy/23-env.secrets.example" >> .env
     else
-      cat "$REPO_DIR/.docs/deploy/23-env.secrets.example" >> .env
+      cat "$REPO_DIR/.ui/docs/deploy/23-env.secrets.example" >> .env
     fi
   fi
 fi

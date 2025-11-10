@@ -17,7 +17,7 @@ Phases
    - backups, metrics endpoints, log routing
 
 Checkpoints
-- After each phase run health checks and record outputs in `.docs/deploy/logs/`
+- After each phase run health checks and record outputs in `.ui/docs/deploy/logs/`
 
 Rollout Order (piece‑by‑piece)
 - postgres → zookeeper → kafka → keycloak → minio → identity → registry → issuance → settlement → compliance → api‑gateway

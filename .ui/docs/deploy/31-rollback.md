@@ -2,7 +2,7 @@
 
 Stop services
 ```bash
-docker compose -f reposcan/Runbooks/docker-compose.services.example.yml down
+docker compose -f .ui/reposcan/Runbooks/docker-compose.services.example.yml down
 ```
 
 Stop infra (optional)

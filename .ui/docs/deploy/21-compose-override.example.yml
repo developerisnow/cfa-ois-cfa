@@ -26,7 +26,7 @@ services:
       - "${HOST_MINIO_CONSOLE_PORT:-59001}:9001"
 
 # App services (if using containers via example services compose)
-# See reposcan/Runbooks/docker-compose.services.example.yml for builds.
+# See .ui/reposcan/Runbooks/docker-compose.services.example.yml for builds.
 # Example host port mapping (compose file already exposes 5000 internally):
 #  identity:
 #    ports:
