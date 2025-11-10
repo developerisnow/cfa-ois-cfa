@@ -8,6 +8,13 @@ This document replaces prior split files. It covers: kickoff, inventory/prefligh
 - Change control: iterative commits to `agents`; tag archives as needed (e.g., `zip/agents-md`).
 
 ## Inventory & Preflight
+
+## Scripts
+- .ai/deploy/scripts/check_resources.sh
+- .ai/deploy/scripts/check_ports.sh
+- .ai/deploy/scripts/gen_env.sh
+- .ai/deploy/scripts/bootstrap_deploy.sh
+- .ai/deploy/scripts/preflight.sh
 - Run on eywa1 to snapshot resources and ports (manual quick checks):
   - `uname -a && lsb_release -a` — OS
   - `lscpu && free -h && df -hT` — CPU/Mem/Disk
