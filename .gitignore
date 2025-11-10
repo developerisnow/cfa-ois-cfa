@@ -10,6 +10,8 @@
 *.exe
 *.pdb
 *.log
+cfa-ois-net/
+cfa-ois-net
 
 # Node.js
 node_modules/
