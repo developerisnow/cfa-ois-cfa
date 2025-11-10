@@ -223,6 +223,18 @@
     "EDO": {
       "description": "ЮЗДО (Диадок/СБИС/1С)",
       "c4_level": "Context"
+    },
+    "IdempotencyKey": {
+      "description": "Header to ensure at-most-once semantics for POST operations",
+      "c4_level": "Context"
+    },
+    "OutboxPattern": {
+      "description": "Transactional outbox for reliable events and retries",
+      "c4_level": "Context"
+    },
+    "Qualification": {
+      "description": "Investor suitability tier and corresponding limits",
+      "c4_level": "Context"
     }
   },
   "deployment_topology": {
