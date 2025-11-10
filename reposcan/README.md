@@ -13,8 +13,10 @@ This folder aggregates repository snapshots and system blueprint outputs for age
   - `reposcan/EG/yek.txt` — ultra‑fast plain snapshot with tree header
 - Shotgun (SDD)
   - JSON: `reposcan/Shotgun/ois-cfa.shtgn.reposcan.json`
-  - C4 view: `reposcan/Shotgun/ois-cfa.c4.md` (Mermaid)
-  - ERD: `reposcan/Shotgun/ois-cfa.er.md` (Mermaid)
+  - C4 view: `reposcan/Shotgun/ois-cfa-c4.md` (Mermaid)
+  - ERD: `reposcan/Shotgun/ois-cfa-er.md` (Mermaid)
+  - Dependencies: `reposcan/Shotgun/dependencies.md` (Mermaid)
+  - API summary: `reposcan/Shotgun/ois-cfa-apis.md`
 - Versions
   - `reposcan/versions.txt` — toolchain versions
 
@@ -63,3 +65,5 @@ Notes
 - Contracts: see `packages/contracts/*` for OpenAPI/AsyncAPI and JSON schemas.
 - Helm/devops: `ops/infra/helm/*`, `ops/fabric`, `docker-compose.yml`.
 
+
+Detailed runbook: 	reposcan/Runbooks/docker-compose-ubuntu.md
