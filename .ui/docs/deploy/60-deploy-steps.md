@@ -15,6 +15,10 @@
 - Option B: containerized (if enabled):
   - `docker compose -f docker-compose.yml -f .ui/docs/deploy/compose/apps.override.yml --env-file .env.deployment up -d`
 
+2b) Unified Compose (in-repo)
+- `docker compose -f .ui/compose/docker-compose.yml --env-file .env.deployment build`
+- `docker compose -f .ui/compose/docker-compose.yml --env-file .env.deployment up -d`
+
 3) External deploy pack (single Compose)
 - Alternative: use standalone compose project at `/home/user/__Repositories/yury-customer/deploy/ois-cfa-deployed`
 - Steps there:
