@@ -86,3 +86,6 @@ packages/sdks/**/node_modules/
 .cursor/
 tasks/
 artefact/
+
+# Local nested repo (not tracked here)
+cfa-ois-net/
