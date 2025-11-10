@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "${HOST_POSTGRES_PORT:-55432}:5432"
+
+  zookeeper:
+    ports:
+      - "${HOST_ZOOKEEPER_PORT:-52181}:2181"
+
+  kafka:
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:${HOST_KAFKA_PORT:-59092}
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    ports:
+      - "${HOST_KAFKA_PORT:-59092}:9092"
+
+  keycloak:
+    ports:
+      - "${HOST_KEYCLOAK_PORT:-58080}:8080"
+
+  minio:
+    ports:
+      - "${HOST_MINIO_API_PORT:-59000}:9000"
+      - "${HOST_MINIO_CONSOLE_PORT:-59001}:9001"
+
+# App services (if using containers via example services compose)
+# See reposcan/Runbooks/docker-compose.services.example.yml for builds.
+# Example host port mapping (compose file already exposes 5000 internally):
+#  identity:
+#    ports:
+#      - "${SERVICE_IDENTITY_PORT:-6504}:5000"
+#  issuance:
+#    ports:
+#      - "${SERVICE_ISSUANCE_PORT:-6505}:5000"
+#  registry:
+#    ports:
+#      - "${SERVICE_REGISTRY_PORT:-6506}:5000"
+#  settlement:
+#    ports:
+#      - "${SERVICE_SETTLEMENT_PORT:-6507}:5000"
+#  compliance:
+#    ports:
+#      - "${SERVICE_COMPLIANCE_PORT:-6508}:5000"
+#  api-gateway:
+#    ports:
+#      - "${SERVICE_APIGW_PORT:-6580}:5000"
