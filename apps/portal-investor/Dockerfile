@@ -1,7 +1,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund
+COPY package.json ./
+RUN npm install --no-audit --no-fund
 
 FROM node:20-alpine AS build
 WORKDIR /app
@@ -19,4 +19,3 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/package.json ./package.json
 EXPOSE 3002
 CMD ["npm","run","start"]
-
