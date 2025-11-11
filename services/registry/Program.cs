@@ -34,8 +34,7 @@ builder.Services.AddOpenTelemetry()
 // Database
 builder.Services.AddDbContext<RegistryDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Registry")));
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // HTTP Clients
 builder.Services.AddHttpClient<IBankNominalService, BankNominalServiceClient>();
