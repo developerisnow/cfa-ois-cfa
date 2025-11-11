@@ -7,7 +7,8 @@ WORKDIR /src
 COPY ["services/issuance/issuance.csproj", "services/issuance/"]
 COPY ["packages/domain/domain.csproj", "packages/domain/"]
 RUN dotnet restore "services/issuance/issuance.csproj"
-COPY . .
+COPY packages/domain/ packages/domain/
+COPY services/issuance/ services/issuance/
 WORKDIR "/src/services/issuance"
 RUN dotnet build "issuance.csproj" -c Release -o /app/build
 
@@ -18,4 +19,3 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "issuance.dll"]
-
