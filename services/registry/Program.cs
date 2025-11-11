@@ -59,9 +59,11 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (optional, controlled via env MIGRATE_ON_STARTUP=true)
+var migrateOnStartup = Environment.GetEnvironmentVariable("MIGRATE_ON_STARTUP");
+if (string.Equals(migrateOnStartup, "true", StringComparison.OrdinalIgnoreCase))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<RegistryDbContext>();
     db.Database.Migrate();
 }
