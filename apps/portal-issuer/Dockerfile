@@ -1,11 +1,10 @@
 FROM node:20-alpine AS build
 WORKDIR /src
-ENV NODE_ENV=production
 # Копируем весь монорепозиторий, чтобы были доступны shared-ui и sdk
 COPY apps ./apps
 COPY packages ./packages
 RUN cd apps/portal-issuer \
-  && npm install --no-audit --no-fund \
+  && npm install --no-audit --no-fund --include=dev \
   && npm run build
 
 FROM node:20-alpine AS runner
