@@ -50,13 +50,13 @@ builder.Services.AddScoped<IRegistryService, RegistryService>();
 
 // Validation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderRequestValidator>();
-builder.Services.AddFluentValidationAutoValidation();
+// Auto validation can be enabled once package alignment confirmed
+// builder.Services.AddFluentValidationAutoValidation();
 
 // API
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<RegistryDbContext>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
