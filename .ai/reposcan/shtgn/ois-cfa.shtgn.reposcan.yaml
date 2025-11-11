@@ -1,0 +1,885 @@
+meta:
+  project: ois-cfa
+  generated_at: "2025-11-10T16:24:38Z"
+  source:
+    - ./ois-cfa
+  version: shtgn-1.0
+contexts:
+  OIS-CFA Platform:
+    description: Operator of Information System for Digital Financial Assets (CFA) with investor/issuer portals, backoffice, microservices, and DLT integration
+    c4_level: Context
+  DLT Network:
+    description: Hyperledger Fabric network (orderer, peers, CA, CouchDB) hosting issuance/registry chaincode for on-ledger state
+    c4_level: Context
+  Data & Messaging:
+    description: PostgreSQL for services data, Kafka for events, OpenTelemetry + Prometheus/Grafana for observability
+    c4_level: Context
+containers:
+  api-gateway:
+    name: API Gateway
+    description: YARP reverse proxy with rate limiting, health, Swagger; central entrypoint for frontends
+    technology: .NET 9 + YARP
+    c4_level: Container
+  portal-issuer:
+    name: Issuer Portal
+    description: Next.js app for issuers to manage CFA issuances
+    technology: Next.js/React/TypeScript
+    c4_level: Container
+  portal-investor:
+    name: Investor Portal
+    description: 'Next.js app for investors: catalog, KYC, orders'
+    technology: Next.js/React/TypeScript
+    c4_level: Container
+  backoffice:
+    name: Backoffice UI
+    description: Internal operations console for support/ops
+    technology: Next.js/React/TypeScript
+    c4_level: Container
+  identity:
+    name: Identity Service
+    description: Identity/OIDC proxy and authn/authz glue
+    technology: .NET + EF Core + PostgreSQL
+    c4_level: Container
+  registry:
+    name: Registry Service
+    description: Orders, wallets, holdings; integrates with Fabric chaincode and bank nominal service
+    technology: .NET + EF Core + PostgreSQL
+    c4_level: Container
+  issuance:
+    name: Issuance Service
+    description: Create and publish CFA issuances; emits Kafka events; writes to Fabric
+    technology: .NET + EF Core + PostgreSQL + Kafka
+    c4_level: Container
+  settlement:
+    name: Settlement Service
+    description: Batch payouts and reconciliation against bank nominal accounts
+    technology: .NET + PostgreSQL
+    c4_level: Container
+  compliance:
+    name: Compliance Service
+    description: KYC/qualification and complaints; idempotent APIs
+    technology: .NET + EF Core + PostgreSQL
+    c4_level: Container
+  fabric-gateway:
+    name: Fabric Gateway Adapter
+    description: Typed client to Hyperledger Fabric chaincode (registry/issuance)
+    technology: .NET HTTP client to Fabric peer/orderer endpoints
+    c4_level: Container
+  chaincode-issuance:
+    name: 'Chaincode: Issuance'
+    description: On-ledger management of issuances (publish, close)
+    technology: Go + Fabric Contract API
+    c4_level: Container
+  chaincode-registry:
+    name: 'Chaincode: Registry'
+    description: On-ledger transfers and balances for CFA holdings
+    technology: Go + Fabric Contract API
+    c4_level: Container
+  portal-broker:
+    name: Broker Portal
+    description: Broker-facing UI
+    technology: Next.js/React/TypeScript
+    c4_level: Container
+components:
+  RegistryService:
+    name: Registry Service (app layer)
+    description: Handles orders, wallets, holdings; applies idempotency and integrates with outbox
+    technology: C#
+    dependencies:
+      - LedgerRegistryAdapter
+      - ComplianceServiceClient
+      - BankNominalServiceClient
+      - RegistryDbContext
+    c4_level: Component
+  LedgerRegistryAdapter:
+    name: Ledger Registry Adapter
+    description: HTTP client to Fabric gateway for chaincode invoke/query
+    technology: C# HttpClient
+    dependencies:
+      - Fabric peer endpoint
+      - registry chaincode
+    c4_level: Component
+  ComplianceService:
+    name: Compliance Service (domain)
+    description: KYC checks, qualification evaluation, complaints register; ensures idempotency via headers
+    technology: C#
+    dependencies:
+      - ComplianceDbContext
+    c4_level: Component
+  OutboxService:
+    name: Outbox Publisher
+    description: Publishes domain events to Kafka topics (asyncapi defined)
+    technology: C# + Confluent.Kafka
+    dependencies:
+      - Kafka
+    c4_level: Component
+  IssuanceService:
+    name: Issuance Service (app layer)
+    description: Create/publish issuances; outbox + Kafka
+    technology: C#
+    dependencies:
+      - LedgerIssuanceAdapter
+      - IssuanceDbContext
+      - OutboxService
+    c4_level: Component
+  LedgerIssuanceAdapter:
+    name: Ledger Issuance Adapter
+    description: Invoke chaincode for issuance
+    technology: C# HttpClient
+    dependencies:
+      - Fabric peer endpoint
+      - issuance chaincode
+    c4_level: Component
+  SettlementService:
+    name: Settlement Service (domain)
+    description: Batch payout and reconciliation; idempotent
+    technology: C#
+    dependencies:
+      - RegistryClient
+      - IssuanceClient
+      - BankNominalClient
+      - SettlementDbContext
+    c4_level: Component
+  RegistryClient:
+    name: Registry HTTP Client
+    description: Typed client to Registry APIs
+    technology: C# HttpClient
+    dependencies:
+      - Registry API
+    c4_level: Component
+  IssuanceClient:
+    name: Issuance HTTP Client
+    description: Typed client to Issuance APIs
+    technology: C# HttpClient
+    dependencies:
+      - Issuance API
+    c4_level: Component
+  BankNominalClient:
+    name: Bank Nominal Client
+    description: HTTP client to bank nominal service (stub)
+    technology: C# HttpClient
+    dependencies:
+      - Bank Nominal Stub API
+    c4_level: Component
+domain_glossary:
+  CFA:
+    description: Цифровые финансовые активы
+    c4_level: Context
+  NominalAccount:
+    description: Банковский номинальный счёт оператора
+    c4_level: Context
+  AnalyticalLedger:
+    description: Субсчета по эмитентам/инвесторам/выпускам
+    c4_level: Context
+  ESIA:
+    description: Гос. идентификация (OIDC)
+    c4_level: Context
+  EDO:
+    description: ЮЗДО (Диадок/СБИС/1С)
+    c4_level: Context
+  IdempotencyKey:
+    description: Header to ensure at-most-once semantics for POST operations
+    c4_level: Context
+  OutboxPattern:
+    description: Transactional outbox for reliable events and retries
+    c4_level: Context
+  Qualification:
+    description: Investor suitability tier and corresponding limits
+    c4_level: Context
+deployment_topology:
+  kubernetes:
+    name: Kubernetes + Helm
+    description: Helm charts for Fabric (orderer/peer/ca) and chaincode build/install; services and frontends deployed as K8s deployments with ingress and ServiceMonitor
+    relationships:
+      - source: api-gateway
+        destination: registry
+        description: Reverse proxy to service APIs
+      - source: api-gateway
+        destination: compliance
+        description: Reverse proxy to service APIs
+      - source: registry
+        destination: PostgreSQL
+        description: EF Core storage
+      - source: compliance
+        destination: PostgreSQL
+        description: EF Core storage
+      - source: issuance
+        destination: Kafka
+        description: Publish issuance events
+      - source: fabric-gateway
+        destination: Fabric Peer
+        description: Invoke/query chaincode
+      - source: api-gateway
+        destination: issuance
+        description: Reverse proxy to service APIs
+      - source: settlement
+        destination: issuance
+        description: Fetch issuances for settlement
+      - source: settlement
+        destination: registry
+        description: Read holdings/wallets for settlement
+      - source: settlement
+        destination: Bank Nominal Stub
+        description: Trigger reserve/payouts
+      - source: api-gateway
+        destination: registry
+        description: Proxy to Registry
+      - source: api-gateway
+        destination: compliance
+        description: Proxy to Compliance
+      - source: api-gateway
+        destination: issuance
+        description: Proxy to Issuance
+      - source: api-gateway
+        destination: settlement
+        description: Proxy to Settlement
+      - source: issuance
+        destination: Kafka
+        description: Emit issuance events
+      - source: issuance
+        destination: Hyperledger Fabric
+        description: Invoke issuance chaincode
+      - source: registry
+        destination: Hyperledger Fabric
+        description: Invoke registry chaincode
+      - source: fabric-gateway
+        destination: Hyperledger Fabric
+        description: Gateway to peers/orderer
+      - source: identity
+        destination: Keycloak
+        description: OIDC provider
+      - source: compliance
+        destination: PostgreSQL
+        description: EF Core DB
+      - source: registry
+        destination: PostgreSQL
+        description: EF Core DB
+      - source: issuance
+        destination: PostgreSQL
+        description: EF Core DB
+      - source: settlement
+        destination: PostgreSQL
+        description: EF Core DB
+    c4_level: Container
+  docker-dev:
+    name: Docker Compose (dev Fabric)
+    description: 'Local dev fabric: orderer, 2 peers with CouchDB, CA'
+    relationships:
+      - source: orderer.example.com
+        destination: peer0/peer1
+        description: Fabric ordering
+    c4_level: Container
+data_schema:
+  description: PostgreSQL schemas per service (EF Core). Key tables in registry and compliance services.
+  tables:
+    wallets:
+      description: Balances per owner (investor/issuer)
+      columns:
+        - id (uuid, pk)
+        - owner_type (varchar(50), not null)
+        - owner_id (uuid, not null)
+        - balance (numeric(20,8))
+        - blocked (numeric(20,8))
+        - updated_at (timestamptz)
+    holdings:
+      description: Investor holdings per issuance
+      columns:
+        - id (uuid, pk)
+        - investor_id (uuid)
+        - issuance_id (uuid)
+        - quantity (numeric(20,8))
+        - updated_at (timestamptz)
+    orders:
+      description: Investor orders with idempotency and DLT link
+      columns:
+        - id (uuid, pk)
+        - investor_id (uuid)
+        - issuance_id (uuid)
+        - amount (numeric(20,8))
+        - status (varchar(50))
+        - idem_key (varchar(255))
+        - wallet_id (uuid?)
+        - dlt_tx_hash (varchar(64))
+        - created_at (timestamptz)
+    investors_compliance:
+      description: KYC/qualification snapshot per investor
+      columns:
+        - investor_id (uuid, pk)
+        - kyc (varchar(50))
+        - qualification_tier (varchar(50))
+        - qual_limit (numeric(20,8))
+        - qual_used (numeric(20,8))
+        - updated_at (timestamptz)
+    complaints:
+      description: Customer complaints with SLA and idempotency
+      columns:
+        - id (uuid, pk)
+        - investor_id (uuid)
+        - category (varchar(50))
+        - text (text)
+        - status (varchar(50))
+        - sla_due (timestamptz)
+        - created_at (timestamptz)
+        - resolved_at (timestamptz)
+        - idem_key (varchar(255))
+    transactions:
+      description: Ledger of off-ledger transactions linked to orders
+      columns:
+        - id (uuid, pk)
+        - order_id (uuid, fk orders.id)
+        - amount (numeric)
+        - type (varchar)
+        - created_at (timestamptz)
+    outbox_messages:
+      description: Outbox pattern table for reliable events
+      columns:
+        - id (uuid, pk)
+        - aggregate (varchar)
+        - type (varchar)
+        - payload (jsonb)
+        - created_at (timestamptz)
+        - processed_at (timestamptz?)
+    issuances:
+      description: Issuance definitions and lifecycle state
+      columns:
+        - id (uuid, pk)
+        - name (varchar)
+        - status (varchar)
+        - published_at (timestamptz?)
+    payout_batches:
+      description: Settlement payout batches
+      columns:
+        - id (uuid, pk)
+        - run_date (date)
+        - status (varchar)
+        - created_at (timestamptz)
+    payout_items:
+      description: Items within payout batches
+      columns:
+        - id (uuid, pk)
+        - batch_id (uuid, fk payout_batches.id)
+        - investor_id (uuid)
+        - amount (numeric)
+        - bank_ref (varchar)
+        - status (varchar)
+    reconciliation_logs:
+      description: Bank reconciliation logs
+      columns:
+        - id (uuid, pk)
+        - item_id (uuid, fk payout_items.id)
+        - status (varchar)
+        - details (text)
+        - created_at (timestamptz)
+    users:
+      description: Identity users (dev stub)
+      columns:
+        - id (uuid, pk)
+        - email (varchar)
+        - role (varchar)
+        - status (varchar)
+        - created_at (timestamptz)
+  relationships:
+    - from: holdings
+      to: wallets
+      type: Many-to-One
+      description: Holder has wallet per investor
+    - from: orders
+      to: holdings
+      type: Many-to-One
+      description: Order updates holdings upon settlement
+    - from: orders
+      to: transactions
+      type: One-to-Many
+      description: Order generates one or more transactions
+    - from: holdings
+      to: issuances
+      type: Many-to-One
+      description: Holding is scoped to an issuance
+    - from: payout_items
+      to: payout_batches
+      type: Many-to-One
+      description: Items belong to a batch
+    - from: reconciliation_logs
+      to: payout_items
+      type: Many-to-One
+      description: Reconciliation per payout item
+api_endpoints:
+  - name: Registry API
+    prefix: /v1
+    description: Orders, wallets, holdings endpoints
+    endpoints:
+      - method: POST
+        path: /orders
+        description: Place order (Idempotency-Key header)
+        authentication: jwt
+      - method: GET
+        path: /orders/{id}
+        description: Get order by id
+        authentication: jwt
+      - method: GET
+        path: /wallets/{investorId}
+        description: Get investor wallet
+        authentication: jwt
+      - method: POST
+        path: /issuances/{id}/redeem
+        description: Redeem issuance for investor
+        authentication: jwt
+  - name: Compliance API
+    prefix: /v1
+    description: KYC, qualification, complaints
+    endpoints:
+      - method: POST
+        path: /compliance/kyc/check
+        description: Perform KYC check
+        authentication: jwt
+      - method: POST
+        path: /compliance/qualification/evaluate
+        description: Evaluate investor qualification
+        authentication: jwt
+      - method: POST
+        path: /complaints
+        description: Create complaint (idempotent)
+        authentication: jwt
+      - method: GET
+        path: /complaints/{id}
+        description: Get complaint by id
+        authentication: jwt
+  - name: Gateway API
+    prefix: /
+    description: YARP reverse proxy; see OpenAPI contracts
+    endpoints:
+      - method: GET
+        path: /health
+        description: Health check
+        authentication: none
+  - name: Identity API
+    prefix: /
+    description: OIDC discovery, user info, user registry
+    endpoints:
+      - method: GET
+        path: /.well-known/openid-configuration
+        description: OIDC discovery
+        authentication: none
+      - method: GET
+        path: /userinfo
+        description: OIDC user info (stub)
+        authentication: jwt
+      - method: GET
+        path: /users
+        description: List users (stub)
+        authentication: jwt
+      - method: GET
+        path: /users/{id}
+        description: Get user by id (stub)
+        authentication: jwt
+  - name: Issuance API
+    prefix: /v1
+    description: Create, fetch, publish issuances
+    endpoints:
+      - method: POST
+        path: /issuances
+        description: Create issuance
+        authentication: jwt
+      - method: GET
+        path: /issuances/{id}
+        description: Get issuance by id
+        authentication: jwt
+      - method: POST
+        path: /issuances/{id}/publish
+        description: Publish issuance
+        authentication: jwt
+  - name: Settlement API
+    prefix: /v1
+    description: Run settlement and reports
+    endpoints:
+      - method: POST
+        path: /settlement/run
+        description: Run settlement batch
+        authentication: jwt
+      - method: GET
+        path: /reports/payouts
+        description: Payouts report
+        authentication: jwt
+  - name: Bank Nominal Stub API
+    prefix: /
+    description: Mock bank nominal reserve and batch payouts
+    endpoints:
+      - method: POST
+        path: /nominal/reserve
+        description: Reserve funds (idempotent)
+        authentication: service
+      - method: POST
+        path: /nominal/payouts/batch
+        description: Batch payouts (idempotent)
+        authentication: service
+  - name: Registry API
+    prefix: /v1
+    description: Orders, wallets, issuance redeem
+    endpoints:
+      - method: POST
+        path: /v1/orders
+        description: Create order
+        authentication: jwt
+      - method: GET
+        path: /v1/orders/{id}
+        description: Get order by id
+        authentication: jwt
+      - method: GET
+        path: /v1/wallets/{investorId}
+        description: Get investor wallet
+        authentication: jwt
+      - method: POST
+        path: /v1/issuances/{id}/redeem
+        description: Redeem issuance
+        authentication: jwt
+  - name: Gateway API
+    prefix: /
+    description: Aggregated routes proxied via YARP
+    endpoints:
+      - method: GET
+        path: /health
+        description: Health check
+        authentication: none
+      - method: POST
+        path: /issuances
+        description: Create issuance
+        authentication: jwt
+      - method: GET
+        path: /issuances/{id}
+        description: Get issuance
+        authentication: jwt
+      - method: POST
+        path: /issuances/{id}/publish
+        description: Publish issuance
+        authentication: jwt
+      - method: POST
+        path: /issuances/{id}/close
+        description: Close issuance
+        authentication: jwt
+      - method: POST
+        path: /v1/orders
+        description: Create order
+        authentication: jwt
+      - method: GET
+        path: /orders/{id}
+        description: Get order by id
+        authentication: jwt
+      - method: GET
+        path: /v1/wallets/{investorId}
+        description: Get investor wallet
+        authentication: jwt
+      - method: POST
+        path: /v1/issuances/{id}/redeem
+        description: Redeem issuance
+        authentication: jwt
+  - name: Identity OpenID
+    prefix: /
+    description: OIDC endpoints
+    endpoints:
+      - method: GET
+        path: /.well-known/openid-configuration
+        description: OIDC discovery
+        authentication: none
+      - method: GET
+        path: /authorize
+        description: Authorization endpoint
+        authentication: none
+      - method: POST
+        path: /token
+        description: Token endpoint
+        authentication: basic/client
+      - method: GET
+        path: /userinfo
+        description: User info
+        authentication: jwt
+      - method: GET
+        path: /users
+        description: List users
+        authentication: jwt
+      - method: GET
+        path: /users/{id}
+        description: Get user by id
+        authentication: jwt
+  - name: Bank Integrations
+    prefix: /nominal
+    description: Nominal account operations
+    endpoints:
+      - method: GET
+        path: /nominal/accounts/{accountId}
+        description: Get account
+        authentication: service
+      - method: POST
+        path: /nominal/accounts
+        description: Create account
+        authentication: service
+      - method: POST
+        path: /nominal/transfer
+        description: Transfer funds
+        authentication: service
+external_services:
+  PostgreSQL:
+    type: db
+    description: Primary relational storage for services
+    technology: PostgreSQL
+  Kafka:
+    type: queue
+    description: Event streaming for issuance/outbox
+    technology: Kafka
+  Hyperledger Fabric:
+    type: platform
+    description: DLT network for CFA state (orderer/peers/CA)
+    technology: Fabric 2.5
+  CouchDB:
+    type: db
+    description: State database for Fabric peers
+    technology: CouchDB 3.3
+  ESIA:
+    type: third-party
+    description: Government OIDC identity
+    technology: OIDC
+  EDO:
+    type: third-party
+    description: Legal e-doc exchange (Diadoc/SBIS/1C)
+    technology: HTTP APIs
+  Keycloak:
+    type: identity
+    description: OIDC provider for auth flows
+    technology: Keycloak / OIDC
+  OpenTelemetry:
+    type: observability
+    description: Tracing/metrics instrumentation
+    technology: OTel SDK
+  Prometheus:
+    type: observability
+    description: Metrics scraping
+    technology: Prometheus
+  Grafana:
+    type: observability
+    description: Dashboards
+    technology: Grafana
+  Minio:
+    type: object-storage
+    description: S3-compatible storage (artifacts/docs)
+    technology: MinIO
+  Zookeeper:
+    type: coordination
+    description: Kafka dependency (metadata/coordination)
+    technology: Apache Zookeeper
+sources:
+  - path: apps/api-gateway/Program.cs
+    role: api
+    anchors:
+      - AddReverseProxy
+      - MapReverseProxy
+      - MapGet(/ -> /swagger)
+  - path: services/registry/Program.cs
+    role: api
+    anchors:
+      - UseNpgsql(DefaultConnection)
+      - MapGroup /v1
+      - MapPost /orders
+  - path: services/compliance/Program.cs
+    role: api
+    anchors:
+      - UseNpgsql(DefaultConnection)
+      - MapPost /compliance/kyc/check
+      - MapPost /compliance/qualification/evaluate
+  - path: services/issuance/appsettings.json
+    role: deployment
+    anchors:
+      - Kafka:BootstrapServers
+      - Fabric:PeerEndpoint
+      - Ledger:ChaincodeEndpoint
+  - path: ops/fabric/docker-compose.yml
+    role: deployment
+    anchors:
+      - orderer.example.com
+      - peer0.ois-dev.example.com
+      - couchdb0
+  - path: ops/infra/helm/fabric-peer/templates/deployment.yaml
+    role: deployment
+    anchors:
+      - 'app.kubernetes.io/component: peer'
+      - ServiceMonitor
+      - topologyKey
+  - path: packages/contracts/openapi-gateway.yaml
+    role: api
+    anchors:
+      - 'openapi: 3.1.0'
+      - 'servers:'
+      - paths:/health
+  - path: packages/contracts/asyncapi.yaml
+    role: api
+    anchors:
+      - 'channels:'
+      - ois.issuance.published
+      - 'protocol: kafka'
+  - path: chaincode/issuance/issuance.go
+    role: component
+    anchors:
+      - Issue(...)
+      - Close(...)
+      - contractapi
+  - path: chaincode/registry/registry.go
+    role: component
+    anchors:
+      - Transfer(...)
+      - Holder
+      - PutState
+  - path: docs/architecture/10-HighLevel-Architecture.md
+    role: context
+    anchors:
+      - High-Level Architecture
+      - Frontends
+      - Services
+      - DLT
+  - path: docs/architecture/12-DataModel.md
+    role: data_schema
+    anchors:
+      - МОДЕЛЬ ДАННЫХ
+      - ОСНОВНЫЕ СУЩНОСТИ
+      - Связи
+  - path: docs/glossary.md
+    role: context
+    anchors:
+      - ОИС
+      - ЦФА
+      - Номинальный счёт
+      - ЕСИА
+  - path: services/identity/Program.cs
+    role: api
+    anchors:
+      - /.well-known/openid-configuration
+      - /userinfo
+      - /users
+  - path: apps/api-gateway/Program.cs
+    role: deployment
+    anchors:
+      - AddReverseProxy
+      - AddRateLimiter
+      - MapGet(/ -> /swagger)
+  - path: services/issuance/Program.cs
+    role: api
+    anchors:
+      - /v1/issuances
+      - /v1/issuances/{id}
+      - /v1/issuances/{id}/publish
+      - MapPrometheusScrapingEndpoint
+  - path: services/settlement/Program.cs
+    role: api
+    anchors:
+      - /v1/settlement/run
+      - /v1/reports/payouts
+      - ISettlementService
+  - path: services/integrations/bank-nominal/Program.cs
+    role: api
+    anchors:
+      - /nominal/reserve
+      - /nominal/payouts/batch
+      - Idempotency-Key
+  - path: docker-compose.yml
+    role: deployment
+    anchors:
+      - 'kafka:'
+      - 'zookeeper:'
+      - 'keycloak:'
+      - 'minio:'
+  - path: services/registry/RegistryDbContext.cs
+    role: data_schema
+    anchors:
+      - DbSet<WalletEntity>
+      - DbSet<HoldingEntity>
+      - DbSet<OrderEntity>
+      - DbSet<TransactionEntity>
+      - DbSet<OutboxMessage>
+  - path: services/issuance/IssuanceDbContext.cs
+    role: data_schema
+    anchors:
+      - DbSet<IssuanceEntity>
+      - DbSet<OutboxMessage>
+  - path: services/compliance/ComplianceDbContext.cs
+    role: data_schema
+    anchors:
+      - DbSet<InvestorComplianceEntity>
+      - DbSet<ComplaintEntity>
+      - DbSet<OutboxMessage>
+  - path: services/settlement/SettlementDbContext.cs
+    role: data_schema
+    anchors:
+      - DbSet<PayoutBatchEntity>
+      - DbSet<PayoutItemEntity>
+      - DbSet<ReconciliationLogEntity>
+      - DbSet<OutboxMessage>
+  - path: packages/contracts/openapi-gateway.yaml
+    role: api
+    anchors:
+      - 'openapi:'
+      - 'paths:'
+      - /health
+  - path: packages/contracts/openapi-registry.yaml
+    role: api
+    anchors:
+      - /v1/orders
+      - /v1/wallets/{investorId}
+  - path: packages/contracts/openapi-issuance.yaml
+    role: api
+    anchors:
+      - /v1/issuances
+      - /v1/issuances/{id}
+  - path: packages/contracts/openapi-compliance.yaml
+    role: api
+    anchors:
+      - /v1/compliance/kyc/check
+      - /v1/complaints
+  - path: packages/contracts/openapi-settlement.yaml
+    role: api
+    anchors:
+      - /v1/settlement/run
+      - /v1/reports/payouts
+  - path: packages/contracts/openapi-identity.yaml
+    role: api
+    anchors:
+      - /.well-known/openid-configuration
+      - /users
+  - path: packages/contracts/openapi-integrations-bank.yaml
+    role: api
+    anchors:
+      - /nominal/reserve
+      - /nominal/payouts/batch
+  - path: packages/contracts/openapi-integrations-esia.yaml
+    role: api
+    anchors:
+      - ESIA
+      - OIDC
+  - path: packages/contracts/openapi-integrations-edo.yaml
+    role: api
+    anchors:
+      - EDO
+      - Diadoc|SBIS|1C
+  - path: packages/contracts/asyncapi.yaml
+    role: api
+    anchors:
+      - 'channels:'
+      - 'protocol: kafka'
+  - path: ops/infra/helm/fabric-peer/values.yaml
+    role: deployment
+    anchors:
+      - 'peer:'
+      - 'couchdb:'
+      - 'ServiceMonitor:'
+  - path: ops/infra/helm/fabric-orderer/values.yaml
+    role: deployment
+    anchors:
+      - 'orderer:'
+      - 'tls:'
+  - path: ops/infra/helm/fabric-ca/values.yaml
+    role: deployment
+    anchors:
+      - 'fabric-ca-server:'
+      - 'ingress:'
+  - path: ops/infra/helm/chaincode-build/values.yaml
+    role: deployment
+    anchors:
+      - 'chaincode:'
+      - 'repository:'
+      - 'tag:'
