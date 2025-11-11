@@ -6,5 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-</Project>
+  <!-- Exclude nested test project sources from library build -->
+  <ItemGroup>
+    <Compile Remove="domain.Tests/**/*.cs" />
+  </ItemGroup>
 
+</Project>
