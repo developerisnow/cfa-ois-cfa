@@ -79,7 +79,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapHealthChecks("/health");
-app.MapPrometheusScrapingEndpoint("/metrics");
+// app.MapPrometheusScrapingEndpoint("/metrics");
 
 // API Endpoints
 var api = app.MapGroup("/v1").WithTags("Issuances");
