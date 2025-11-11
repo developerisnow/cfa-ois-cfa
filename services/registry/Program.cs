@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -146,4 +147,3 @@ api.MapPost("/issuances/{id:guid}/redeem", async (
 .WithOpenApi();
 
 app.Run();
-
