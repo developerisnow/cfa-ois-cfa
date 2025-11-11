@@ -1,21 +1,19 @@
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package.json ./
-RUN npm install --no-audit --no-fund
-
 FROM node:20-alpine AS build
-WORKDIR /app
+WORKDIR /src
 ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
+# Копируем весь монорепозиторий, чтобы были доступны shared-ui и sdk
+COPY apps ./apps
+COPY packages ./packages
+RUN cd apps/portal-issuer \
+  && npm install --no-audit --no-fund \
+  && npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/public ./public
-COPY --from=build /app/package.json ./package.json
+COPY --from=build /src/apps/portal-issuer/.next ./.next
+COPY --from=build /src/apps/portal-issuer/node_modules ./node_modules
+COPY --from=build /src/apps/portal-issuer/public ./public
+COPY --from=build /src/apps/portal-issuer/package.json ./package.json
 EXPOSE 3001
 CMD ["npm","run","start"]
