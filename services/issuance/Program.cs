@@ -39,8 +39,7 @@ builder.Services.AddPrometheusExporter();
 // Database
 builder.Services.AddDbContext<IssuanceDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Issuance")));
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // HTTP Client for Ledger Adapter
 builder.Services.AddHttpClient<LedgerIssuanceAdapter>()
@@ -63,9 +62,11 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (optional, via MIGRATE_ON_STARTUP=true)
+var migrateOnStartup = Environment.GetEnvironmentVariable("MIGRATE_ON_STARTUP");
+if (string.Equals(migrateOnStartup, "true", StringComparison.OrdinalIgnoreCase))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<IssuanceDbContext>();
     db.Database.Migrate();
 }
@@ -149,4 +150,3 @@ api.MapPost("/issuances/{id:guid}/close", async (
 .WithOpenApi();
 
 app.Run();
-
