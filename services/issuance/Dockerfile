@@ -9,6 +9,7 @@ COPY ["packages/domain/domain.csproj", "packages/domain/"]
 RUN dotnet restore "services/issuance/issuance.csproj"
 COPY packages/domain/ packages/domain/
 COPY services/issuance/ services/issuance/
+RUN rm -rf services/issuance/issuance.Tests || true
 WORKDIR "/src/services/issuance"
 RUN dotnet build "issuance.csproj" -c Release -o /app/build
 

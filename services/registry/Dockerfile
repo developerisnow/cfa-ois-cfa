@@ -10,6 +10,7 @@ RUN dotnet restore "services/registry/registry.csproj"
 # Copy only required source to keep context minimal and exclude tests
 COPY packages/domain/ packages/domain/
 COPY services/registry/ services/registry/
+RUN rm -rf services/registry/registry.Tests || true
 WORKDIR "/src/services/registry"
 RUN dotnet build "registry.csproj" -c Release -o /app/build
 
