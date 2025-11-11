@@ -45,20 +45,20 @@ tags: [nextjs, docker]
 - [ ] Убедиться, что клиенты в Keycloak созданы (см. 06)
 - [ ] Проверить redirect URIs и web origins под ваши адреса
 
-SSH‑туннели (если внешний фаервол закрыт)
-- [ ] ```bash
+- SSH‑туннели (если внешний фаервол закрыт)
+- [ ] Порты должны быть ≤ 65535. Пример корректного туннеля:
+  ```bash
   ssh -N \
-    -L 155000:localhost:55000 \
-    -L 155001:localhost:55001 \
-    -L 155006:localhost:55006 \
-    -L 155080:localhost:58080 \
-    -L 155101:localhost:53001 \
-    -L 155102:localhost:53002 \
+    -L 15500:localhost:55000 \
+    -L 15501:localhost:55001 \
+    -L 15506:localhost:55006 \
+    -L 15808:localhost:58080 \
+    -L 15301:localhost:53001 \
+    -L 15302:localhost:53002 \
     cfa1-mux
   ```
 - [ ] Открыть в браузере: 
-  - Gateway: `http://localhost:155000/health`
-  - Issuer app: `http://localhost:155101/`
-  - Investor app: `http://localhost:155102/`
-  - Keycloak: `http://localhost:155080/`
-
+  - Gateway: `http://localhost:15500/health`
+  - Issuer app: `http://localhost:15301/`
+  - Investor app: `http://localhost:15302/`
+  - Keycloak: `http://localhost:15808/`
