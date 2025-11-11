@@ -620,7 +620,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /v1/reports/payouts:
+  /v1/reports/issuer/payouts:
     get:
       summary: Get issuer payouts report
       operationId: getIssuerPayoutsReport
@@ -973,6 +973,24 @@ components:
         remainingAmount:
           type: number
           format: decimal
+
+    # Cross-file references to service schemas
+    SettlementResponse:
+      $ref: 'openapi-settlement.yaml#/components/schemas/SettlementResponse'
+    KycCheckRequest:
+      $ref: 'openapi-compliance.yaml#/components/schemas/KycCheckRequest'
+    KycResult:
+      $ref: 'openapi-compliance.yaml#/components/schemas/KycResult'
+    QualificationEvaluateRequest:
+      $ref: 'openapi-compliance.yaml#/components/schemas/QualificationEvaluateRequest'
+    QualificationResult:
+      $ref: 'openapi-compliance.yaml#/components/schemas/QualificationResult'
+    InvestorStatusResponse:
+      $ref: 'openapi-compliance.yaml#/components/schemas/InvestorStatusResponse'
+    CreateComplaintRequest:
+      $ref: 'openapi-compliance.yaml#/components/schemas/CreateComplaintRequest'
+    ComplaintResponse:
+      $ref: 'openapi-compliance.yaml#/components/schemas/ComplaintResponse'
     
     CreateOrderRequest:
       type: object

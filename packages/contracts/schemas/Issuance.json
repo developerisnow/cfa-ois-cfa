@@ -23,15 +23,13 @@
     "totalAmount": {
       "type": "number",
       "format": "decimal",
-      "minimum": 0,
-      "exclusiveMinimum": true,
+      "exclusiveMinimum": 0,
       "description": "Общая сумма выпуска"
     },
     "nominal": {
       "type": "number",
       "format": "decimal",
-      "minimum": 0,
-      "exclusiveMinimum": true,
+      "exclusiveMinimum": 0,
       "description": "Номинальная стоимость единицы"
     },
     "issueDate": {

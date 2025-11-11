@@ -1,11 +1,11 @@
-asyncapi: 3.0.0
+asyncapi: 2.6.0
 info:
   title: OIS Events API
   version: 1.0.0
   description: События системы ОИС (Kafka)
 servers:
   kafka:
-    host: localhost:9092
+    url: localhost:9092
     protocol: kafka
     description: Development Kafka broker
 
@@ -392,6 +392,38 @@ components:
           type: number
           format: decimal
         completedAt:
+          type: string
+      format: date-time
+    
+    RegistryTransferredPayload:
+      type: object
+      required:
+        - orderId
+        - issuanceId
+        - investorId
+        - amount
+        - txHash
+        - transferredAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        walletId:
+          type: string
+          format: uuid
+          nullable: true
+        amount:
+          type: number
+          format: decimal
+        txHash:
+          type: string
+        transferredAt:
           type: string
           format: date-time
     
