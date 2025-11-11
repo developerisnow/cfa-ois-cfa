@@ -6,6 +6,7 @@ using OpenTelemetry.Trace;
 using OIS.Registry;
 using OIS.Registry.DTOs;
 using OIS.Registry.Services;
+using OIS.Registry.Validators;
 using Serilog;
 using System.Diagnostics;
 
