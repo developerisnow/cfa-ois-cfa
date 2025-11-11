@@ -6,6 +6,9 @@ COPY packages ./packages
 RUN cd packages/sdks/ts \
   && npm install --no-audit --no-fund --include=dev \
   && npm run build
+# Install shared-ui dependencies locally so module resolution works
+RUN cd apps/shared-ui \
+  && npm install --no-audit --no-fund --include=dev
 # Then build the app
 RUN cd apps/portal-investor \
   && npm install --no-audit --no-fund --include=dev \
