@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: api-gateway
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      # Override YARP clusters to service names in this compose network
+      ReverseProxy__Clusters__identity__Destinations__default__Address: http://identity-service:8080
+      ReverseProxy__Clusters__issuance__Destinations__default__Address: http://issuance-service:8080
+      ReverseProxy__Clusters__registry__Destinations__default__Address: http://registry-service:8080
+      ReverseProxy__Clusters__settlement__Destinations__default__Address: http://settlement-service:8080
+      ReverseProxy__Clusters__compliance__Destinations__default__Address: http://compliance-service:8080
+    ports:
+      - "${GATEWAY_HOST_PORT}:8080"
+    depends_on:
+      - identity-service
+      - issuance-service
+      - registry-service
+      - settlement-service
+      - compliance-service
+    networks:
+      - default
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: services/identity/Dockerfile
+    container_name: identity-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${SERVICE_DB_CONN}
+      Keycloak__Authority: http://keycloak:8080/realms/ois
+    ports:
+      - "${IDENTITY_HOST_PORT}:8080"
+    depends_on:
+      - postgres
+
+  issuance-service:
+    build:
+      context: .
+      dockerfile: services/issuance/Dockerfile
+    container_name: issuance-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${SERVICE_DB_CONN}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP}
+      Ledger__UseMock: "true"
+    ports:
+      - "${ISSUANCE_HOST_PORT}:8080"
+    depends_on:
+      - postgres
+      - kafka
+
+  registry-service:
+    build:
+      context: .
+      dockerfile: services/registry/Dockerfile
+    container_name: registry-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${SERVICE_DB_CONN}
+      Kafka__BootstrapServers: ${KAFKA_BOOTSTRAP}
+      Ledger__UseMock: "true"
+    ports:
+      - "${REGISTRY_HOST_PORT}:8080"
+    depends_on:
+      - postgres
+      - kafka
+
+  settlement-service:
+    build:
+      context: .
+      dockerfile: services/settlement/Dockerfile
+    container_name: settlement-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${SERVICE_DB_CONN}
+    ports:
+      - "${SETTLEMENT_HOST_PORT}:8080"
+    depends_on:
+      - postgres
+      - bank-nominal
+
+  compliance-service:
+    build:
+      context: .
+      dockerfile: services/compliance/Dockerfile
+    container_name: compliance-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: ${SERVICE_DB_CONN}
+    ports:
+      - "${COMPLIANCE_HOST_PORT}:8080"
+    depends_on:
+      - postgres
+
+  bank-nominal:
+    build:
+      context: .
+      dockerfile: services/integrations/bank-nominal/Dockerfile
+    container_name: bank-nominal
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+    ports:
+      - "${BANK_NOMINAL_HOST_PORT}:8080"
+
+networks:
+  default:
+    name: ois-cfa-net
+
