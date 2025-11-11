@@ -1,0 +1,17 @@
+# Sample stage values
+replicaCount: 2
+image:
+  repository: <REGISTRY>/<PROJECT>/<IMAGE>
+  tag: "${CI_COMMIT_SHA}"
+  pullPolicy: IfNotPresent
+resources:
+  requests: { cpu: 500m, memory: 512Mi }
+  limits:   { cpu: 1000m, memory: 1Gi }
+ingress:
+  enabled: true
+  hosts:
+    - host: app.stage.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+

@@ -1,0 +1,17 @@
+.kaniko_build:
+  image: gcr.io/kaniko-project/executor:v1.23.2-debug
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker/
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - |
+      cat > /kaniko/.docker/config.json <<EOF
+      {"auths": {"$CI_REGISTRY": {"username": "$CI_REGISTRY_USER", "password": "$CI_REGISTRY_PASSWORD"}}}
+      EOF
+  script:
+    - >
+      /kaniko/executor --context "$BUILD_CONTEXT" --dockerfile "$DOCKERFILE" \
+      --destination "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$CI_COMMIT_SHA" \
+      --destination "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$CI_COMMIT_REF_SLUG" \
+      --cache=true --cache-ttl=168h
+

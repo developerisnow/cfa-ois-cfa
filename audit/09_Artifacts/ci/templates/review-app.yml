@@ -1,0 +1,10 @@
+.review_app:
+  image: bitnami/kubectl:1.30
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.example.com
+    on_stop: stop:review
+    auto_stop_in: 24 hours
+  script:
+    - echo "Create/patch review env manifests here"
+

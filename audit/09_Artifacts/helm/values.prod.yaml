@@ -1,0 +1,17 @@
+# Sample prod values
+replicaCount: 3
+image:
+  repository: <REGISTRY>/<PROJECT>/<IMAGE>
+  tag: "${CI_COMMIT_SHA}"
+  pullPolicy: IfNotPresent
+resources:
+  requests: { cpu: 1000m, memory: 1Gi }
+  limits:   { cpu: 2000m, memory: 2Gi }
+ingress:
+  enabled: true
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+

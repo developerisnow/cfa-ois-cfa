@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from '../../../shared-ui/src';
+import { initWebVitals } from '../../../shared-ui/src/utils/webVitals';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -27,5 +28,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       </SessionProvider>
     </ThemeProvider>
   );
+}
+
+// Initialize web-vitals once in module scope for CSR
+if (typeof window !== 'undefined') {
+  initWebVitals();
 }
 

@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: settlement-ef-migrate
+  namespace: ois-cfa
+  annotations:
+    "helm.sh/hook": post-upgrade,post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: <REGISTRY>/settlement:${CI_COMMIT_SHA}
+          args: ["dotnet", "ef", "database", "update", "--project", "services/settlement"]
+          env:
+            - name: ConnectionStrings__Default
+              valueFrom:
+                secretKeyRef:
+                  name: settlement-secrets
+                  key: connection-string
+

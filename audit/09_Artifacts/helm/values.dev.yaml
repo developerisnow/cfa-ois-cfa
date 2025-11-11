@@ -1,0 +1,17 @@
+# Sample dev values
+replicaCount: 1
+image:
+  repository: <REGISTRY>/<PROJECT>/<IMAGE>
+  tag: "${CI_COMMIT_SHA}"
+  pullPolicy: IfNotPresent
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits:   { cpu: 500m, memory: 512Mi }
+ingress:
+  enabled: true
+  hosts:
+    - host: app.dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+

@@ -76,6 +76,7 @@ terraform:apply:
         $BUILD_CONTEXT
   rules:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH == "infra"'
   # Tag latest only for default branch
   after_script:
     - |
@@ -162,6 +163,7 @@ build:bank-nominal:
         .
   rules:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH == "infra"'
   after_script:
     - |
       if [ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]; then
@@ -444,6 +446,7 @@ validate:specs:
       npm install -g @stoplight/spectral-cli @asyncapi/cli ajv-cli || true
       spectral lint packages/contracts/openapi-*.yaml || echo "OpenAPI validation failed"
       asyncapi validate packages/contracts/asyncapi.yaml || echo "AsyncAPI validation failed"
+      ajv compile -s packages/contracts/schemas/*.json --spec=draft7 || echo "AJV compile failed"
   rules:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
 
@@ -679,4 +682,3 @@ k8s:healthcheck:
     - if: '$CI_MERGE_REQUEST_IID'
     - if: '$CI_PIPELINE_SOURCE == "web"'
   when: manual
-

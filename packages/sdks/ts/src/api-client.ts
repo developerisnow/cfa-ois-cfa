@@ -3,13 +3,57 @@
  * Based on OpenAPI Gateway specification
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 
 export interface ApiClientConfig {
   baseURL?: string;
   accessToken?: string;
   timeout?: number;
 }
+
+// Utilities
+function uuid(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return (crypto as any).randomUUID();
+  }
+  // Fallback UUID v4 generator
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function generateTraceparent(): string {
+  try {
+    const traceIdBytes = new Uint8Array(16);
+    const spanIdBytes = new Uint8Array(8);
+    if (typeof crypto !== 'undefined' && (crypto as any).getRandomValues) {
+      (crypto as any).getRandomValues(traceIdBytes);
+      (crypto as any).getRandomValues(spanIdBytes);
+    } else {
+      for (let i = 0; i < 16; i++) traceIdBytes[i] = (Math.random() * 256) | 0;
+      for (let i = 0; i < 8; i++) spanIdBytes[i] = (Math.random() * 256) | 0;
+    }
+    const traceId = toHex(traceIdBytes);
+    const spanId = toHex(spanIdBytes);
+    return `00-${traceId}-${spanId}-01`;
+  } catch {
+    // Safe fallback
+    return `00-${uuid().replace(/-/g, '').padEnd(32, '0').slice(0, 32)}-${uuid()
+      .replace(/-/g, '')
+      .padEnd(16, '0')
+      .slice(0, 16)}-01`;
+  }
+}
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 // Types from OpenAPI schemas
 export interface HealthStatus {
@@ -335,20 +379,71 @@ export class OisApiClient {
 
   constructor(config: ApiClientConfig = {}) {
     this.client = axios.create({
-      baseURL: config.baseURL || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_BASE_URL) || 'http://localhost:5000',
+      baseURL:
+        config.baseURL ||
+        (typeof process !== 'undefined' && (process as any).env?.NEXT_PUBLIC_API_BASE_URL) ||
+        'http://localhost:5000',
       timeout: config.timeout || 30000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Add auth interceptor
+    // Add auth + observability interceptors
     this.client.interceptors.request.use((cfg) => {
+      // Auth
       if (config.accessToken) {
-        cfg.headers.Authorization = `Bearer ${config.accessToken}`;
+        (cfg.headers as any).Authorization = `Bearer ${config.accessToken}`;
       }
+
+      // Correlation/observability headers
+      const headers = (cfg.headers = cfg.headers || {} as any);
+      if (!(headers as any)['x-request-id']) {
+        (headers as any)['x-request-id'] = uuid();
+      }
+      if (!(headers as any)['traceparent']) {
+        (headers as any)['traceparent'] = generateTraceparent();
+      }
+      (headers as any)['x-client-app'] = (headers as any)['x-client-app'] || 'ois-web';
+      (headers as any)['Accept'] = (headers as any)['Accept'] || 'application/json';
+
+      // Start time for basic latency metric
+      (cfg as any).__start = Date.now();
       return cfg;
     });
+
+    // Basic retry with exp backoff + jitter
+    this.client.interceptors.response.use(
+      (resp) => resp,
+      async (error: AxiosError) => {
+        const cfg: any = error.config || {};
+        const status = (error.response && (error.response as any).status) || 0;
+        const isRetryable = !cfg.__noRetry && (status === 429 || (status >= 500 && status < 600) || !status);
+        cfg.__retryCount = cfg.__retryCount || 0;
+        const maxRetries = cfg.__maxRetries ?? 3;
+
+        if (isRetryable && cfg.__retryCount < maxRetries) {
+          cfg.__retryCount += 1;
+          const base = 300 * Math.pow(2, cfg.__retryCount - 1);
+          const jitter = Math.floor(Math.random() * 100);
+          await sleep(base + jitter);
+          return this.client.request(cfg);
+        }
+
+        // Attach simple duration metric for logging
+        const start = cfg.__start || 0;
+        const duration = start ? Date.now() - start : undefined;
+        if (typeof window !== 'undefined' && (window as any).console) {
+          (console as any).warn?.('API request failed', {
+            url: cfg.url,
+            method: cfg.method,
+            status,
+            duration,
+          });
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   // Set access token dynamically
