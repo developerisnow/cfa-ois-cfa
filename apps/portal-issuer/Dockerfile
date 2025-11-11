@@ -3,6 +3,11 @@ WORKDIR /src
 # Копируем весь монорепозиторий, чтобы были доступны shared-ui и sdk
 COPY apps ./apps
 COPY packages ./packages
+# Build SDK dependency first
+RUN cd packages/sdks/ts \
+  && npm install --no-audit --no-fund --include=dev \
+  && npm run build
+# Then build the app
 RUN cd apps/portal-issuer \
   && npm install --no-audit --no-fund --include=dev \
   && npm run build

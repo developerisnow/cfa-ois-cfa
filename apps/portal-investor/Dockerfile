@@ -2,6 +2,11 @@ FROM node:20-alpine AS build
 WORKDIR /src
 COPY apps ./apps
 COPY packages ./packages
+# Build SDK dependency first
+RUN cd packages/sdks/ts \
+  && npm install --no-audit --no-fund --include=dev \
+  && npm run build
+# Then build the app
 RUN cd apps/portal-investor \
   && npm install --no-audit --no-fund --include=dev \
   && npm run build
