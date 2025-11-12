@@ -5,6 +5,12 @@ const nextConfig = {
   experimental: { externalDir: true },
   webpack: (config) => {
     config.resolve.alias['@'] = path.join(__dirname, 'src');
+    // Resolve dependencies used by shared-ui when importing via relative path
+    config.resolve.modules = [
+      path.join(__dirname, 'node_modules'),
+      path.join(__dirname, '../shared-ui/node_modules'),
+      'node_modules'
+    ];
     return config;
   },
   env: {

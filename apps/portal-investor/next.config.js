@@ -5,6 +5,11 @@ const nextConfig = {
   experimental: { externalDir: true },
   webpack: (config) => {
     config.resolve.alias['@'] = path.join(__dirname, 'src');
+    config.resolve.modules = [
+      path.join(__dirname, 'node_modules'),
+      path.join(__dirname, '../shared-ui/node_modules'),
+      'node_modules'
+    ];
     return config;
   },
   env: {
