@@ -6,6 +6,8 @@ using OIS.Compliance;
 using OIS.Compliance.DTOs;
 using OIS.Compliance.Services;
 using Serilog;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -260,7 +262,191 @@ kycTasks.MapPost("/{id:guid}/reject", async (
 .WithName("RejectKycTask")
 .WithOpenApi();
 
+// Audit reporting (immutable, from outbox write-ahead log)
+var auditApi = app.MapGroup("/v1/audit").WithTags("Audit").RequireAuthorization("role:backoffice");
+
+auditApi.MapGet("", async (
+    Guid? actor,
+    string? action,
+    string? entity,
+    DateTime? from,
+    DateTime? to,
+    int? limit,
+    int? offset,
+    ComplianceDbContext db,
+    CancellationToken ct) =>
+{
+    var q = db.OutboxMessages
+        .Where(m => m.Topic == "ois.audit.logged")
+        .OrderByDescending(m => m.CreatedAt)
+        .AsEnumerable();
+
+    IEnumerable<OutboxMessage> filtered = q;
+
+    filtered = filtered.Where(m =>
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(m.Payload);
+            var root = doc.RootElement;
+            if (actor.HasValue)
+            {
+                var actorVal = root.TryGetProperty("actor", out var el) ? el.GetString() : null;
+                if (!Guid.TryParse(actorVal, out var a) || a != actor.Value) return false;
+            }
+            if (!string.IsNullOrEmpty(action))
+            {
+                var act = root.TryGetProperty("action", out var el) ? el.GetString() : null;
+                if (!string.Equals(act, action, StringComparison.OrdinalIgnoreCase)) return false;
+            }
+            if (!string.IsNullOrEmpty(entity))
+            {
+                var ent = root.TryGetProperty("entity", out var el) ? el.GetString() : null;
+                if (!string.Equals(ent, entity, StringComparison.OrdinalIgnoreCase)) return false;
+            }
+            var ts = root.TryGetProperty("timestamp", out var tsEl) && tsEl.ValueKind == JsonValueKind.String
+                ? DateTime.Parse(tsEl.GetString()!)
+                : m.CreatedAt;
+            if (from.HasValue && ts < from.Value) return false;
+            if (to.HasValue && ts > to.Value) return false;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    });
+
+    var take = Math.Clamp(limit ?? 20, 1, 100);
+    var skip = Math.Max(offset ?? 0, 0);
+    var page = filtered.Skip(skip).Take(take).Select(m => MapAudit(m)).ToList();
+
+    return Results.Ok(new { items = page });
+})
+.WithName("GetAuditEvents")
+.WithOpenApi();
+
+auditApi.MapGet("/{id:guid}", async (
+    Guid id,
+    ComplianceDbContext db,
+    CancellationToken ct) =>
+{
+    var msg = await db.OutboxMessages
+        .Where(m => m.Topic == "ois.audit.logged")
+        .OrderByDescending(m => m.CreatedAt)
+        .ToListAsync(ct);
+
+    foreach (var m in msg)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(m.Payload);
+            if (doc.RootElement.TryGetProperty("id", out var idEl) && idEl.ValueKind == JsonValueKind.String)
+            {
+                if (Guid.TryParse(idEl.GetString(), out var aid) && aid == id)
+                    return Results.Ok(MapAudit(m));
+            }
+        }
+        catch { }
+    }
+    return Results.NotFound();
+})
+.WithName("GetAuditEvent")
+.WithOpenApi();
+
+auditApi.MapGet("/export.csv", async (
+    Guid? actor,
+    string? action,
+    string? entity,
+    DateTime? from,
+    DateTime? to,
+    ComplianceDbContext db,
+    CancellationToken ct) =>
+{
+    var sb = new StringBuilder();
+    // Stable header
+    sb.AppendLine("id,actor,actorName,action,entity,entityId,result,timestamp,ip,userAgent");
+
+    var rows = db.OutboxMessages
+        .Where(m => m.Topic == "ois.audit.logged")
+        .OrderBy(m => m.CreatedAt) // chronological for exports
+        .AsEnumerable();
+
+    foreach (var m in rows)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(m.Payload);
+            var r = doc.RootElement;
+            var idStr = r.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+            var actorStr = r.TryGetProperty("actor", out var actEl) ? actEl.GetString() : null;
+            var actorName = r.TryGetProperty("actorName", out var anEl) ? anEl.GetString() : null;
+            var actionStr = r.TryGetProperty("action", out var acEl) ? acEl.GetString() : null;
+            var entityStr = r.TryGetProperty("entity", out var enEl) ? enEl.GetString() : null;
+            var entityId = r.TryGetProperty("entityId", out var eiEl) ? eiEl.GetString() : null;
+            var result = r.TryGetProperty("result", out var resEl) ? resEl.GetString() : null;
+            var ts = r.TryGetProperty("timestamp", out var tsEl) ? tsEl.GetString() : m.CreatedAt.ToString("O");
+            var ip = r.TryGetProperty("ip", out var ipEl) ? ipEl.GetString() : null;
+            var ua = r.TryGetProperty("userAgent", out var uaEl) ? uaEl.GetString() : null;
+
+            // Filter checks
+            if (actor.HasValue && (!Guid.TryParse(actorStr, out var a) || a != actor.Value)) continue;
+            if (!string.IsNullOrEmpty(action) && !string.Equals(actionStr, action, StringComparison.OrdinalIgnoreCase)) continue;
+            if (!string.IsNullOrEmpty(entity) && !string.Equals(entityStr, entity, StringComparison.OrdinalIgnoreCase)) continue;
+            if (from.HasValue && DateTime.Parse(ts) < from.Value) continue;
+            if (to.HasValue && DateTime.Parse(ts) > to.Value) continue;
+
+            sb.AppendLine(string.Join(',', new[]
+            {
+                Csv(idStr), Csv(actorStr), Csv(actorName), Csv(actionStr), Csv(entityStr), Csv(entityId), Csv(result), Csv(ts), Csv(ip), Csv(ua)
+            }));
+        }
+        catch { }
+    }
+
+    return Results.Text(sb.ToString(), "text/csv", Encoding.UTF8);
+})
+.WithName("ExportAuditCsv")
+.WithOpenApi();
+
+static string Csv(string? s)
+{
+    if (s is null) return "";
+    var needsQuotes = s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r');
+    var escaped = s.Replace("\"", "\"\"");
+    return needsQuotes ? $"\"{escaped}\"" : escaped;
+}
+
+static object MapAudit(OutboxMessage m)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(m.Payload);
+        var r = doc.RootElement;
+        return new
+        {
+            id = Guid.TryParse(r.TryGetProperty("id", out var idEl) ? idEl.GetString() : null, out var aid) ? aid : m.Id,
+            actor = r.TryGetProperty("actor", out var actEl) ? actEl.GetString() : null,
+            actorName = r.TryGetProperty("actorName", out var anEl) ? anEl.GetString() : null,
+            action = r.TryGetProperty("action", out var acEl) ? acEl.GetString() : null,
+            entity = r.TryGetProperty("entity", out var enEl) ? enEl.GetString() : null,
+            entityId = r.TryGetProperty("entityId", out var eiEl) ? eiEl.GetString() : null,
+            payload = r.TryGetProperty("payload", out var pEl) ? pEl : default(JsonElement?),
+            ip = r.TryGetProperty("ip", out var ipEl) ? ipEl.GetString() : null,
+            userAgent = r.TryGetProperty("userAgent", out var uaEl) ? uaEl.GetString() : null,
+            timestamp = r.TryGetProperty("timestamp", out var tsEl) ? tsEl.GetString() : m.CreatedAt.ToString("O"),
+            result = r.TryGetProperty("result", out var resEl) ? resEl.GetString() : null
+        };
+    }
+    catch
+    {
+        return new { id = m.Id, timestamp = m.CreatedAt.ToString("O") };
+    }
+}
+
 app.Run();
+
+public partial class Program { }
 
 static void MapKeycloakRoles(TokenValidatedContext ctx)
 {

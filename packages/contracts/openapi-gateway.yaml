@@ -731,6 +731,51 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /v1/audit/export.csv:
+    get:
+      summary: Export audit events as CSV
+      operationId: exportAuditCsv
+      tags:
+        - Audit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: actor
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: entity
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: CSV export
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /v1/audit/{id}:
     get:
       summary: Get audit event by ID
