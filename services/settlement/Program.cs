@@ -6,6 +6,8 @@ using OIS.Settlement;
 using OIS.Settlement.DTOs;
 using OIS.Settlement.Services;
 using Serilog;
+using OIS.Settlement.Background;
+using OIS.Settlement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +29,8 @@ builder.Services.AddOpenTelemetry()
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddConsoleExporter()
-        .AddPrometheusExporter());
+        .AddPrometheusExporter()
+        .AddMeter(Metrics.MeterName));
 
 // Database
 builder.Services.AddDbContext<SettlementDbContext>(options =>
@@ -43,6 +46,14 @@ builder.Services.AddHttpClient<IBankNominalClient, BankNominalClient>();
 // Services
 builder.Services.AddScoped<IOutboxService, OutboxService>();
 builder.Services.AddScoped<ISettlementService, SettlementService>();
+
+// Background workers (Kafka)
+var kafkaEnabled = builder.Configuration.GetValue<bool>("Kafka:Enabled", true);
+if (kafkaEnabled)
+{
+    builder.Services.AddHostedService<OrderPaidConsumer>();
+    builder.Services.AddHostedService<OutboxPublisher>();
+}
 
 // AuthN/Z
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
