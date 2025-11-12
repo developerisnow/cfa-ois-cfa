@@ -68,5 +68,32 @@ public class OrderFlowTests
         tx.Should().NotBeNull();
         tx!.Status.Should().Be("confirmed");
     }
-}
 
+    [Fact]
+    public async Task MarkPaid_On_Ledger_Error_Stays_Reserved_And_Allows_Retry()
+    {
+        var investor = Guid.NewGuid();
+        var issuance = Guid.NewGuid();
+        var req = new CreateOrderRequest { InvestorId = investor, IssuanceId = issuance, Amount = 10m };
+        var idem = Guid.NewGuid().ToString();
+
+        var order = await _service.PlaceOrderAsync(req, idem, CancellationToken.None);
+
+        // now make ledger fail
+        _ledger.Setup(x => x.TransferAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()))
+               .ThrowsAsync(new InvalidOperationException("dlterr"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.MarkPaidAsync(order.Id, null, CancellationToken.None));
+
+        var entity = await _db.Orders.FindAsync(order.Id);
+        entity!.Status.Should().Be("reserved");
+
+        // restore ledger and retry -> should succeed
+        _ledger.Setup(x => x.TransferAsync(It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync("txhash-retry");
+
+        var paid = await _service.MarkPaidAsync(order.Id, null, CancellationToken.None);
+        paid.Status.Should().Be("paid");
+        paid.DltTxHash.Should().Be("txhash-retry");
+    }
+}

@@ -1028,7 +1028,7 @@ components:
           format: decimal
         status:
           type: string
-          enum: [pending, confirmed, failed, cancelled]
+          enum: [created, reserved, paid, failed, cancelled]
         createdAt:
           type: string
           format: date-time

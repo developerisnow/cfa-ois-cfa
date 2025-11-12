@@ -221,6 +221,10 @@ public class RegistryService : IRegistryService
         var order = await _db.Orders.FindAsync(new object[] { orderId }, ct)
             ?? throw new InvalidOperationException($"Order {orderId} not found");
 
+        // Idempotent: if already paid, return current state
+        if (order.Status == "paid")
+            return MapToOrderResponse(order);
+
         if (order.Status != "reserved")
             throw new InvalidOperationException($"Order must be in 'reserved' status to mark paid; actual: {order.Status}");
 
@@ -241,7 +245,7 @@ public class RegistryService : IRegistryService
             _logger.LogError(ex,
                 "Ledger Transfer failed for order {OrderId} after {Duration}ms",
                 order.Id, stopwatch.ElapsedMilliseconds);
-            order.Status = "failed";
+            // Keep order in 'reserved' status to allow retry; record failure reason transiently
             order.FailureReason = $"Ledger error: {ex.Message}";
             await _db.SaveChangesAsync(ct);
             throw;
