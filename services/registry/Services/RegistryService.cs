@@ -12,6 +12,8 @@ public interface IRegistryService
     Task<OrderResponse?> GetOrderAsync(Guid orderId, CancellationToken ct);
     Task<WalletResponse?> GetWalletAsync(Guid investorId, CancellationToken ct);
     Task<RedeemResponse> RedeemAsync(Guid issuanceId, RedeemRequest request, CancellationToken ct);
+    Task<OrderResponse> CancelOrderAsync(Guid orderId, CancellationToken ct);
+    Task<OrderResponse> MarkPaidAsync(Guid orderId, string? paymentRef, CancellationToken ct);
 }
 
 public class RegistryService : IRegistryService
@@ -61,6 +63,33 @@ public class RegistryService : IRegistryService
         if (!qualOk)
             throw new InvalidOperationException($"Qualification check failed for investor {request.InvestorId}: limit exceeded or not qualified");
 
+        // Create order (created)
+        var order = new OrderEntity
+        {
+            Id = Guid.NewGuid(),
+            InvestorId = request.InvestorId,
+            IssuanceId = request.IssuanceId,
+            Amount = request.Amount,
+            Status = "created",
+            IdemKey = idempotencyKey,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync(ct);
+
+        // Emit order.created
+        await _outbox.AddAsync("ois.order.created", new
+        {
+            orderId = order.Id,
+            issuanceId = request.IssuanceId,
+            investorId = request.InvestorId,
+            amount = request.Amount,
+            createdAt = order.CreatedAt
+        }, ct);
+        await _db.SaveChangesAsync(ct);
+
         // (b) Reserve funds via bank-nominal (idempotent)
         string transferId;
         try
@@ -75,85 +104,24 @@ public class RegistryService : IRegistryService
             throw new InvalidOperationException($"Failed to reserve funds: {ex.Message}", ex);
         }
 
-        // Create order
-        var order = new OrderEntity
+        // Update order to reserved
+        order.Status = "reserved";
+        order.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
+        await _outbox.AddAsync("ois.order.reserved", new
         {
-            Id = Guid.NewGuid(),
-            InvestorId = request.InvestorId,
-            IssuanceId = request.IssuanceId,
-            Amount = request.Amount,
-            Status = "pending",
-            IdemKey = idempotencyKey,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            orderId = order.Id,
+            issuanceId = request.IssuanceId,
+            investorId = request.InvestorId,
+            amount = request.Amount,
+            reservedAt = order.UpdatedAt,
+            bankTransferId = transferId
+        }, ct);
 
-        _db.Orders.Add(order);
+        await _db.SaveChangesAsync(ct);
 
-        try
-        {
-            // (c) Call ledger registry.Transfer(to=investor, issuanceId, amount)
-            var stopwatch = Stopwatch.StartNew();
-            string txHash;
-            try
-            {
-                txHash = await _ledger.TransferAsync(null, request.InvestorId.ToString(), request.IssuanceId, request.Amount, ct);
-                stopwatch.Stop();
-                _logger.LogInformation(
-                    "Ledger Transfer successful: orderId={OrderId}, txHash={TxHash}, duration={Duration}ms",
-                    order.Id, txHash, stopwatch.ElapsedMilliseconds);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                _logger.LogError(ex,
-                    "Ledger Transfer failed for order {OrderId} after {Duration}ms",
-                    order.Id, stopwatch.ElapsedMilliseconds);
-                order.Status = "failed";
-                order.FailureReason = $"Ledger error: {ex.Message}";
-                await _db.SaveChangesAsync(ct);
-                throw;
-            }
-
-            // Update order
-            order.Status = "confirmed";
-            order.DltTxHash = txHash;
-            order.ConfirmedAt = DateTime.UtcNow;
-            order.UpdatedAt = DateTime.UtcNow;
-
-            // Get or create wallet
-            var wallet = await GetOrCreateWalletAsync(request.InvestorId, "individual", ct);
-            order.WalletId = wallet.Id;
-
-            // Update or create holding
-            await UpdateHoldingAsync(request.InvestorId, request.IssuanceId, request.Amount, ct);
-
-            // (d) Write audit & emit event
-            await WriteTransactionAsync(order.Id, "transfer", null, wallet.Id, request.IssuanceId, request.Amount, txHash, ct);
-
-            await _outbox.AddAsync("ois.registry.transferred", new
-            {
-                orderId = order.Id,
-                issuanceId = request.IssuanceId,
-                investorId = request.InvestorId,
-                amount = request.Amount,
-                txHash = txHash,
-                walletId = wallet.Id,
-                transferredAt = order.ConfirmedAt
-            }, ct);
-
-            await _db.SaveChangesAsync(ct);
-
-            _logger.LogInformation("Order {OrderId} confirmed with txHash {TxHash}", order.Id, txHash);
-
-            return MapToOrderResponse(order);
-        }
-        catch
-        {
-            order.Status = "failed";
-            await _db.SaveChangesAsync(ct);
-            throw;
-        }
+        return MapToOrderResponse(order);
     }
 
     public async Task<OrderResponse?> GetOrderAsync(Guid orderId, CancellationToken ct)
@@ -231,6 +199,93 @@ public class RegistryService : IRegistryService
             DltTxHash = txHash,
             RedeemedAt = DateTime.UtcNow
         };
+    }
+
+    public async Task<OrderResponse> CancelOrderAsync(Guid orderId, CancellationToken ct)
+    {
+        var order = await _db.Orders.FindAsync(new object[] { orderId }, ct)
+            ?? throw new InvalidOperationException($"Order {orderId} not found");
+
+        if (order.Status is "paid" or "cancelled")
+            throw new InvalidOperationException($"Cannot cancel order in status {order.Status}");
+
+        order.Status = "cancelled";
+        order.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
+        return MapToOrderResponse(order);
+    }
+
+    public async Task<OrderResponse> MarkPaidAsync(Guid orderId, string? paymentRef, CancellationToken ct)
+    {
+        var order = await _db.Orders.FindAsync(new object[] { orderId }, ct)
+            ?? throw new InvalidOperationException($"Order {orderId} not found");
+
+        if (order.Status != "reserved")
+            throw new InvalidOperationException($"Order must be in 'reserved' status to mark paid; actual: {order.Status}");
+
+        // (c) Call ledger registry.Transfer
+        var stopwatch = Stopwatch.StartNew();
+        string txHash;
+        try
+        {
+            txHash = await _ledger.TransferAsync(null, order.InvestorId.ToString(), order.IssuanceId, order.Amount, ct);
+            stopwatch.Stop();
+            _logger.LogInformation(
+                "Ledger Transfer successful: orderId={OrderId}, txHash={TxHash}, duration={Duration}ms",
+                order.Id, txHash, stopwatch.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex,
+                "Ledger Transfer failed for order {OrderId} after {Duration}ms",
+                order.Id, stopwatch.ElapsedMilliseconds);
+            order.Status = "failed";
+            order.FailureReason = $"Ledger error: {ex.Message}";
+            await _db.SaveChangesAsync(ct);
+            throw;
+        }
+
+        // Update order -> paid
+        order.Status = "paid";
+        order.DltTxHash = txHash;
+        order.ConfirmedAt = DateTime.UtcNow;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        // Wallet + holding
+        var wallet = await GetOrCreateWalletAsync(order.InvestorId, "individual", ct);
+        order.WalletId = wallet.Id;
+        await UpdateHoldingAsync(order.InvestorId, order.IssuanceId, order.Amount, ct);
+
+        // Transactions and events
+        await WriteTransactionAsync(order.Id, "transfer", null, wallet.Id, order.IssuanceId, order.Amount, txHash, ct);
+
+        await _outbox.AddAsync("ois.order.paid", new
+        {
+            orderId = order.Id,
+            issuanceId = order.IssuanceId,
+            investorId = order.InvestorId,
+            amount = order.Amount,
+            paidAt = order.ConfirmedAt,
+            txHash = txHash
+        }, ct);
+
+        await _outbox.AddAsync("ois.registry.transferred", new
+        {
+            orderId = order.Id,
+            issuanceId = order.IssuanceId,
+            investorId = order.InvestorId,
+            amount = order.Amount,
+            txHash = txHash,
+            walletId = wallet.Id,
+            transferredAt = order.ConfirmedAt
+        }, ct);
+
+        await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Order {OrderId} marked as paid with txHash {TxHash}", order.Id, txHash);
+
+        return MapToOrderResponse(order);
     }
 
     private async Task<WalletEntity> GetOrCreateWalletAsync(Guid ownerId, string ownerType, CancellationToken ct)

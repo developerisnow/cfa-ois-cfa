@@ -143,6 +143,9 @@ api.MapPost("/issuances/{id:guid}/publish", async (
     IIssuanceService service,
     CancellationToken ct) =>
 {
+    var existing = await service.GetByIdAsync(id, ct);
+    if (existing is null)
+        return Results.NotFound();
     try
     {
         var result = await service.PublishAsync(id, ct);
@@ -165,6 +168,9 @@ api.MapPost("/issuances/{id:guid}/close", async (
     IIssuanceService service,
     CancellationToken ct) =>
 {
+    var existing = await service.GetByIdAsync(id, ct);
+    if (existing is null)
+        return Results.NotFound();
     try
     {
         var result = await service.CloseAsync(id, ct);
@@ -183,6 +189,8 @@ api.MapPost("/issuances/{id:guid}/close", async (
 .WithOpenApi();
 
 app.Run();
+
+public partial class Program { }
 
 static void MapKeycloakRoles(TokenValidatedContext ctx)
 {

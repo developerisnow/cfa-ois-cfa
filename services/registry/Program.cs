@@ -192,6 +192,50 @@ api.MapPost("/issuances/{id:guid}/redeem", async (
 .RequireAuthorization("role:investor")
 .WithOpenApi();
 
+api.MapPost("/orders/{id:guid}/cancel", async (
+    Guid id,
+    IRegistryService service,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var result = await service.CancelOrderAsync(id, ct);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(
+            detail: ex.Message,
+            statusCode: ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ? 404 : 400,
+            title: ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ? "Not Found" : "Bad Request");
+    }
+})
+.WithName("CancelOrder")
+.RequireAuthorization("role:investor-or-backoffice")
+.WithOpenApi();
+
+api.MapPost("/orders/{id:guid}/mark-paid", async (
+    Guid id,
+    IRegistryService service,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var result = await service.MarkPaidAsync(id, null, ct);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(
+            detail: ex.Message,
+            statusCode: ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ? 404 : 400,
+            title: ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ? "Not Found" : "Bad Request");
+    }
+})
+.WithName("MarkOrderPaid")
+.RequireAuthorization("role:investor-or-backoffice")
+.WithOpenApi();
+
 app.Run();
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;

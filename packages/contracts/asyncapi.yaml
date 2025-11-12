@@ -43,6 +43,30 @@ channels:
       summary: Order confirmed event
       message:
         $ref: '#/components/messages/OrderConfirmed'
+
+  ois.order.created:
+    description: Событие создания заказа
+    publish:
+      operationId: onOrderCreated
+      summary: Order created event
+      message:
+        $ref: '#/components/messages/OrderCreated'
+
+  ois.order.reserved:
+    description: Событие резерва средств по заказу
+    publish:
+      operationId: onOrderReserved
+      summary: Order reserved event
+      message:
+        $ref: '#/components/messages/OrderReserved'
+
+  ois.order.paid:
+    description: Событие оплаты заказа
+    publish:
+      operationId: onOrderPaid
+      summary: Order paid event
+      message:
+        $ref: '#/components/messages/OrderPaid'
   
   ois.payout.executed:
     description: Событие выполнения выплаты
@@ -94,6 +118,26 @@ channels:
 
 components:
   messages:
+    OrderCreated:
+      name: OrderCreated
+      title: Order Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderCreatedPayload'
+
+    OrderReserved:
+      name: OrderReserved
+      title: Order Reserved Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderReservedPayload'
+
+    OrderPaid:
+      name: OrderPaid
+      title: Order Paid Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/OrderPaidPayload'
     IssuancePublished:
       name: IssuancePublished
       title: Issuance Published Event
@@ -165,6 +209,69 @@ components:
         $ref: '#/components/schemas/ComplianceFlaggedPayload'
   
   schemas:
+    OrderCreatedPayload:
+      type: object
+      required: [orderId, investorId, issuanceId, amount, createdAt]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderReservedPayload:
+      type: object
+      required: [orderId, investorId, issuanceId, amount, reservedAt]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        reservedAt:
+          type: string
+          format: date-time
+        bankTransferId:
+          type: string
+
+    OrderPaidPayload:
+      type: object
+      required: [orderId, investorId, issuanceId, amount, paidAt, txHash]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        issuanceId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        paidAt:
+          type: string
+          format: date-time
+        txHash:
+          type: string
     IssuancePublishedPayload:
       type: object
       required:
