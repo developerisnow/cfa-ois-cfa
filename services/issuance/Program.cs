@@ -10,6 +10,7 @@ using OIS.Issuance.Validators;
 using Serilog;
 using MassTransit;
 using OIS.Contracts.Events;
+using OIS.Issuance.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -36,7 +37,8 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
-        .AddPrometheusExporter());
+        .AddPrometheusExporter()
+        .AddMeter(Metrics.MeterName));
 
 // Prometheus metrics endpoint
 builder.Services.AddPrometheusExporter();
@@ -129,6 +131,32 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
+
+// Correlation + request metrics
+app.Use(async (ctx, next) =>
+{
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    // Correlate X-Request-ID
+    if (!ctx.Request.Headers.TryGetValue("X-Request-ID", out var reqId) || string.IsNullOrWhiteSpace(reqId))
+    {
+        reqId = Guid.NewGuid().ToString();
+        ctx.Request.Headers["X-Request-ID"] = reqId;
+    }
+    ctx.Response.Headers["X-Request-ID"] = reqId.ToString();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        sw.Stop();
+        var status = ctx.Response.StatusCode;
+        var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
+        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+    }
+});
 
 // API Endpoints
 var api = app.MapGroup("/v1").WithTags("Issuances").RequireAuthorization();

@@ -1,0 +1,21 @@
+groups:
+  - name: ois-slo
+    interval: 30s
+    rules:
+      - alert: HighP95Latency
+        expr: histogram_quantile(0.95, sum(rate(request_duration_ms_bucket[5m])) by (le, job)) > 300
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p95 latency (>300ms)"
+          description: "Service {{ $labels.job }} p95 latency is {{ $value }} ms"
+
+      - alert: HighErrorRate
+        expr: (sum(rate(request_errors_total[5m])) by (job) / sum(rate(request_duration_ms_count[5m])) by (job)) > 0.01
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate (>1%)"
+          description: "Service {{ $labels.job }} 5xx rate is {{ $value | humanizePercentage }}"

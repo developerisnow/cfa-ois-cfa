@@ -135,6 +135,31 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
 
+// Correlation + request metrics
+app.Use(async (ctx, next) =>
+{
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    if (!ctx.Request.Headers.TryGetValue("X-Request-ID", out var reqId) || string.IsNullOrWhiteSpace(reqId))
+    {
+        reqId = Guid.NewGuid().ToString();
+        ctx.Request.Headers["X-Request-ID"] = reqId;
+    }
+    ctx.Response.Headers["X-Request-ID"] = reqId.ToString();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        sw.Stop();
+        var status = ctx.Response.StatusCode;
+        var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
+        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+    }
+});
+
 // API Endpoints
 var api = app.MapGroup("/v1").WithTags("Settlement").RequireAuthorization();
 
