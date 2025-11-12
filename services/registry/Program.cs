@@ -10,6 +10,8 @@ using System.Diagnostics;
 using MassTransit;
 using OIS.Contracts.Events;
 using OIS.Registry.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -119,6 +121,25 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<RegistryDbContext>();
 
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("sensitive", httpContext =>
+    {
+        var key = GetPartitionKey(httpContext);
+        return RateLimitPartition.GetTokenBucketLimiter(key, _ => new TokenBucketRateLimiterOptions
+        {
+            TokenLimit = 20,
+            TokensPerPeriod = 20,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true,
+            QueueLimit = 0,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        });
+    });
+});
+
 var app = builder.Build();
 
 // Apply migrations
@@ -138,6 +159,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
 
@@ -191,6 +213,7 @@ api.MapPost("/orders", async (
 })
 .WithName("PlaceOrder")
 .RequireAuthorization("role:investor")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 api.MapGet("/orders/{id:guid}", async (
@@ -238,6 +261,7 @@ api.MapPost("/issuances/{id:guid}/redeem", async (
 })
 .WithName("RedeemIssuance")
 .RequireAuthorization("role:investor")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 api.MapPost("/orders/{id:guid}/cancel", async (
@@ -260,6 +284,7 @@ api.MapPost("/orders/{id:guid}/cancel", async (
 })
 .WithName("CancelOrder")
 .RequireAuthorization("role:investor-or-backoffice")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 api.MapPost("/orders/{id:guid}/mark-paid", async (
@@ -282,6 +307,7 @@ api.MapPost("/orders/{id:guid}/mark-paid", async (
 })
 .WithName("MarkOrderPaid")
 .RequireAuthorization("role:investor-or-backoffice")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 app.Run();
@@ -318,4 +344,11 @@ static void MapKeycloakRoles(TokenValidatedContext ctx)
         }
     }
     catch { /* ignore parsing errors */ }
+}
+
+static string GetPartitionKey(HttpContext ctx)
+{
+    var sub = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (!string.IsNullOrEmpty(sub)) return $"user:{sub}";
+    return $"ip:{ctx.Connection.RemoteIpAddress}";
 }

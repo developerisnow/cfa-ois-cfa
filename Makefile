@@ -53,6 +53,14 @@ k6-load: ## Run k6 gateway critical paths
 	@echo "Running k6 gateway critical paths..."
 	k6 run tests/k6/gateway-critical-paths.js
 
+k6-orders: ## Run k6 orders load (set BASE_URL, TOKEN)
+	@echo "Running k6 orders scenario (BASE_URL=$(BASE_URL))..."
+	BASE_URL=$(BASE_URL) TOKEN=$(TOKEN) k6 run tests/k6/gateway-critical-paths.js
+
+k6-reports: ## Run k6 payouts report load (set BASE_URL, TOKEN)
+	@echo "Running k6 payouts reports (BASE_URL=$(BASE_URL))..."
+	BASE_URL=$(BASE_URL) TOKEN=$(TOKEN) k6 run tests/k6/payouts-report.js
+
 k6-report: ## Run k6 and generate JSON report
 	k6 run --out json=k6-report.json tests/k6/gateway-critical-paths.js
 

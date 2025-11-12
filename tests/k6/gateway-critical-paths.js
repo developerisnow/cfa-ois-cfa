@@ -22,6 +22,7 @@ export const options = {
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
+const TOKEN = __ENV.TOKEN; // optional JWT
 
 export default function () {
   // Test critical path: Place Order
@@ -34,6 +35,7 @@ export default function () {
   const orderHeaders = {
     'Content-Type': 'application/json',
     'Idempotency-Key': `test-${Date.now()}-${Math.random()}`,
+    ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}),
   };
 
   const orderRes = http.post(
@@ -55,7 +57,7 @@ export default function () {
   // Test critical path: Settlement Report
   const reportRes = http.get(
     `${BASE_URL}/v1/reports/payouts?from=2025-01-01&to=2025-12-31`,
-    { headers: { 'Content-Type': 'application/json' } }
+    { headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}) } }
   );
 
   const reportSuccess = check(reportRes, {

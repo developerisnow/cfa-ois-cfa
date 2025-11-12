@@ -297,8 +297,8 @@ public class ComplianceService : IComplianceService
         _db.Complaints.Add(complaint);
         await _db.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Created complaint {ComplaintId} for investor {InvestorId}, category {Category}",
-            complaint.Id, request.InvestorId, request.Category);
+        _logger.LogInformation("Created complaint {ComplaintId} for investor {Investor}, category {Category}",
+            complaint.Id, OIS.Domain.Security.MaskGuid(request.InvestorId), request.Category);
 
         return MapToComplaintResponse(complaint);
     }

@@ -26,6 +26,7 @@
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="MassTransit" Version="8.2.0" />
     <PackageReference Include="MassTransit.Kafka" Version="8.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.RateLimiting" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

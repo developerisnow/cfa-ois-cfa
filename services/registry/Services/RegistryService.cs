@@ -95,12 +95,12 @@ public class RegistryService : IRegistryService
         try
         {
             transferId = await _bank.ReserveFundsAsync(request.InvestorId, request.Amount, idempotencyKey, ct);
-            _logger.LogInformation("Funds reserved: transferId={TransferId}, investor={InvestorId}, amount={Amount}",
-                transferId, request.InvestorId, request.Amount);
+            _logger.LogInformation("Funds reserved: transferId={TransferId}, investor={Investor}, amount={Amount}",
+                transferId, OIS.Domain.Security.MaskGuid(request.InvestorId), request.Amount);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to reserve funds for investor {InvestorId}", request.InvestorId);
+            _logger.LogError(ex, "Failed to reserve funds for investor {Investor}", OIS.Domain.Security.MaskGuid(request.InvestorId));
             throw new InvalidOperationException($"Failed to reserve funds: {ex.Message}", ex);
         }
 

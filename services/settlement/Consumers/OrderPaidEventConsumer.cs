@@ -34,8 +34,8 @@ public class OrderPaidEventConsumer : IConsumer<OrderPaid>
         }
 
         // minimal: just log, business postings handled in services as needed
-        _logger.LogInformation("OrderPaid consumed: orderId={OrderId}, investor={InvestorId}, issuance={IssuanceId}, amount={Amount}",
-            context.Message.orderId, context.Message.investorId, context.Message.issuanceId, context.Message.amount);
+        _logger.LogInformation("OrderPaid consumed: orderId={OrderId}, investor={Investor}, issuance={IssuanceId}, amount={Amount}",
+            context.Message.orderId, OIS.Domain.Security.MaskGuid(context.Message.investorId), context.Message.issuanceId, context.Message.amount);
 
         if (!string.IsNullOrEmpty(messageId))
         {
@@ -49,4 +49,3 @@ public class OrderPaidEventConsumer : IConsumer<OrderPaid>
         }
     }
 }
-

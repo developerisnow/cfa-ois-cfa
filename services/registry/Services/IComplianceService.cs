@@ -35,7 +35,7 @@ public class ComplianceServiceClient : IComplianceService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("KYC check failed for investor {InvestorId}: {StatusCode}", investorId, response.StatusCode);
+                _logger.LogError("KYC check failed for investor {Investor}: {StatusCode}", OIS.Domain.Security.MaskGuid(investorId), response.StatusCode);
                 return false;
             }
 
@@ -44,7 +44,7 @@ public class ComplianceServiceClient : IComplianceService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking KYC for investor {InvestorId}", investorId);
+            _logger.LogError(ex, "Error checking KYC for investor {Investor}", OIS.Domain.Security.MaskGuid(investorId));
             return false;
         }
     }
@@ -58,7 +58,7 @@ public class ComplianceServiceClient : IComplianceService
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Qualification check failed for investor {InvestorId}: {StatusCode}", investorId, response.StatusCode);
+                _logger.LogError("Qualification check failed for investor {Investor}: {StatusCode}", OIS.Domain.Security.MaskGuid(investorId), response.StatusCode);
                 return false;
             }
 
@@ -67,7 +67,7 @@ public class ComplianceServiceClient : IComplianceService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking qualification for investor {InvestorId}", investorId);
+            _logger.LogError(ex, "Error checking qualification for investor {Investor}", OIS.Domain.Security.MaskGuid(investorId));
             return false;
         }
     }

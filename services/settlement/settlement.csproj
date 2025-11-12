@@ -28,6 +28,7 @@
     <PackageReference Include="Confluent.Kafka" Version="2.5.3" />
     <PackageReference Include="MassTransit" Version="8.2.0" />
     <PackageReference Include="MassTransit.Kafka" Version="8.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.RateLimiting" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

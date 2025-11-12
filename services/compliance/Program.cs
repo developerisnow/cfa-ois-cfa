@@ -11,6 +11,8 @@ using OIS.Contracts.Events;
 using Serilog;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +54,26 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ComplianceDbContext>();
+
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("sensitive", httpContext =>
+    {
+        var key = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(key)) key = $"user:{key}"; else key = $"ip:{httpContext.Connection.RemoteIpAddress}";
+        return RateLimitPartition.GetTokenBucketLimiter(key!, _ => new TokenBucketRateLimiterOptions
+        {
+            TokenLimit = 10,
+            TokensPerPeriod = 10,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true,
+            QueueLimit = 0,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        });
+    });
+});
 
 // AuthN/Z
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -101,6 +123,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
+app.UseRateLimiter();
 
 // Correlation + request metrics
 app.Use(async (ctx, next) =>
@@ -201,6 +224,7 @@ complaintsApi.MapPost("", async (
 })
 .WithName("CreateComplaint")
 .RequireAuthorization("role:investor")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 complaintsApi.MapGet("/{id:guid}", async (
@@ -232,6 +256,7 @@ kycApi.MapPost("/investors/{id:guid}/approve", async (
     return Results.Ok(result);
 })
 .WithName("ApproveKyc")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 kycApi.MapPost("/investors/{id:guid}/reject", async (
@@ -248,6 +273,7 @@ kycApi.MapPost("/investors/{id:guid}/reject", async (
     return Results.Ok(result);
 })
 .WithName("RejectKyc")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 // KYC tasks queue
@@ -262,6 +288,7 @@ kycTasks.MapPost("", async (
     return Results.Created($"/v1/kyc/tasks/{task.Id}", task);
 })
 .WithName("CreateKycTask")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 kycTasks.MapGet("", async (
@@ -289,6 +316,7 @@ kycTasks.MapPost("/{id:guid}/approve", async (
     return task != null ? Results.Ok(task) : Results.NotFound();
 })
 .WithName("ApproveKycTask")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 kycTasks.MapPost("/{id:guid}/reject", async (
@@ -305,6 +333,7 @@ kycTasks.MapPost("/{id:guid}/reject", async (
     return task != null ? Results.Ok(task) : Results.NotFound();
 })
 .WithName("RejectKycTask")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 // Audit reporting (immutable, from outbox write-ahead log)

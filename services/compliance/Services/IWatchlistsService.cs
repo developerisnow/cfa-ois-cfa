@@ -27,7 +27,7 @@ public class WatchlistsServiceStub : IWatchlistsService
         var lastByte = investorId.ToByteArray().Last();
         var matched = lastByte % 10 == 0; // ~10% match rate
 
-        _logger.LogInformation("Watchlists check for investor {InvestorId}: matched={Matched}", investorId, matched);
+        _logger.LogInformation("Watchlists check for investor {Investor}: matched={Matched}", OIS.Domain.Security.MaskGuid(investorId), matched);
 
         return Task.FromResult(new WatchlistCheckResult
         {

@@ -134,6 +134,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
+app.UseRateLimiter();
 
 // Correlation + request metrics
 app.Use(async (ctx, next) =>
@@ -183,6 +184,7 @@ api.MapPost("/settlement/run", async (
 })
 .WithName("RunSettlement")
 .RequireAuthorization("role:backoffice")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 api.MapGet("/reports/payouts", async (
