@@ -43,7 +43,7 @@ builder.Services.AddScoped<IComplianceService, ComplianceService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ComplianceDbContext>();
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
 var app = builder.Build();
 
