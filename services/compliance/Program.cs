@@ -5,6 +5,8 @@ using OpenTelemetry.Trace;
 using OIS.Compliance;
 using OIS.Compliance.DTOs;
 using OIS.Compliance.Services;
+using MassTransit;
+using OIS.Contracts.Events;
 using Serilog;
 using System.Text;
 using System.Text.Json;
@@ -97,6 +99,23 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
+
+// MassTransit + Kafka publish setup
+if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            cfg.Message<ComplianceFlagged>(m => m.SetEntityName("ois.compliance.flagged"));
+            cfg.Message<KycUpdated>(m => m.SetEntityName("ois.kyc.updated"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+        });
+    });
+
+    builder.Services.AddHostedService<OIS.Compliance.Background.OutboxPublisher>();
+}
 
 // API Endpoints
 var api = app.MapGroup("/v1").WithTags("Compliance").RequireAuthorization();
@@ -447,6 +466,23 @@ static object MapAudit(OutboxMessage m)
 app.Run();
 
 public partial class Program { }
+
+// MassTransit + Kafka for publishing
+if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            cfg.Message<ComplianceFlagged>(m => m.SetEntityName("ois.compliance.flagged"));
+            cfg.Message<KycUpdated>(m => m.SetEntityName("ois.kyc.updated"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+        });
+    });
+
+    builder.Services.AddHostedService<OIS.Compliance.Background.OutboxPublisher>();
+}
 
 static void MapKeycloakRoles(TokenValidatedContext ctx)
 {

@@ -8,6 +8,8 @@ using OIS.Settlement.Services;
 using Serilog;
 using OIS.Settlement.Background;
 using OIS.Settlement.Infrastructure;
+using MassTransit;
+using OIS.Contracts.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,11 +49,31 @@ builder.Services.AddHttpClient<IBankNominalClient, BankNominalClient>();
 builder.Services.AddScoped<IOutboxService, OutboxService>();
 builder.Services.AddScoped<ISettlementService, SettlementService>();
 
-// Background workers (Kafka)
+// MassTransit + Kafka
 var kafkaEnabled = builder.Configuration.GetValue<bool>("Kafka:Enabled", true);
 if (kafkaEnabled)
 {
-    builder.Services.AddHostedService<OrderPaidConsumer>();
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>();
+
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+
+            // Map message types to topics according to AsyncAPI
+            cfg.Message<OrderPaid>(m => m.SetEntityName("ois.order.paid"));
+            cfg.Message<PayoutExecuted>(m => m.SetEntityName("ois.payout.executed"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+
+            cfg.TopicEndpoint<OrderPaid>("ois.order.paid", "settlement-orderpaid", e =>
+            {
+                e.ConfigureConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>(context);
+                e.ConcurrentMessageLimit = 4;
+            });
+        });
+    });
+
     builder.Services.AddHostedService<OutboxPublisher>();
 }
 

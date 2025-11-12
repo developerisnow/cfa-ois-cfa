@@ -7,6 +7,8 @@ using OIS.Registry.DTOs;
 using OIS.Registry.Services;
 using Serilog;
 using System.Diagnostics;
+using MassTransit;
+using OIS.Contracts.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,6 +91,25 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("scope:orders.write", p => p.RequireAssertion(HasScope("orders.write")));
     options.AddPolicy("scope:orders.read", p => p.RequireAssertion(HasScope("orders.read")));
 });
+
+// MassTransit + Kafka for publishing
+if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            cfg.Message<OrderCreated>(m => m.SetEntityName("ois.order.created"));
+            cfg.Message<OrderReserved>(m => m.SetEntityName("ois.order.reserved"));
+            cfg.Message<OrderPaid>(m => m.SetEntityName("ois.order.paid"));
+            cfg.Message<RegistryTransferred>(m => m.SetEntityName("ois.registry.transferred"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+        });
+    });
+
+    builder.Services.AddHostedService<OIS.Registry.Background.OutboxPublisher>();
+}
 
 // API
 builder.Services.AddEndpointsApiExplorer();

@@ -26,6 +26,8 @@
     <PackageReference Include="Polly" Version="8.4.1" />
     <PackageReference Include="System.Net.Http.Json" Version="9.0.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.5.3" />
+    <PackageReference Include="MassTransit" Version="8.2.0" />
+    <PackageReference Include="MassTransit.Kafka" Version="8.2.0" />
   </ItemGroup>
 
   <ItemGroup>

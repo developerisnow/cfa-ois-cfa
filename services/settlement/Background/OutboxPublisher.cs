@@ -1,7 +1,8 @@
-using Confluent.Kafka;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OIS.Contracts.Events;
 using OIS.Settlement.Infrastructure;
 using Polly;
 
@@ -22,22 +23,13 @@ public class OutboxPublisher : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var enabled = _configuration.GetValue<bool>("Kafka:Enabled", true);
-        if (!enabled)
-        {
-            _logger.LogWarning("Kafka disabled, OutboxPublisher will not start");
-            return;
-        }
-
-        var bootstrap = _configuration["Kafka:BootstrapServers"] ?? "localhost:9092";
-        var producerConfig = new ProducerConfig { BootstrapServers = bootstrap };
-
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 using var scope = _services.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<SettlementDbContext>();
+                var publisher = scope.ServiceProvider.GetRequiredService<IPublishEndpoint>();
 
                 var messages = await db.OutboxMessages
                     .Where(x => x.ProcessedAt == null)
@@ -51,7 +43,6 @@ public class OutboxPublisher : BackgroundService
                     continue;
                 }
 
-                using var producer = new ProducerBuilder<string, string>(producerConfig).Build();
                 foreach (var msg in messages)
                 {
                     var retry = Policy
@@ -61,11 +52,7 @@ public class OutboxPublisher : BackgroundService
 
                     await retry.ExecuteAsync(async () =>
                     {
-                        await producer.ProduceAsync(msg.Topic, new Message<string, string>
-                        {
-                            Key = msg.Id.ToString(),
-                            Value = msg.Payload
-                        }, stoppingToken);
+                        await PublishTypedAsync(publisher, msg, stoppingToken);
                     });
 
                     msg.ProcessedAt = DateTime.UtcNow;
@@ -85,5 +72,33 @@ public class OutboxPublisher : BackgroundService
             }
         }
     }
-}
 
+    private static async Task PublishTypedAsync(IPublishEndpoint publisher, OutboxMessage msg, CancellationToken ct)
+    {
+        // Map topic to contract and publish typed; fallback to raw AuditLogged
+        switch (msg.Topic)
+        {
+            case "ois.payout.executed":
+            {
+                var data = System.Text.Json.JsonSerializer.Deserialize<PayoutExecuted>(msg.Payload);
+                if (data != null)
+                {
+                    await publisher.Publish(data, x => x.MessageId = msg.Id, ct);
+                    return;
+                }
+                break;
+            }
+            default:
+                // try audit as a generic
+                var audit = System.Text.Json.JsonSerializer.Deserialize<AuditLogged>(msg.Payload);
+                if (audit != null)
+                {
+                    await publisher.Publish(audit, x => x.MessageId = msg.Id, ct);
+                    return;
+                }
+                break;
+        }
+
+        // if unknown, publish as object to keep bus alive (optional no-op)
+    }
+}

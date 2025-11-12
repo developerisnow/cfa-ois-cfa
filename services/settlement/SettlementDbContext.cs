@@ -10,6 +10,7 @@ public class SettlementDbContext : DbContext
     public DbSet<PayoutItemEntity> PayoutItems => Set<PayoutItemEntity>();
     public DbSet<ReconciliationLogEntity> ReconciliationLogs => Set<ReconciliationLogEntity>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<ProcessedMessage> ProcessedMessages => Set<ProcessedMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -162,6 +163,21 @@ public class SettlementDbContext : DbContext
 
             entity.HasIndex(e => new { e.ProcessedAt, e.CreatedAt });
         });
+
+        modelBuilder.Entity<ProcessedMessage>(entity =>
+        {
+            entity.ToTable("inbox_processed");
+            entity.HasKey(e => e.MessageId);
+            entity.Property(e => e.MessageId)
+                .HasColumnName("message_id")
+                .HasMaxLength(128);
+            entity.Property(e => e.Consumer)
+                .HasColumnName("consumer")
+                .HasMaxLength(128);
+            entity.Property(e => e.ProcessedAt)
+                .HasColumnName("processed_at");
+            entity.HasIndex(e => new { e.Consumer, e.ProcessedAt });
+        });
     }
 }
 
@@ -204,5 +220,12 @@ public class OutboxMessage
     public string Payload { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
+}
+
+public class ProcessedMessage
+{
+    public string MessageId { get; set; } = string.Empty;
+    public string Consumer { get; set; } = string.Empty;
+    public DateTime ProcessedAt { get; set; }
 }
 

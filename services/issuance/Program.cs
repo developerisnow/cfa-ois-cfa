@@ -8,6 +8,8 @@ using OIS.Issuance.DTOs;
 using OIS.Issuance.Services;
 using OIS.Issuance.Validators;
 using Serilog;
+using MassTransit;
+using OIS.Contracts.Events;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -53,6 +55,23 @@ builder.Services.AddHttpClient<LedgerIssuanceAdapter>()
 builder.Services.AddScoped<ILedgerIssuance, LedgerIssuanceAdapter>();
 builder.Services.AddScoped<IOutboxService, OutboxService>();
 builder.Services.AddScoped<IIssuanceService, IssuanceService>();
+
+// MassTransit + Kafka publish
+if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            cfg.Message<IssuancePublished>(m => m.SetEntityName("ois.issuance.published"));
+            cfg.Message<IssuanceClosed>(m => m.SetEntityName("ois.issuance.closed"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+        });
+    });
+
+    builder.Services.AddHostedService<OIS.Issuance.Background.OutboxPublisher>();
+}
 
 // Validation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateIssuanceRequestValidator>();
