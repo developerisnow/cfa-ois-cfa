@@ -12,7 +12,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /src/apps/backoffice/.next ./.next
 COPY --from=build /src/apps/backoffice/node_modules ./node_modules
-COPY --from=build /src/apps/backoffice/public ./public
 COPY --from=build /src/apps/backoffice/package.json ./package.json
 EXPOSE 3003
 CMD ["npm","run","start"]
