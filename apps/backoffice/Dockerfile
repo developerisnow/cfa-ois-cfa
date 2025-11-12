@@ -1,10 +1,9 @@
 FROM node:20-alpine AS build
 WORKDIR /src
-ENV NODE_ENV=production
 COPY apps ./apps
 COPY packages ./packages
 RUN cd apps/backoffice \
-  && npm install --no-audit --no-fund \
+  && npm install --no-audit --no-fund --include=dev \
   && npm run build
 
 FROM node:20-alpine AS runner
