@@ -168,6 +168,98 @@ complaintsApi.MapGet("/{id:guid}", async (
 .RequireAuthorization("role:investor-or-backoffice")
 .WithOpenApi();
 
+// KYC admin endpoints
+var kycApi = app.MapGroup("/v1/compliance/kyc").WithTags("KYC").RequireAuthorization("role:backoffice");
+
+kycApi.MapPost("/investors/{id:guid}/approve", async (
+    Guid id,
+    HttpContext http,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    Guid? actor = http.User.Identity?.IsAuthenticated == true ?
+        http.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is string s && Guid.TryParse(s, out var g) ? g : null
+        : null;
+
+    var result = await service.UpdateKycStatusAsync(id, "pass", actor, null, ct);
+    return Results.Ok(result);
+})
+.WithName("ApproveKyc")
+.WithOpenApi();
+
+kycApi.MapPost("/investors/{id:guid}/reject", async (
+    Guid id,
+    HttpContext http,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    Guid? actor = http.User.Identity?.IsAuthenticated == true ?
+        http.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is string s && Guid.TryParse(s, out var g) ? g : null
+        : null;
+
+    var result = await service.UpdateKycStatusAsync(id, "fail", actor, null, ct);
+    return Results.Ok(result);
+})
+.WithName("RejectKyc")
+.WithOpenApi();
+
+// KYC tasks queue
+var kycTasks = app.MapGroup("/v1/kyc/tasks").WithTags("KYC Tasks").RequireAuthorization("role:backoffice");
+
+kycTasks.MapPost("", async (
+    CreateKycTaskRequest req,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    var task = await service.CreateKycTaskAsync(req.InvestorId, req.Reason, ct);
+    return Results.Created($"/v1/kyc/tasks/{task.Id}", task);
+})
+.WithName("CreateKycTask")
+.WithOpenApi();
+
+kycTasks.MapGet("", async (
+    string? status,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    var list = await service.ListKycTasksAsync(status, ct);
+    return Results.Ok(list);
+})
+.WithName("ListKycTasks")
+.WithOpenApi();
+
+kycTasks.MapPost("/{id:guid}/approve", async (
+    Guid id,
+    HttpContext http,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    Guid? actor = http.User.Identity?.IsAuthenticated == true ?
+        http.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is string s && Guid.TryParse(s, out var g) ? g : null
+        : null;
+
+    var task = await service.ResolveKycTaskAsync(id, "approve", actor, null, ct);
+    return task != null ? Results.Ok(task) : Results.NotFound();
+})
+.WithName("ApproveKycTask")
+.WithOpenApi();
+
+kycTasks.MapPost("/{id:guid}/reject", async (
+    Guid id,
+    HttpContext http,
+    IComplianceService service,
+    CancellationToken ct) =>
+{
+    Guid? actor = http.User.Identity?.IsAuthenticated == true ?
+        http.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is string s && Guid.TryParse(s, out var g) ? g : null
+        : null;
+
+    var task = await service.ResolveKycTaskAsync(id, "reject", actor, null, ct);
+    return task != null ? Results.Ok(task) : Results.NotFound();
+})
+.WithName("RejectKycTask")
+.WithOpenApi();
+
 app.Run();
 
 static void MapKeycloakRoles(TokenValidatedContext ctx)

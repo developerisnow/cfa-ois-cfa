@@ -116,6 +116,14 @@ channels:
       message:
         $ref: '#/components/messages/ComplianceFlagged'
 
+  ois.kyc.updated:
+    description: Обновление статуса KYC инвестора
+    publish:
+      operationId: onKycUpdated
+      summary: KYC updated event
+      message:
+        $ref: '#/components/messages/KycUpdated'
+
 components:
   messages:
     OrderCreated:
@@ -207,6 +215,13 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/ComplianceFlaggedPayload'
+
+    KycUpdated:
+      name: KycUpdated
+      title: KYC Updated Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/KycUpdatedPayload'
   
   schemas:
     OrderCreatedPayload:
@@ -583,4 +598,24 @@ components:
           format: uuid
           nullable: true
           description: User who resolved the flag
+
+    KycUpdatedPayload:
+      type: object
+      required:
+        - investorId
+        - status
+        - updatedAt
+      properties:
+        investorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pass, fail, pending, review]
+        reason:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
 

@@ -9,6 +9,7 @@ public class ComplianceDbContext : DbContext
     public DbSet<InvestorComplianceEntity> InvestorsCompliance => Set<InvestorComplianceEntity>();
     public DbSet<ComplaintEntity> Complaints => Set<ComplaintEntity>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<KycTaskEntity> KycTasks => Set<KycTaskEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -121,6 +122,38 @@ public class ComplianceDbContext : DbContext
 
             entity.HasIndex(e => new { e.ProcessedAt, e.CreatedAt });
         });
+
+        modelBuilder.Entity<KycTaskEntity>(entity =>
+        {
+            entity.ToTable("kyc_tasks");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.InvestorId)
+                .HasColumnName("investor_id")
+                .IsRequired();
+
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(e => e.Reason)
+                .HasColumnName("reason");
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+
+            entity.Property(e => e.ResolvedAt)
+                .HasColumnName("resolved_at");
+
+            entity.HasIndex(e => e.InvestorId);
+            entity.HasIndex(e => e.Status);
+        });
     }
 }
 
@@ -154,5 +187,15 @@ public class OutboxMessage
     public string Payload { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
+}
+
+public class KycTaskEntity
+{
+    public Guid Id { get; set; }
+    public Guid InvestorId { get; set; }
+    public string Status { get; set; } = "open"; // open, approved, rejected
+    public string? Reason { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? ResolvedAt { get; set; }
 }
 

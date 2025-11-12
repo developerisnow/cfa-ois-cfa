@@ -84,6 +84,142 @@ paths:
                 $ref: '#/components/schemas/InvestorStatusResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /v1/compliance/kyc/investors/{id}/approve:
+    post:
+      summary: Approve KYC for investor
+      operationId: approveKyc
+      tags:
+        - KYC
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: KYC updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycResult'
+
+  /v1/compliance/kyc/investors/{id}/reject:
+    post:
+      summary: Reject KYC for investor
+      operationId: rejectKyc
+      tags:
+        - KYC
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: KYC updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycResult'
+
+  /v1/kyc/tasks:
+    post:
+      summary: Create KYC manual review task
+      operationId: createKycTask
+      tags:
+        - KYC Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [investorId]
+              properties:
+                investorId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycTask'
+    get:
+      summary: List KYC tasks
+      operationId: listKycTasks
+      tags:
+        - KYC Tasks
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, approved, rejected]
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KycTask'
+
+  /v1/kyc/tasks/{id}/approve:
+    post:
+      summary: Approve KYC task and investor
+      operationId: approveKycTask
+      tags:
+        - KYC Tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/kyc/tasks/{id}/reject:
+    post:
+      summary: Reject KYC task and investor
+      operationId: rejectKycTask
+      tags:
+        - KYC Tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycTask'
+        '404':
+          $ref: '#/components/responses/NotFound'
   
   /v1/complaints:
     post:
@@ -240,6 +376,29 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    KycTask:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        investorId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [open, approved, rejected]
+        reason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
     
     CreateComplaintRequest:
       type: object
