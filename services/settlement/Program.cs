@@ -26,7 +26,8 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
-        .AddConsoleExporter());
+        .AddConsoleExporter()
+        .AddPrometheusExporter());
 
 // Database
 builder.Services.AddDbContext<SettlementDbContext>(options =>
@@ -42,6 +43,36 @@ builder.Services.AddHttpClient<IBankNominalClient, BankNominalClient>();
 // Services
 builder.Services.AddScoped<IOutboxService, OutboxService>();
 builder.Services.AddScoped<ISettlementService, SettlementService>();
+
+// AuthN/Z
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        if (!string.IsNullOrEmpty(authority))
+        {
+            options.Authority = authority;
+        }
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RoleClaimType = ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx => { MapKeycloakRoles(ctx); return Task.CompletedTask; }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("role:issuer", p => p.RequireRole("issuer"));
+    options.AddPolicy("role:backoffice", p => p.RequireRole("backoffice"));
+    options.AddPolicy("role:issuer-or-backoffice", p =>
+        p.RequireAssertion(ctx => ctx.User.IsInRole("issuer") || ctx.User.IsInRole("backoffice")));
+});
 
 // API
 builder.Services.AddEndpointsApiExplorer();
@@ -66,10 +97,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 // API Endpoints
-var api = app.MapGroup("/v1").WithTags("Settlement");
+var api = app.MapGroup("/v1").WithTags("Settlement").RequireAuthorization();
 
 api.MapPost("/settlement/run", async (
     DateOnly? date,
@@ -90,6 +124,7 @@ api.MapPost("/settlement/run", async (
     }
 })
 .WithName("RunSettlement")
+.RequireAuthorization("role:backoffice")
 .WithOpenApi();
 
 api.MapGet("/reports/payouts", async (
@@ -113,7 +148,34 @@ api.MapGet("/reports/payouts", async (
     return Results.Ok(result);
 })
 .WithName("GetPayoutsReport")
+.RequireAuthorization("role:issuer-or-backoffice")
 .WithOpenApi();
 
 app.Run();
 
+static void MapKeycloakRoles(TokenValidatedContext ctx)
+{
+    try
+    {
+        if (ctx.Principal?.Identity is not ClaimsIdentity identity) return;
+        var realmAccessJson = identity.FindFirst("realm_access")?.Value;
+        if (!string.IsNullOrEmpty(realmAccessJson))
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(realmAccessJson);
+            if (doc.RootElement.TryGetProperty("roles", out var rolesEl) && rolesEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var r in rolesEl.EnumerateArray())
+                {
+                    var role = r.GetString();
+                    if (!string.IsNullOrEmpty(role))
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
+    }
+    catch { }
+}
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;

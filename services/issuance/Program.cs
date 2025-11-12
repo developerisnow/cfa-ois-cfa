@@ -8,6 +8,9 @@ using OIS.Issuance.DTOs;
 using OIS.Issuance.Services;
 using OIS.Issuance.Validators;
 using Serilog;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,6 +58,31 @@ builder.Services.AddScoped<IIssuanceService, IssuanceService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateIssuanceRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
+// AuthN/Z
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        if (!string.IsNullOrEmpty(authority)) options.Authority = authority;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RoleClaimType = ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx => { MapKeycloakRoles(ctx); return Task.CompletedTask; }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("role:issuer", p => p.RequireRole("issuer"));
+    options.AddPolicy("role:any-auth", p => p.RequireAuthenticatedUser());
+});
+
 // API
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -78,11 +106,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapPrometheusScrapingEndpoint("/metrics");
 
 // API Endpoints
-var api = app.MapGroup("/v1").WithTags("Issuances");
+var api = app.MapGroup("/v1").WithTags("Issuances").RequireAuthorization();
 
 api.MapPost("/issuances", async (
     CreateIssuanceRequest request,
@@ -93,6 +123,7 @@ api.MapPost("/issuances", async (
     return Results.Created($"/v1/issuances/{result.Id}", result);
 })
 .WithName("CreateIssuance")
+.RequireAuthorization("role:issuer")
 .WithOpenApi();
 
 api.MapGet("/issuances/{id:guid}", async (
@@ -104,6 +135,7 @@ api.MapGet("/issuances/{id:guid}", async (
     return result != null ? Results.Ok(result) : Results.NotFound();
 })
 .WithName("GetIssuance")
+.RequireAuthorization("role:any-auth")
 .WithOpenApi();
 
 api.MapPost("/issuances/{id:guid}/publish", async (
@@ -125,6 +157,7 @@ api.MapPost("/issuances/{id:guid}/publish", async (
     }
 })
 .WithName("PublishIssuance")
+.RequireAuthorization("role:issuer")
 .WithOpenApi();
 
 api.MapPost("/issuances/{id:guid}/close", async (
@@ -146,7 +179,31 @@ api.MapPost("/issuances/{id:guid}/close", async (
     }
 })
 .WithName("CloseIssuance")
+.RequireAuthorization("role:issuer")
 .WithOpenApi();
 
 app.Run();
+
+static void MapKeycloakRoles(TokenValidatedContext ctx)
+{
+    try
+    {
+        if (ctx.Principal?.Identity is not ClaimsIdentity identity) return;
+        var realmAccessJson = identity.FindFirst("realm_access")?.Value;
+        if (!string.IsNullOrEmpty(realmAccessJson))
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(realmAccessJson);
+            if (doc.RootElement.TryGetProperty("roles", out var rolesEl) && rolesEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var r in rolesEl.EnumerateArray())
+                {
+                    var role = r.GetString();
+                    if (!string.IsNullOrEmpty(role))
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
+    }
+    catch { }
+}
 

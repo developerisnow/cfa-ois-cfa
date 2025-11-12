@@ -26,7 +26,8 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
-        .AddConsoleExporter());
+        .AddConsoleExporter()
+        .AddPrometheusExporter());
 
 // Database
 builder.Services.AddDbContext<ComplianceDbContext>(options =>
@@ -46,6 +47,33 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ComplianceDbContext>();
 
+// AuthN/Z
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        if (!string.IsNullOrEmpty(authority)) options.Authority = authority;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RoleClaimType = ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx => { MapKeycloakRoles(ctx); return Task.CompletedTask; }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("role:investor", p => p.RequireRole("investor"));
+    options.AddPolicy("role:backoffice", p => p.RequireRole("backoffice"));
+    options.AddPolicy("role:investor-or-backoffice", p =>
+        p.RequireAssertion(ctx => ctx.User.IsInRole("investor") || ctx.User.IsInRole("backoffice")));
+});
+
 var app = builder.Build();
 
 // Apply migrations
@@ -63,10 +91,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 // API Endpoints
-var api = app.MapGroup("/v1").WithTags("Compliance");
+var api = app.MapGroup("/v1").WithTags("Compliance").RequireAuthorization();
 
 api.MapPost("/compliance/kyc/check", async (
     KycCheckRequest request,
@@ -77,6 +108,7 @@ api.MapPost("/compliance/kyc/check", async (
     return Results.Ok(result);
 })
 .WithName("CheckKyc")
+.RequireAuthorization("role:investor-or-backoffice")
 .WithOpenApi();
 
 api.MapPost("/compliance/qualification/evaluate", async (
@@ -88,6 +120,7 @@ api.MapPost("/compliance/qualification/evaluate", async (
     return Results.Ok(result);
 })
 .WithName("EvaluateQualification")
+.RequireAuthorization("role:investor-or-backoffice")
 .WithOpenApi();
 
 api.MapGet("/compliance/investors/{id:guid}/status", async (
@@ -99,9 +132,10 @@ api.MapGet("/compliance/investors/{id:guid}/status", async (
     return result != null ? Results.Ok(result) : Results.NotFound();
 })
 .WithName("GetInvestorStatus")
+.RequireAuthorization("role:investor-or-backoffice")
 .WithOpenApi();
 
-var complaintsApi = app.MapGroup("/v1/complaints").WithTags("Complaints");
+var complaintsApi = app.MapGroup("/v1/complaints").WithTags("Complaints").RequireAuthorization();
 
 complaintsApi.MapPost("", async (
     CreateComplaintRequest request,
@@ -119,6 +153,7 @@ complaintsApi.MapPost("", async (
     return Results.Created($"/v1/complaints/{result.Id}", result);
 })
 .WithName("CreateComplaint")
+.RequireAuthorization("role:investor")
 .WithOpenApi();
 
 complaintsApi.MapGet("/{id:guid}", async (
@@ -130,7 +165,34 @@ complaintsApi.MapGet("/{id:guid}", async (
     return result != null ? Results.Ok(result) : Results.NotFound();
 })
 .WithName("GetComplaint")
+.RequireAuthorization("role:investor-or-backoffice")
 .WithOpenApi();
 
 app.Run();
 
+static void MapKeycloakRoles(TokenValidatedContext ctx)
+{
+    try
+    {
+        if (ctx.Principal?.Identity is not ClaimsIdentity identity) return;
+        var realmAccessJson = identity.FindFirst("realm_access")?.Value;
+        if (!string.IsNullOrEmpty(realmAccessJson))
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(realmAccessJson);
+            if (doc.RootElement.TryGetProperty("roles", out var rolesEl) && rolesEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var r in rolesEl.EnumerateArray())
+                {
+                    var role = r.GetString();
+                    if (!string.IsNullOrEmpty(role))
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
+    }
+    catch { }
+}
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
