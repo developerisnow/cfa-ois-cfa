@@ -1,4 +1,7 @@
-# Bash log
+# Bash log — Proof of listeners vs external reachability
+
+## Client-side probe (from macOS)
+```bash
 ```Bash
 prj_Cifra-rwa-exachange-assets (codex/yougile-mcp-export) ❯ for p in 5000 8080 3001 3002 3003; do nc -vz 87.249.49.56 $p; done
 
