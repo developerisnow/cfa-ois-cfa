@@ -1,14 +1,13 @@
----
 created: 2025-11-13 13:45
-updated: 2025-11-13 13:45
+updated: 2025-11-13 15:25
 type: operations-runbook
 sphere: devops
 topic: uk1 cloudflare ingress
 author: Alex (co-76ca)
 agentID: co-76ca
 partAgentID: [co-76ca]
-version: 0.1.0
-tags: [cloudflare, nginx, keycloak, demo]
+version: 0.2.0
+tags: [cloudflare, nginx, keycloak, demo, smtp]
 ---
 
 # Goal
@@ -20,15 +19,16 @@ tags: [cloudflare, nginx, keycloak, demo]
 - Keycloak + порталы (pm2) + API gateway, без модификации .NET compose.
 
 # Checklist
-- [ ] Cloudflare DNS: A-записи `auth|issuer|investor|backoffice|api.cfa.llmneighbors.com → 185.168.192.214` (DNS only).
-- [ ] Cloudflare SSL Mode = `Full` (после первичной настройки можно краткосрочно переключать на Flexible для отладки).
-- [ ] Wildcard LE-сертификат `*.cfa.llmneighbors.com` выпущен через `certbot --dns-cloudflare` и хранится в `/etc/letsencrypt/live/cfa.llmneighbors.com/`.
-- [ ] `/etc/nginx/sites-available/cfa-portals.conf` развёрнут из шаблона `ops/infra/uk1/nginx-cfa-portals.conf`, включён и перезапущен nginx.
-- [ ] Docker override `ops/infra/uk1/docker-compose.keycloak-proxy.yml` прокатили (KEYCLOAK_PUBLIC_URL указывает на `https://auth.cfa.llmneighbors.com`).
-- [ ] `.env.local` порталов указывает на публичные URL, pm2 перезапущен.
-- [ ] Keycloak clients обновлены (redirect/webOrigins) + отключены `requiredActions`.
-- [ ] Playwright e2e (issuer/investor) прошёл и скриншоты сохранены.
-- [ ] VPN `x-ui` пересажен на свободный порт, если нужен (по умолчанию сервис выключен, чтобы освободить 443).
+- [x] Cloudflare DNS: A-записи `auth|issuer|investor|backoffice|api.cfa.llmneighbors.com → 185.168.192.214` (DNS only).
+- [x] Cloudflare SSL Mode = `Full`.
+- [x] Wildcard LE-сертификат `*.cfa.llmneighbors.com` выпущен в `/etc/letsencrypt/live/cfa.llmneighbors.com/`.
+- [x] `/etc/nginx/sites-available/cfa-portals.conf` развернут и nginx перезапущен.
+- [x] Docker override `ops/infra/uk1/docker-compose.keycloak-proxy.yml` активирован (`KEYCLOAK_PUBLIC_URL=https://auth.cfa.llmneighbors.com`).
+- [x] `.env.local` порталов обновлены, pm2 перезапущен.
+- [x] Keycloak clients/realm откорректированы (redirects, webOrigins, self-registration ON, verifyEmail ON).
+- [x] Playwright e2e (issuer/investor + self-registration) проходит, отчёты в `tests/e2e-playwright/test-results/`.
+- [x] VPN `x-ui` выключен (порт 443 свободен).
+- [x] SMTP стек (Postfix + OpenDKIM) + SPF/DKIM/DMARC настроены; Keycloak использует локальный relay.
 
 # Why → What → How → Result
 
@@ -116,15 +116,73 @@ tags: [cloudflare, nginx, keycloak, demo]
    ```bash
    curl -I https://auth.cfa.llmneighbors.com
    curl https://api.cfa.llmneighbors.com/health
-   cd /tmp/playwright-run && node index.js  # сценарий из /tmp/uk1-login-check.js
+   cd tests/e2e-playwright && npm test
    ```
 
 ## Result
 - Пользовательские порталы и Keycloak доступны по HTTPS без SSH-туннелей.
-- Playwright обеспечивает «доказательство» логина (скриншоты приложены в memory-bank).
+- Playwright обеспечивает «доказательство» логина (issuer/investor + self-registration).
+- SMTP цепочка (Postfix + OpenDKIM) выдаёт проверочные письма; Keycloak self-registration завершает flow без ручных действий.
 - Вся конфигурация задокументирована и может быть переиспользована для других VPS.
+
+## Email / SMTP / DKIM
+1. **Postfix + OpenDKIM**
+   ```bash
+   apt-get install -y postfix mailutils opendkim opendkim-tools
+   postconf -e 'inet_interfaces = all'
+   postconf -e 'mynetworks = 127.0.0.0/8 172.17.0.0/16 172.18.0.0/16'
+   postconf -e 'smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination'
+   postconf -e 'smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination'
+   systemctl enable --now opendkim postfix
+   ```
+
+   `/etc/opendkim.conf` (основное):
+   ```conf
+   UserID                  opendkim:opendkim
+   Socket                  inet:8891@127.0.0.1
+   KeyTable                refile:/etc/opendkim/KeyTable
+   SigningTable            refile:/etc/opendkim/SigningTable
+   InternalHosts           /etc/opendkim/TrustedHosts
+   ```
+   Ключ `mail._domainkey.cfa.llmneighbors.com` → TXT (см. Cloudflare ниже).
+
+2. **Cloudflare DNS для почты**
+   ```bash
+   # A-запись
+   curl -sX POST ... --data '{"type":"A","name":"mail.cfa.llmneighbors.com","content":"185.168.192.214","proxied":false}'
+   # MX
+   curl -sX POST ... --data '{"type":"MX","name":"cfa.llmneighbors.com","content":"mail.cfa.llmneighbors.com","priority":10}'
+   # SPF
+   curl -sX POST ... --data '{"type":"TXT","name":"cfa.llmneighbors.com","content":"v=spf1 ip4:185.168.192.214 ~all"}'
+   # DKIM
+   curl -sX POST ... --data '{"type":"TXT","name":"mail._domainkey.cfa.llmneighbors.com","content":"v=DKIM1; ..."}'
+   # DMARC
+   curl -sX POST ... --data '{"type":"TXT","name":"_dmarc.cfa.llmneighbors.com","content":"v=DMARC1; p=none; rua=mailto:ops@llmneighbors.com; fo=1"}'
+   ```
+
+3. **Keycloak realm SMTP**
+   ```bash
+   docker exec ois-keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user admin --password admin123
+   docker exec ois-keycloak /opt/keycloak/bin/kcadm.sh update realms/ois-dev \
+     -s verifyEmail=true -s registrationAllowed=true \
+     -s "smtpServer.host=172.18.0.1" \
+     -s "smtpServer.port=25" \
+     -s "smtpServer.from=no-reply@cfa.llmneighbors.com" \
+     -s "smtpServer.replyTo=ops@llmneighbors.com" \
+     -s "smtpServer.envelopeFrom=no-reply@cfa.llmneighbors.com" \
+     -s "smtpServer.starttls=false" -s "smtpServer.ssl=false" -s "smtpServer.auth=false"
+   ```
+
+4. **Smoke**
+   ```bash
+   echo "SMTP ok" | mail -s "Test" cfa+demo@2200freefonts.com
+   tail -f /var/log/mail.log  # подтверждаем delivery
+   TOKEN=$(curl -s -X POST https://api.mail.tm/token ...)
+   curl -H "Authorization: Bearer $TOKEN" https://api.mail.tm/messages
+   ```
+   Playwright self-registration (`tests/e2e-playwright/tests/self-registration.spec.ts`) использует тот же API для проверки real-world flow.
 
 # Notes
 - `x-ui` (VPN) был отключён из-за конфликтов порта 443. При переносе на другой порт добавьте `sudo sed -i 's/:443/:<new_port>/' /etc/systemd/system/x-ui.service` и перезапустите nginx.
 - IaC артефакты: `ops/infra/uk1/nginx-cfa-portals.conf` и `ops/infra/uk1/docker-compose.keycloak-proxy.yml`.
-- Инструменты: `flarectl`, `wrangler`, `certbot-dns-cloudflare`, `pm2`, `playwright`.
+- Инструменты: `flarectl`, `wrangler`, `certbot-dns-cloudflare`, `pm2`, `playwright`, `mail.tm`.
