@@ -1,5 +1,5 @@
 created: 2025-11-13 13:45
-updated: 2025-11-13 15:25
+updated: 2025-11-13 17:05
 type: operations-runbook
 sphere: devops
 topic: uk1 cloudflare ingress
@@ -18,7 +18,7 @@ tags: [cloudflare, nginx, keycloak, demo, smtp]
 - Cloudflare аккаунт `llmneighbors.com` (CLI/Token уже лежит в `/home/user/__Repositories/cloudflare__developerisnow/.env`).
 - Keycloak + порталы (pm2) + API gateway, без модификации .NET compose.
 
-# Checklist
+- # Checklist
 - [x] Cloudflare DNS: A-записи `auth|issuer|investor|backoffice|api.cfa.llmneighbors.com → 185.168.192.214` (DNS only).
 - [x] Cloudflare SSL Mode = `Full`.
 - [x] Wildcard LE-сертификат `*.cfa.llmneighbors.com` выпущен в `/etc/letsencrypt/live/cfa.llmneighbors.com/`.
@@ -26,9 +26,10 @@ tags: [cloudflare, nginx, keycloak, demo, smtp]
 - [x] Docker override `ops/infra/uk1/docker-compose.keycloak-proxy.yml` активирован (`KEYCLOAK_PUBLIC_URL=https://auth.cfa.llmneighbors.com`).
 - [x] `.env.local` порталов обновлены, pm2 перезапущен.
 - [x] Keycloak clients/realm откорректированы (redirects, webOrigins, self-registration ON, verifyEmail ON).
-- [x] Playwright e2e (issuer/investor + self-registration) проходит, отчёты в `tests/e2e-playwright/test-results/`.
+- [x] Playwright e2e (issuer/investor + self-registration + backoffice admin) проходит, отчёты в `tests/e2e-playwright/test-results/`.
 - [x] VPN `x-ui` выключен (порт 443 свободен).
 - [x] SMTP стек (Postfix + OpenDKIM) + SPF/DKIM/DMARC настроены; Keycloak использует локальный relay.
+- [x] Postfix слушает только `127.0.0.1` и `172.18.0.1` (docker bridge); внешний 25 порт закрыт.
 
 # Why → What → How → Result
 
@@ -180,7 +181,7 @@ tags: [cloudflare, nginx, keycloak, demo, smtp]
    TOKEN=$(curl -s -X POST https://api.mail.tm/token ...)
    curl -H "Authorization: Bearer $TOKEN" https://api.mail.tm/messages
    ```
-   Playwright self-registration (`tests/e2e-playwright/tests/self-registration.spec.ts`) использует тот же API для проверки real-world flow.
+   Playwright self-registration (`tests/e2e-playwright/tests/self-registration.spec.ts`) и backoffice spec (`tests/e2e-playwright/tests/backoffice-auth.spec.ts`) используют те же домены/SMTP.
 
 # Notes
 - `x-ui` (VPN) был отключён из-за конфликтов порта 443. При переносе на другой порт добавьте `sudo sed -i 's/:443/:<new_port>/' /etc/systemd/system/x-ui.service` и перезапустите nginx.
