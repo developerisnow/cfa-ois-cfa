@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  url: https://argocd.ois-cfa.example.com
+  oidc.config: |
+    name: Keycloak
+    issuer: https://keycloak.ois-cfa.example.com/realms/argocd
+    clientId: argocd
+    clientSecret: $oidc.keycloak.clientSecret
+    requestedScopes: ["openid", "profile", "email", "groups"]
+    requestedIDTokenClaims:
+      groups:
+        essential: true
+    # RBAC via OIDC groups
+    # Groups: argocd-admins, argocd-developers, argocd-auditors
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-secret
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-secret
+    app.kubernetes.io/part-of: argocd
+type: Opaque
+stringData:
+  # OIDC client secret (set via Vault or sealed-secrets)
+  oidc.keycloak.clientSecret: "CHANGE_ME_FROM_VAULT"
+

@@ -19,6 +19,7 @@ export { OrderForm } from './components/forms/OrderForm';
 // Feedback
 export { EmptyState } from './components/feedback/EmptyState';
 export { Skeleton } from './components/feedback/Skeleton';
+export { ErrorBoundary } from './components/feedback/ErrorBoundary';
 
 // Timeline
 export { Timeline } from './components/timeline/Timeline';

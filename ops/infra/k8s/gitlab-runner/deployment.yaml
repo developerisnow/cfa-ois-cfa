@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab-runner
+  namespace: gitlab-runner
+  labels:
+    app: gitlab-runner
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gitlab-runner
+  template:
+    metadata:
+      labels:
+        app: gitlab-runner
+    spec:
+      serviceAccountName: gitlab-runner
+      containers:
+        - name: gitlab-runner
+          image: gitlab/gitlab-runner:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - --config=/etc/gitlab-runner/config.toml
+          env:
+            - name: CI_SERVER_URL
+              value: "https://git.telex.global"
+            - name: RUNNER_EXECUTOR
+              value: "kubernetes"
+            # RUNNER_TAG_LIST removed - tags are configured in config.toml
+            # If tags are needed, add them in config.toml: tags = ["docker", "kubernetes"]
+            - name: RUNNER_REQUESTED_CONCURRENT_BUILDS
+              value: "10"
+            - name: RUNNER_OUTPUT_LIMIT
+              value: "4096"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/gitlab-runner
+            - name: runner-home
+              mountPath: /home/gitlab-runner
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # Health checks disabled - runner doesn't listen on port 9252 by default
+          # To enable metrics, add listen_address = ":9252" to config.toml
+          # livenessProbe:
+          #   httpGet:
+          #     path: /metrics
+          #     port: 9252
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /metrics
+          #     port: 9252
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: gitlab-runner-config
+            items:
+              - key: config.toml
+                path: config.toml
+        - name: runner-home
+          emptyDir: {}
+

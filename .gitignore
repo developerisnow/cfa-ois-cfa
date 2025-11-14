@@ -92,3 +92,6 @@ apps/backoffice/package-lock.json
 /apps/backoffice/package-lock.json
 kniga_cfa.pdf
 **/app/*
+ARCHIVE/
+artifacts/
+.tools/

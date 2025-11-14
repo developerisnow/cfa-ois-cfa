@@ -1,0 +1,17 @@
+# Development environment values for fabric-orderer
+replicaCount: 3  # Minimum for Raft
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+storage:
+  size: 10Gi
+
+secrets:
+  type: "sealed-secrets"
+

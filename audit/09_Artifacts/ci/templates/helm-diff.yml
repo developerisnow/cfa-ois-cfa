@@ -1,0 +1,7 @@
+.helm_diff:
+  image: alpine/helm:3.15.4
+  before_script:
+    - helm plugin install https://github.com/databus23/helm-diff || true
+  script:
+    - helm diff upgrade "$RELEASE" "$CHART" -n "$NAMESPACE" -f "$VALUES"
+

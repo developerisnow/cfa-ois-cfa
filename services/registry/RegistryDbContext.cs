@@ -245,7 +245,7 @@ public class OrderEntity
     public Guid InvestorId { get; set; }
     public Guid IssuanceId { get; set; }
     public decimal Amount { get; set; }
-    public string Status { get; set; } = "pending"; // pending, confirmed, failed, cancelled
+    public string Status { get; set; } = "created"; // created, reserved, paid, failed, cancelled
     public string? IdemKey { get; set; }
     public Guid? WalletId { get; set; }
     public string? DltTxHash { get; set; }

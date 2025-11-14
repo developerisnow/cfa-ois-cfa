@@ -1,0 +1,10 @@
+extends: []
+formats: [oas3]
+rules:
+  openapi-exists:
+    description: File must declare OpenAPI version
+    message: "Missing 'openapi' field"
+    given: "$"
+    then:
+      field: openapi
+      function: truthy

@@ -17,6 +17,7 @@ export const options = {
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
+const TOKEN = __ENV.TOKEN; // optional JWT
 
 export default function () {
   const today = new Date();
@@ -31,6 +32,7 @@ export default function () {
   const params = {
     headers: {
       'Content-Type': 'application/json',
+      ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}),
     },
   };
 

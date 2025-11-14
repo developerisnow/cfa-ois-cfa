@@ -1,0 +1,71 @@
+# ArgoCD Helm values for OIS-CFA
+global:
+  image:
+    tag: "v2.10.0"
+
+controller:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+server:
+  replicas: 2
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.ois-cfa.example.com
+    tls:
+      - secretName: argocd-tls
+        hosts:
+          - argocd.ois-cfa.example.com
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+repoServer:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+applicationSet:
+  enabled: true
+  replicas: 2
+
+configs:
+  params:
+    server.insecure: false
+  cm:
+    url: https://argocd.ois-cfa.example.com
+  rbac:
+    policy.default: role:readonly
+  secret:
+    # Admin password (change in production, use Vault)
+    argocdServerAdminPassword: "$2y$10$CHANGE_ME"
+
+redis:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+

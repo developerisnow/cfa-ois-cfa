@@ -1,0 +1,9 @@
+.trivy_scan:
+  image: aquasec/trivy:0.51.0
+  script:
+    - trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$CI_COMMIT_SHA"
+    - trivy image --format cyclonedx --output sbom.cdx.json "$CI_REGISTRY_IMAGE/$IMAGE_NAME:$CI_COMMIT_SHA"
+  artifacts:
+    when: always
+    paths: [sbom.cdx.json]
+

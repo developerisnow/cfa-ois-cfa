@@ -39,8 +39,7 @@
     "totalSupply": {
       "type": "number",
       "format": "decimal",
-      "minimum": 0,
-      "exclusiveMinimum": true,
+      "exclusiveMinimum": 0,
       "description": "Общий объём выпуска"
     },
     "issuedAmount": {

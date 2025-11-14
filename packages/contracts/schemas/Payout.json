@@ -28,8 +28,7 @@
     "amount": {
       "type": "number",
       "format": "decimal",
-      "minimum": 0,
-      "exclusiveMinimum": true,
+      "exclusiveMinimum": 0,
       "description": "Сумма выплаты"
     },
     "status": {

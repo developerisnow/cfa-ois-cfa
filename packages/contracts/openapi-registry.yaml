@@ -76,6 +76,56 @@ paths:
                 $ref: '#/components/schemas/OrderResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /v1/orders/{id}/cancel:
+    post:
+      summary: Cancel order
+      operationId: cancelOrder
+      tags:
+        - Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/orders/{id}/mark-paid:
+    post:
+      summary: Mark order as paid
+      operationId: markOrderPaid
+      tags:
+        - Orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   
   /v1/wallets/{investorId}:
     get:
@@ -169,7 +219,7 @@ components:
           format: decimal
         status:
           type: string
-          enum: [pending, confirmed, failed, cancelled]
+          enum: [created, reserved, paid, failed, cancelled]
         walletId:
           type: string
           format: uuid

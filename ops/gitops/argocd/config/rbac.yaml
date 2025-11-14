@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    # Organization Admin - full access
+    p, role:org-admin, applications, *, */*, allow
+    p, role:org-admin, clusters, get, *, allow
+    p, role:org-admin, clusters, create, *, allow
+    p, role:org-admin, clusters, update, *, allow
+    p, role:org-admin, clusters, delete, *, allow
+    p, role:org-admin, repositories, get, *, allow
+    p, role:org-admin, repositories, create, *, allow
+    p, role:org-admin, repositories, update, *, allow
+    p, role:org-admin, repositories, delete, *, allow
+    p, role:org-admin, certificates, get, *, allow
+    p, role:org-admin, certificates, create, *, allow
+    p, role:org-admin, certificates, update, *, allow
+    p, role:org-admin, certificates, delete, *, allow
+    p, role:org-admin, accounts, get, *, allow
+    p, role:org-admin, accounts, create, *, allow
+    p, role:org-admin, accounts, update, *, allow
+    p, role:org-admin, accounts, delete, *, allow
+    p, role:org-admin, gpgkeys, get, *, allow
+    p, role:org-admin, gpgkeys, create, *, allow
+    p, role:org-admin, gpgkeys, delete, *, allow
+    p, role:org-admin, logs, get, */*, allow
+
+    # Developer - can sync applications
+    p, role:developer, applications, get, */*, allow
+    p, role:developer, applications, sync, */*, allow
+    p, role:developer, applications, override, */*, allow
+    p, role:developer, applications, action/*, */*, allow
+    p, role:developer, repositories, get, *, allow
+    p, role:developer, clusters, get, *, allow
+    p, role:developer, logs, get, */*, allow
+
+    # Auditor - read-only access
+    p, role:auditor, applications, get, */*, allow
+    p, role:auditor, applications, logs, get, */*, allow
+    p, role:auditor, repositories, get, *, allow
+    p, role:auditor, clusters, get, *, allow
+    p, role:auditor, certificates, get, *, allow
+    p, role:auditor, accounts, get, *, allow
+    p, role:auditor, gpgkeys, get, *, allow
+
+    # Role bindings (via OIDC groups)
+    g, argocd-admins, role:org-admin
+    g, argocd-developers, role:developer
+    g, argocd-auditors, role:auditor
+

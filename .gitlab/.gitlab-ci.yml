@@ -1,0 +1,79 @@
+  stages: [infra, build, test, deploy]
+
+variables:
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: $CI_COMMIT_SHA
+
+# === INFRA (по кнопке) ===
+terraform:plan:
+  stage: infra
+  rules: [ { if: '$CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_BRANCH == "infra/*"' } ]
+  image: hashicorp/terraform:1.9
+  script:
+    - cd ops/infra/timeweb
+    - terraform init
+    - terraform validate
+    - terraform plan -out tfplan
+  artifacts: { paths: [ops/infra/timeweb/tfplan] }
+
+# === BUILD ===
+build:gateway:
+  stage: build
+  image: gcr.io/kaniko-project/executor:latest
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --destination "$CI_REGISTRY_IMAGE/gateway:$IMAGE_TAG" --dockerfile services/gateway/Dockerfile --context .
+  rules: [ { if: '$CI_COMMIT_BRANCH' } ]
+
+# (повтори для остальных сервисов/фронтов)
+
+# === TEST ===
+test:unit:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:9.0
+  script:
+    - dotnet test --logger "trx;LogFileName=tests.trx"
+  artifacts: { when: always, reports: { junit: tests.trx } }
+
+test:pact:
+  stage: test
+  image: node:22
+  script: [ "npm ci --workspace=tests/pact", "npm test --workspace=tests/pact" ]
+
+test:e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.47.2-jammy
+  script: [ "cd tests/e2e && npm ci && npx playwright install --with-deps && npm test" ]
+  artifacts: { when: always, paths: [ "tests/e2e/playwright-report" ] }
+
+test:k6:
+  stage: test
+  image: grafana/k6:0.49.0
+  script: [ "k6 run --summary-export=summary.json tests/k6/smoke.js" ]
+  artifacts: { when: always, paths: [ "summary.json" ] }
+
+# === DEPLOY ===
+deploy:staging:
+  stage: deploy
+  environment:
+    name: staging
+    url: https://staging.cfa.capital
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  image: bitnami/kubectl:1.30
+  script:
+    # Option A: ArgoCD (если Argo в кластере)
+    - argocd app sync ois-staging --grpc-web
+    # Option B: GitLab Agent — применяем Helm манифесты через pull-based GitOps (рекомендуемо)
+
+deploy:prod:
+  stage: deploy
+  environment:
+    name: production
+    url: https://cfa.capital
+  rules: [ { if: '$CI_COMMIT_TAG =~ /^v\\d+\\.\\d+\\.\\d+$/' } ]
+  image: bitnami/kubectl:1.30
+  script:
+    - argocd app sync ois-prod --grpc-web

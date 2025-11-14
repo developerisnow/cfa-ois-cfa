@@ -1,0 +1,106 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fabric-orderer
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/fabric-orderer
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fabric-network
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fabric-peer
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/fabric-peer
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fabric-network
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fabric-ca
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/fabric-ca
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-${ARGOCD_ENV}.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fabric-network
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chaincode-lifecycle
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+  source:
+    repoURL: https://gitlab.com/ois-cfa/ois-cfa.git
+    targetRevision: main
+    path: ops/infra/helm/chaincode-lifecycle
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fabric-network
+  syncPolicy:
+    automated:
+      prune: false  # Jobs should be triggered manually
+    syncOptions:
+      - CreateNamespace=true
+

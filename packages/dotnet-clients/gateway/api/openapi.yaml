@@ -1,0 +1,2437 @@
+openapi: 3.1.0
+info:
+  contact:
+    name: OIS Support
+  description: API Gateway для оператора информационной системы ЦФА
+  title: OIS Gateway API
+  version: 1.0.0
+servers:
+- description: Development
+  url: http://localhost:5000
+- description: Production
+  url: https://api.ois.example.com
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+          description: Service is healthy
+      summary: Health check
+      tags:
+      - Health
+  /issuances:
+    post:
+      operationId: createIssuance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIssuanceRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceResponse"
+          description: Issuance created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Create draft issuance
+      tags:
+      - Issuances
+  /issuances/{id}:
+    get:
+      operationId: getIssuance
+      parameters:
+      - $ref: "#/components/parameters/IssuanceId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceResponse"
+          description: Issuance details
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Get issuance by ID
+      tags:
+      - Issuances
+  /issuances/{id}/publish:
+    post:
+      operationId: publishIssuance
+      parameters:
+      - $ref: "#/components/parameters/IssuanceId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceResponse"
+          description: Issuance published
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Publish issuance
+      tags:
+      - Issuances
+  /issuances/{id}/close:
+    post:
+      operationId: closeIssuance
+      parameters:
+      - $ref: "#/components/parameters/IssuanceId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuanceResponse"
+          description: Issuance closed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Close issuance
+      tags:
+      - Issuances
+  /v1/orders:
+    post:
+      operationId: placeOrder
+      parameters:
+      - description: Idempotency key to prevent duplicate orders
+        explode: false
+        in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+          description: Order accepted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Order with this idempotency key already exists
+      security:
+      - BearerAuth: []
+      summary: Place buy order
+      tags:
+      - Orders
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+          description: Order details
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - Orders
+  /v1/wallets/{investorId}:
+    get:
+      operationId: getWallet
+      parameters:
+      - explode: false
+        in: path
+        name: investorId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletResponse"
+          description: Wallet portfolio
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Get wallet portfolio
+      tags:
+      - Wallets
+  /v1/issuances/{id}/redeem:
+    post:
+      operationId: redeemIssuance
+      parameters:
+      - $ref: "#/components/parameters/IssuanceId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedeemRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedeemResponse"
+          description: Issuance redeemed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Redeem issuance
+      tags:
+      - Issuances
+  /v1/settlement/run:
+    post:
+      operationId: runSettlement
+      parameters:
+      - description: Date to run settlement for (YYYY-MM-DD). Defaults to today.
+        explode: true
+        in: query
+        name: date
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementResponse"
+          description: Settlement accepted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      security:
+      - BearerAuth: []
+      summary: Run settlement for a specific date
+      tags:
+      - Settlement
+  /v1/compliance/kyc/check:
+    post:
+      operationId: checkKyc
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycCheckRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycResult"
+          description: KYC check result
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      security:
+      - BearerAuth: []
+      summary: Check KYC status
+      tags:
+      - Compliance
+  /v1/compliance/qualification/evaluate:
+    post:
+      operationId: evaluateQualification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QualificationEvaluateRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualificationResult"
+          description: Qualification result
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      security:
+      - BearerAuth: []
+      summary: Evaluate qualification
+      tags:
+      - Compliance
+  /v1/compliance/investors/{id}/status:
+    get:
+      operationId: getInvestorStatus
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestorStatusResponse"
+          description: Investor status
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Get investor compliance status
+      tags:
+      - Compliance
+  /v1/complaints:
+    post:
+      operationId: createComplaint
+      parameters:
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComplaintRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplaintResponse"
+          description: Complaint created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      security:
+      - BearerAuth: []
+      summary: Create complaint
+      tags:
+      - Complaints
+  /v1/complaints/{id}:
+    get:
+      operationId: getComplaint
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplaintResponse"
+          description: Complaint details
+        "404":
+          $ref: "#/components/responses/NotFound"
+      security:
+      - BearerAuth: []
+      summary: Get complaint
+      tags:
+      - Complaints
+  /v1/reports/payouts:
+    get:
+      operationId: getPayoutsReport
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: End date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutsReportResponse"
+          description: Payouts report
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      security:
+      - BearerAuth: []
+      summary: Get payouts report
+      tags:
+      - Reports
+  /v1/market/issuances:
+    get:
+      operationId: listMarketIssuances
+      parameters:
+      - description: Filter by status
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          default: open
+          enum:
+          - open
+          - closed
+          - all
+          type: string
+        style: form
+      - description: Sort order (prefix - for descending)
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: -yield
+          enum:
+          - -yield
+          - yield
+          - -maturityDate
+          - maturityDate
+          - -totalAmount
+          - totalAmount
+          type: string
+        style: form
+      - description: Page size
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      - description: Page offset
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          default: 0
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketIssuancesResponse"
+          description: Market issuances list
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: List market issuances
+      tags:
+      - Market
+  /v1/market/issuances/{id}:
+    get:
+      operationId: getMarketIssuance
+      parameters:
+      - description: Issuance ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketIssuanceCard"
+          description: Market issuance details
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Get market issuance details
+      tags:
+      - Market
+  /v1/investors/{id}/transactions:
+    get:
+      operationId: getInvestorTransactions
+      parameters:
+      - description: Investor ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - description: Start date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: End date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: Filter by transaction type
+        explode: true
+        in: query
+        name: type
+        required: false
+        schema:
+          default: all
+          enum:
+          - transfer
+          - redeem
+          - issue
+          - all
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionHistoryResponse"
+          description: Transaction history
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Get investor transaction history
+      tags:
+      - Investors
+  /v1/investors/{id}/payouts:
+    get:
+      operationId: getInvestorPayouts
+      parameters:
+      - description: Investor ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - description: Start date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: End date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayoutHistoryResponse"
+          description: Payout history
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Get investor payout history
+      tags:
+      - Investors
+  /v1/reports/issuances:
+    get:
+      operationId: getIssuerIssuancesReport
+      parameters:
+      - description: Issuer ID
+        explode: true
+        in: query
+        name: issuerId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: form
+      - description: Start date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: End date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuerIssuancesReportResponse"
+          description: Issuer issuances report
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Get issuer report for issuances
+      tags:
+      - Reports
+  /v1/reports/issuer/payouts:
+    get:
+      operationId: getIssuerPayoutsReport
+      parameters:
+      - description: Issuer ID
+        explode: true
+        in: query
+        name: issuerId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: form
+      - description: Start date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: End date (YYYY-MM-DD)
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      - description: Report granularity
+        explode: true
+        in: query
+        name: granularity
+        required: false
+        schema:
+          default: month
+          enum:
+          - day
+          - week
+          - month
+          - year
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuerPayoutsReportResponse"
+          description: Issuer payouts report
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      security:
+      - BearerAuth: []
+      summary: Get issuer payouts report
+      tags:
+      - Reports
+  /v1/audit:
+    get:
+      operationId: getAuditEvents
+      parameters:
+      - description: Filter by actor ID
+        explode: true
+        in: query
+        name: actor
+        required: false
+        schema:
+          format: uuid
+          type: string
+        style: form
+      - description: Filter by action type
+        explode: true
+        in: query
+        name: action
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filter by entity type
+        explode: true
+        in: query
+        name: entity
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Start datetime
+        explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: End datetime
+        explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Page size
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          type: integer
+        style: form
+      - description: Page offset
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          default: 0
+          minimum: 0
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventsResponse"
+          description: Audit events list
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - BearerAuth: []
+      summary: Get audit events
+      tags:
+      - Audit
+  /v1/audit/export.csv:
+    get:
+      operationId: exportAuditCsv
+      parameters:
+      - explode: true
+        in: query
+        name: actor
+        required: false
+        schema:
+          format: uuid
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: action
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: entity
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: from
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: to
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            text/csv:
+              schema:
+                format: binary
+                type: string
+          description: CSV export
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - BearerAuth: []
+      summary: Export audit events as CSV
+      tags:
+      - Audit
+  /v1/audit/{id}:
+    get:
+      operationId: getAuditEvent
+      parameters:
+      - description: Audit event ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEvent"
+          description: Audit event details
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - BearerAuth: []
+      summary: Get audit event by ID
+      tags:
+      - Audit
+  /v1/kyc/{investorId}/decision:
+    post:
+      operationId: makeKycDecision
+      parameters:
+      - description: Investor ID
+        explode: false
+        in: path
+        name: investorId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KycDecisionRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycDecisionResponse"
+          description: KYC decision made
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - BearerAuth: []
+      summary: Make KYC decision
+      tags:
+      - Compliance
+  /v1/kyc/{investorId}/documents:
+    post:
+      operationId: uploadKycDocuments
+      parameters:
+      - description: Investor ID
+        explode: false
+        in: path
+        name: investorId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/uploadKycDocuments_request"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycDocumentsResponse"
+          description: Documents uploaded
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+      security:
+      - BearerAuth: []
+      summary: Upload KYC documents
+      tags:
+      - Compliance
+components:
+  parameters:
+    IssuanceId:
+      description: Issuance ID
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
+        format: uuid
+        type: string
+      style: simple
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          example:
+            type: https://tools.ietf.org/html/rfc7807
+            title: Bad Request
+            status: 400
+            detail: Invalid request parameters
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Bad request
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Unauthorized
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Resource not found
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Forbidden
+  schemas:
+    HealthStatus:
+      example:
+        status: healthy
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        status:
+          enum:
+          - healthy
+          - unhealthy
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+    CreateIssuanceRequest:
+      example:
+        issuerId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        totalAmount: 0.08008281904610115
+        nominal: 0.6027456183070403
+        assetId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        maturityDate: 2000-01-23
+        issueDate: 2000-01-23
+        scheduleJson: "{}"
+      properties:
+        assetId:
+          format: uuid
+          type: string
+        issuerId:
+          format: uuid
+          type: string
+        totalAmount:
+          format: decimal
+          minimum: 0
+          type: number
+        nominal:
+          format: decimal
+          minimum: 0
+          type: number
+        issueDate:
+          format: date
+          type: string
+        maturityDate:
+          format: date
+          type: string
+        scheduleJson:
+          description: Payout schedule (optional)
+          type: object
+      required:
+      - assetId
+      - issueDate
+      - issuerId
+      - maturityDate
+      - nominal
+      - totalAmount
+    IssuanceResponse:
+      example:
+        issuerId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        totalAmount: 0.8008281904610115
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        nominal: 6.027456183070403
+        assetId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        maturityDate: 2000-01-23
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        issueDate: 2000-01-23
+        status: draft
+        scheduleJson: "{}"
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        assetId:
+          format: uuid
+          type: string
+        issuerId:
+          format: uuid
+          type: string
+        totalAmount:
+          format: decimal
+          type: number
+        nominal:
+          format: decimal
+          type: number
+        issueDate:
+          format: date
+          type: string
+        maturityDate:
+          format: date
+          type: string
+        status:
+          enum:
+          - draft
+          - published
+          - closed
+          - redeemed
+          type: string
+        scheduleJson:
+          type: object
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+    RedeemRequest:
+      example:
+        amount: 0.08008281904610115
+      properties:
+        amount:
+          format: decimal
+          minimum: 0
+          type: number
+      required:
+      - amount
+    RedeemResponse:
+      example:
+        remainingAmount: 6.027456183070403
+        redeemedAmount: 0.8008281904610115
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: redeemed
+      properties:
+        id:
+          format: uuid
+          type: string
+        status:
+          enum:
+          - redeemed
+          - partial
+          type: string
+        redeemedAmount:
+          format: decimal
+          type: number
+        remainingAmount:
+          format: decimal
+          type: number
+    SettlementResponse:
+      example:
+        totalAmount: 0.8008281904610115
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        runDate: 2000-01-23
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: pending
+        itemCount: 6
+      properties:
+        batchId:
+          format: uuid
+          type: string
+        runDate:
+          format: date
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+          nullable: true
+        totalAmount:
+          format: decimal
+          type: number
+        status:
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+          type: string
+        itemCount:
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+    KycCheckRequest:
+      example:
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        investorId:
+          format: uuid
+          type: string
+      required:
+      - investorId
+    KycResult:
+      example:
+        reason: reason
+        checkedAt: 2000-01-23T04:56:07.000+00:00
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: pass
+      properties:
+        investorId:
+          format: uuid
+          type: string
+        status:
+          enum:
+          - pass
+          - fail
+          - pending
+          - review
+          type: string
+        checkedAt:
+          format: date-time
+          type: string
+        reason:
+          type: string
+          nullable: true
+      required:
+      - investorId
+      - status
+    QualificationEvaluateRequest:
+      example:
+        amount: 0.08008281904610115
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        investorId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          minimum: 0
+          type: number
+      required:
+      - amount
+      - investorId
+    QualificationResult:
+      example:
+        reason: reason
+        tier: unqualified
+        allowed: true
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        limit: 0.8008281904610115
+        used: 6.027456183070403
+        evaluatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        investorId:
+          format: uuid
+          type: string
+        tier:
+          enum:
+          - unqualified
+          - qualified
+          - professional
+          type: string
+        limit:
+          format: decimal
+          type: number
+          nullable: true
+        used:
+          format: decimal
+          type: number
+          nullable: true
+        allowed:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+        evaluatedAt:
+          format: date-time
+          type: string
+      required:
+      - allowed
+      - investorId
+      - tier
+    InvestorStatusResponse:
+      example:
+        kyc: pass
+        qualificationUsed: 6.027456183070403
+        qualificationTier: unqualified
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        qualificationLimit: 0.8008281904610115
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        investorId:
+          format: uuid
+          type: string
+        kyc:
+          enum:
+          - pass
+          - fail
+          - pending
+          - review
+          type: string
+        qualificationTier:
+          enum:
+          - unqualified
+          - qualified
+          - professional
+          type: string
+        qualificationLimit:
+          format: decimal
+          type: number
+          nullable: true
+        qualificationUsed:
+          format: decimal
+          type: number
+          nullable: true
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+      - investorId
+      - kyc
+      - qualificationTier
+    CreateComplaintRequest:
+      example:
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        text: text
+        category: fraud
+      properties:
+        investorId:
+          format: uuid
+          type: string
+          nullable: true
+        category:
+          enum:
+          - fraud
+          - service
+          - technical
+          - other
+          type: string
+        text:
+          maxLength: 5000
+          minLength: 10
+          type: string
+      required:
+      - category
+      - text
+    ComplaintResponse:
+      example:
+        slaDue: 2000-01-23T04:56:07.000+00:00
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        resolvedAt: 2000-01-23T04:56:07.000+00:00
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        text: text
+        category: fraud
+        status: open
+      properties:
+        id:
+          format: uuid
+          type: string
+        investorId:
+          format: uuid
+          type: string
+          nullable: true
+        category:
+          enum:
+          - fraud
+          - service
+          - technical
+          - other
+          type: string
+        text:
+          type: string
+        status:
+          enum:
+          - open
+          - in_progress
+          - resolved
+          - closed
+          type: string
+        slaDue:
+          format: date-time
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        resolvedAt:
+          format: date-time
+          type: string
+          nullable: true
+      required:
+      - createdAt
+      - id
+      - status
+    CreateOrderRequest:
+      example:
+        amount: 0.08008281904610115
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        investorId:
+          format: uuid
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          minimum: 0
+          type: number
+      required:
+      - amount
+      - investorId
+      - issuanceId
+    OrderResponse:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        amount: 0.8008281904610115
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: created
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        investorId:
+          format: uuid
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          type: number
+        status:
+          enum:
+          - created
+          - reserved
+          - paid
+          - failed
+          - cancelled
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+    WalletResponse:
+      example:
+        ownerType: individual
+        balance: 0.8008281904610115
+        blocked: 6.027456183070403
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        holdings:
+        - amount: 1.4658129805029452
+          assetCode: assetCode
+          assetId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          assetName: assetName
+        - amount: 1.4658129805029452
+          assetCode: assetCode
+          assetId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          assetName: assetName
+        ownerId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        ownerType:
+          enum:
+          - individual
+          - legal_entity
+          type: string
+        ownerId:
+          format: uuid
+          type: string
+        balance:
+          format: decimal
+          type: number
+        blocked:
+          format: decimal
+          type: number
+        holdings:
+          items:
+            $ref: "#/components/schemas/Holding"
+          type: array
+    Holding:
+      example:
+        amount: 1.4658129805029452
+        assetCode: assetCode
+        assetId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        assetName: assetName
+      properties:
+        assetId:
+          format: uuid
+          type: string
+        assetCode:
+          type: string
+        assetName:
+          type: string
+        amount:
+          format: decimal
+          type: number
+    PayoutsReportResponse:
+      example:
+        totalAmount: 6.027456183070403
+        period:
+          from: 2000-01-23
+          to: 2000-01-23
+        items:
+        - amount: 0.8008281904610115
+          executedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          status: pending
+        - amount: 0.8008281904610115
+          executedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          status: pending
+      properties:
+        period:
+          $ref: "#/components/schemas/PayoutsReportResponse_period"
+        items:
+          items:
+            $ref: "#/components/schemas/PayoutItem"
+          type: array
+        totalAmount:
+          format: decimal
+          type: number
+    PayoutItem:
+      example:
+        amount: 0.8008281904610115
+        executedAt: 2000-01-23T04:56:07.000+00:00
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: pending
+      properties:
+        id:
+          format: uuid
+          type: string
+        batchId:
+          format: uuid
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        investorId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          type: number
+        status:
+          enum:
+          - pending
+          - executed
+          - failed
+          type: string
+        executedAt:
+          format: date-time
+          type: string
+    MarketIssuanceCard:
+      example:
+        assetCode: assetCode
+        publishedAt: 2000-01-23T04:56:07.000+00:00
+        issuerName: issuerName
+        totalAmount: 0.8008281904610115
+        nominal: 6.027456183070403
+        availableAmount: 1.4658129805029452
+        maturityDate: 2000-01-23
+        yield: 5.962133916683182
+        assetName: assetName
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        issueDate: 2000-01-23
+        status: open
+        scheduleJson: "{}"
+      properties:
+        id:
+          format: uuid
+          type: string
+        assetCode:
+          type: string
+        assetName:
+          type: string
+        issuerName:
+          type: string
+        totalAmount:
+          format: decimal
+          type: number
+        nominal:
+          format: decimal
+          type: number
+        availableAmount:
+          format: decimal
+          type: number
+        issueDate:
+          format: date
+          type: string
+        maturityDate:
+          format: date
+          type: string
+        yield:
+          description: Annual yield percentage
+          format: decimal
+          type: number
+        status:
+          enum:
+          - open
+          - closed
+          type: string
+        publishedAt:
+          format: date-time
+          type: string
+        scheduleJson:
+          description: Payout schedule
+          type: object
+    MarketIssuancesResponse:
+      example:
+        total: 5
+        offset: 7
+        limit: 2
+        items:
+        - assetCode: assetCode
+          publishedAt: 2000-01-23T04:56:07.000+00:00
+          issuerName: issuerName
+          totalAmount: 0.8008281904610115
+          nominal: 6.027456183070403
+          availableAmount: 1.4658129805029452
+          maturityDate: 2000-01-23
+          yield: 5.962133916683182
+          assetName: assetName
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          issueDate: 2000-01-23
+          status: open
+          scheduleJson: "{}"
+        - assetCode: assetCode
+          publishedAt: 2000-01-23T04:56:07.000+00:00
+          issuerName: issuerName
+          totalAmount: 0.8008281904610115
+          nominal: 6.027456183070403
+          availableAmount: 1.4658129805029452
+          maturityDate: 2000-01-23
+          yield: 5.962133916683182
+          assetName: assetName
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          issueDate: 2000-01-23
+          status: open
+          scheduleJson: "{}"
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/MarketIssuanceCard"
+          type: array
+        total:
+          description: Total count
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    TxHistoryItem:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        amount: 0.8008281904610115
+        issuanceCode: issuanceCode
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        type: transfer
+        confirmedAt: 2000-01-23T04:56:07.000+00:00
+        status: pending
+        dltTxHash: dltTxHash
+      properties:
+        id:
+          format: uuid
+          type: string
+        type:
+          enum:
+          - transfer
+          - redeem
+          - issue
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        issuanceCode:
+          type: string
+        amount:
+          format: decimal
+          type: number
+        status:
+          enum:
+          - pending
+          - confirmed
+          - failed
+          type: string
+        dltTxHash:
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        confirmedAt:
+          format: date-time
+          type: string
+          nullable: true
+    TransactionHistoryResponse:
+      example:
+        total: 6
+        items:
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          amount: 0.8008281904610115
+          issuanceCode: issuanceCode
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          type: transfer
+          confirmedAt: 2000-01-23T04:56:07.000+00:00
+          status: pending
+          dltTxHash: dltTxHash
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          amount: 0.8008281904610115
+          issuanceCode: issuanceCode
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          type: transfer
+          confirmedAt: 2000-01-23T04:56:07.000+00:00
+          status: pending
+          dltTxHash: dltTxHash
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/TxHistoryItem"
+          type: array
+        total:
+          type: integer
+    PayoutHistoryResponse:
+      example:
+        totalAmount: 6.027456183070403
+        total: 0
+        items:
+        - amount: 0.8008281904610115
+          executedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          status: pending
+        - amount: 0.8008281904610115
+          executedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          batchId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          status: pending
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/PayoutItem"
+          type: array
+        total:
+          type: integer
+        totalAmount:
+          format: decimal
+          type: number
+    IssuerReportRow:
+      example:
+        totalAmount: 0.8008281904610115
+        assetCode: assetCode
+        publishedAt: 2000-01-23T04:56:07.000+00:00
+        issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        maturityDate: 2000-01-23
+        assetName: assetName
+        soldAmount: 6.027456183070403
+        issueDate: 2000-01-23
+        investorsCount: 1
+        status: draft
+      properties:
+        issuanceId:
+          format: uuid
+          type: string
+        assetCode:
+          type: string
+        assetName:
+          type: string
+        totalAmount:
+          format: decimal
+          type: number
+        soldAmount:
+          format: decimal
+          type: number
+        investorsCount:
+          type: integer
+        status:
+          enum:
+          - draft
+          - published
+          - closed
+          - redeemed
+          type: string
+        issueDate:
+          format: date
+          type: string
+        maturityDate:
+          format: date
+          type: string
+        publishedAt:
+          format: date-time
+          type: string
+          nullable: true
+    IssuerIssuancesReportResponse:
+      example:
+        summary:
+          totalAmount: 5.637376656633329
+          totalInvestors: 7
+          totalIssuances: 5
+          totalSold: 2.3021358869347655
+        issuerId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        period:
+          from: 2000-01-23
+          to: 2000-01-23
+        items:
+        - totalAmount: 0.8008281904610115
+          assetCode: assetCode
+          publishedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          maturityDate: 2000-01-23
+          assetName: assetName
+          soldAmount: 6.027456183070403
+          issueDate: 2000-01-23
+          investorsCount: 1
+          status: draft
+        - totalAmount: 0.8008281904610115
+          assetCode: assetCode
+          publishedAt: 2000-01-23T04:56:07.000+00:00
+          issuanceId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          maturityDate: 2000-01-23
+          assetName: assetName
+          soldAmount: 6.027456183070403
+          issueDate: 2000-01-23
+          investorsCount: 1
+          status: draft
+      properties:
+        issuerId:
+          format: uuid
+          type: string
+        period:
+          $ref: "#/components/schemas/PayoutsReportResponse_period"
+        items:
+          items:
+            $ref: "#/components/schemas/IssuerReportRow"
+          type: array
+        summary:
+          $ref: "#/components/schemas/IssuerIssuancesReportResponse_summary"
+    IssuerPayoutsReportResponse:
+      example:
+        summary:
+          totalAmount: 5.962133916683182
+          totalPayouts: 5
+          totalInvestors: 2
+        issuerId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        period:
+          from: 2000-01-23
+          to: 2000-01-23
+        granularity: day
+        items:
+        - totalAmount: 0.8008281904610115
+          period: period
+          payoutCount: 6
+          investorsCount: 1
+        - totalAmount: 0.8008281904610115
+          period: period
+          payoutCount: 6
+          investorsCount: 1
+      properties:
+        issuerId:
+          format: uuid
+          type: string
+        period:
+          $ref: "#/components/schemas/PayoutsReportResponse_period"
+        granularity:
+          enum:
+          - day
+          - week
+          - month
+          - year
+          type: string
+        items:
+          items:
+            $ref: "#/components/schemas/IssuerPayoutsReportResponse_items_inner"
+          type: array
+        summary:
+          $ref: "#/components/schemas/IssuerPayoutsReportResponse_summary"
+    BrokerClient:
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          description: Client name
+          type: string
+        email:
+          format: email
+          type: string
+        inn:
+          description: Tax ID (for legal entities)
+          type: string
+        type:
+          enum:
+          - individual
+          - legal_entity
+          type: string
+        kycStatus:
+          enum:
+          - pending
+          - approved
+          - rejected
+          type: string
+        qualificationStatus:
+          enum:
+          - none
+          - qualified
+          - unqualified
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        lastActivityAt:
+          format: date-time
+          type: string
+          nullable: true
+      required:
+      - email
+      - id
+      - kycStatus
+      - name
+      - qualificationStatus
+    BrokerClientsResponse:
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/BrokerClient"
+          type: array
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    CreateBrokerOrderRequest:
+      properties:
+        clientId:
+          format: uuid
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          minimum: 0
+          type: number
+      required:
+      - amount
+      - clientId
+      - issuanceId
+    BrokerOrderResponse:
+      properties:
+        id:
+          format: uuid
+          type: string
+        clientId:
+          format: uuid
+          type: string
+        issuanceId:
+          format: uuid
+          type: string
+        amount:
+          format: decimal
+          type: number
+        status:
+          enum:
+          - pending
+          - confirmed
+          - failed
+          - cancelled
+          type: string
+        commission:
+          description: Commission amount
+          format: decimal
+          type: number
+        createdAt:
+          format: date-time
+          type: string
+    CommissionRow:
+      properties:
+        period:
+          description: Period label (YYYY-MM or YYYY-MM-DD)
+          type: string
+        totalAmount:
+          description: Total order amount
+          format: decimal
+          type: number
+        commissionAmount:
+          description: Commission earned
+          format: decimal
+          type: number
+        ordersCount:
+          description: Number of orders
+          type: integer
+        clientsCount:
+          description: Number of unique clients
+          type: integer
+    CommissionsResponse:
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/CommissionRow"
+          type: array
+        total:
+          type: integer
+        totalAmount:
+          format: decimal
+          type: number
+        totalCommission:
+          format: decimal
+          type: number
+    FeedItem:
+      properties:
+        id:
+          format: uuid
+          type: string
+        type:
+          enum:
+          - order
+          - transfer
+          - payout
+          - kyc
+          - qualification
+          type: string
+        title:
+          description: Event title
+          type: string
+        description:
+          description: Event description
+          type: string
+        clientId:
+          format: uuid
+          type: string
+          nullable: true
+        clientName:
+          type: string
+          nullable: true
+        issuanceId:
+          format: uuid
+          type: string
+          nullable: true
+        amount:
+          format: decimal
+          type: number
+          nullable: true
+        status:
+          enum:
+          - pending
+          - completed
+          - failed
+          type: string
+          nullable: true
+        timestamp:
+          format: date-time
+          type: string
+        metadata:
+          additionalProperties: true
+          description: Additional event data
+          type: object
+      required:
+      - id
+      - timestamp
+      - type
+    FeedResponse:
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/FeedItem"
+          type: array
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+    AuditEvent:
+      example:
+        actor: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        result: success
+        payload:
+          key: ""
+        ip: ip
+        action: action
+        actorName: actorName
+        entityId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        userAgent: userAgent
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        entity: entity
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        actor:
+          description: User/system that performed the action
+          format: uuid
+          type: string
+        actorName:
+          description: Actor name or identifier
+          type: string
+        action:
+          description: "Action type (e.g., 'create', 'update', 'delete', 'approve',\
+            \ 'reject')"
+          type: string
+        entity:
+          description: "Entity type (e.g., 'issuance', 'order', 'kyc', 'investor')"
+          type: string
+        entityId:
+          description: Entity ID
+          format: uuid
+          type: string
+          nullable: true
+        payload:
+          additionalProperties: true
+          description: Additional event data
+          type: object
+        ip:
+          description: IP address
+          format: ipv4
+          type: string
+          nullable: true
+        userAgent:
+          description: User agent string
+          type: string
+          nullable: true
+        timestamp:
+          format: date-time
+          type: string
+        result:
+          description: Action result
+          enum:
+          - success
+          - failure
+          - pending
+          type: string
+          nullable: true
+      required:
+      - action
+      - actor
+      - entity
+      - id
+      - timestamp
+    AuditEventsResponse:
+      example:
+        total: 0
+        offset: 1
+        limit: 6
+        items:
+        - actor: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          result: success
+          payload:
+            key: ""
+          ip: ip
+          action: action
+          actorName: actorName
+          entityId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          userAgent: userAgent
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          entity: entity
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - actor: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          result: success
+          payload:
+            key: ""
+          ip: ip
+          action: action
+          actorName: actorName
+          entityId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          userAgent: userAgent
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          entity: entity
+          timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+          type: array
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    KycDecisionRequest:
+      example:
+        comment: comment
+        status: approved
+      properties:
+        status:
+          description: KYC decision status
+          enum:
+          - approved
+          - rejected
+          type: string
+        comment:
+          description: Decision comment/reason
+          type: string
+      required:
+      - comment
+      - status
+    KycDecisionResponse:
+      example:
+        decisionAt: 2000-01-23T04:56:07.000+00:00
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        decisionBy: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        comment: comment
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: approved
+      properties:
+        id:
+          format: uuid
+          type: string
+        investorId:
+          format: uuid
+          type: string
+        status:
+          enum:
+          - approved
+          - rejected
+          type: string
+        comment:
+          type: string
+        decisionBy:
+          description: User who made the decision
+          format: uuid
+          type: string
+        decisionAt:
+          format: date-time
+          type: string
+    KycDocument:
+      example:
+        fileName: fileName
+        documentType: passport
+        fileSize: 0
+        investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        uploadedAt: 2000-01-23T04:56:07.000+00:00
+        comment: comment
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        mimeType: mimeType
+        storageUrl: https://openapi-generator.tech
+        uploadedBy: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        investorId:
+          format: uuid
+          type: string
+        documentType:
+          enum:
+          - passport
+          - inn
+          - snils
+          - address_proof
+          - income_proof
+          - other
+          type: string
+        fileName:
+          type: string
+        fileSize:
+          description: File size in bytes
+          type: integer
+        mimeType:
+          type: string
+        storageUrl:
+          description: S3/MinIO storage URL
+          format: uri
+          type: string
+        uploadedAt:
+          format: date-time
+          type: string
+        uploadedBy:
+          format: uuid
+          type: string
+        comment:
+          type: string
+          nullable: true
+    KycDocumentsResponse:
+      example:
+        total: 6
+        items:
+        - fileName: fileName
+          documentType: passport
+          fileSize: 0
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          uploadedAt: 2000-01-23T04:56:07.000+00:00
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          mimeType: mimeType
+          storageUrl: https://openapi-generator.tech
+          uploadedBy: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - fileName: fileName
+          documentType: passport
+          fileSize: 0
+          investorId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          uploadedAt: 2000-01-23T04:56:07.000+00:00
+          comment: comment
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          mimeType: mimeType
+          storageUrl: https://openapi-generator.tech
+          uploadedBy: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/KycDocument"
+          type: array
+        total:
+          type: integer
+    ProblemDetails:
+      example:
+        instance: https://openapi-generator.tech
+        detail: detail
+        type: https://openapi-generator.tech
+        title: title
+        status: 1
+      properties:
+        type:
+          format: uri
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          format: uri
+          type: string
+    uploadKycDocuments_request:
+      properties:
+        files:
+          items:
+            format: binary
+            type: string
+          type: array
+        documentType:
+          enum:
+          - passport
+          - inn
+          - snils
+          - address_proof
+          - income_proof
+          - other
+          type: string
+        comment:
+          description: Optional comment
+          type: string
+      required:
+      - files
+    PayoutsReportResponse_period:
+      example:
+        from: 2000-01-23
+        to: 2000-01-23
+      properties:
+        from:
+          format: date
+          type: string
+        to:
+          format: date
+          type: string
+    IssuerIssuancesReportResponse_summary:
+      example:
+        totalAmount: 5.637376656633329
+        totalInvestors: 7
+        totalIssuances: 5
+        totalSold: 2.3021358869347655
+      properties:
+        totalIssuances:
+          type: integer
+        totalAmount:
+          format: decimal
+          type: number
+        totalSold:
+          format: decimal
+          type: number
+        totalInvestors:
+          type: integer
+    IssuerPayoutsReportResponse_items_inner:
+      example:
+        totalAmount: 0.8008281904610115
+        period: period
+        payoutCount: 6
+        investorsCount: 1
+      properties:
+        period:
+          description: Period label (depends on granularity)
+          type: string
+        totalAmount:
+          format: decimal
+          type: number
+        payoutCount:
+          type: integer
+        investorsCount:
+          type: integer
+    IssuerPayoutsReportResponse_summary:
+      example:
+        totalAmount: 5.962133916683182
+        totalPayouts: 5
+        totalInvestors: 2
+      properties:
+        totalAmount:
+          format: decimal
+          type: number
+        totalPayouts:
+          type: integer
+        totalInvestors:
+          type: integer
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+

@@ -1,0 +1,30 @@
+# Production environment values for fabric-peer
+replicaCount: 3  # Better fault tolerance
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+
+couchdb:
+  storage:
+    createPerReplica: true  # Per-replica PVC for prod
+    size: 50Gi
+
+storage:
+  size: 100Gi
+
+secrets:
+  type: "vault"
+  rotation:
+    enabled: true
+    schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 5
+

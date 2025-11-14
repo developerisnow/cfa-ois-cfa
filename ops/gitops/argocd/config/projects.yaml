@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: system
+  namespace: argocd
+spec:
+  description: System infrastructure applications
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: '*'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform services applications
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: 'keycloak'
+      server: '*'
+    - namespace: 'vault'
+      server: '*'
+    - namespace: 'postgresql'
+      server: '*'
+    - namespace: 'kafka'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: business
+  namespace: argocd
+spec:
+  description: Business applications
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: 'ois-cfa'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+

@@ -7,13 +7,14 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "generate": "echo 'SDK is manually maintained. Use npm run build to compile TypeScript.'"
+    "generate": "openapi --input ../../contracts/openapi-gateway.yaml --output src/generated --client axios --useOptions --exportCore false --exportServices false --exportModels true || echo 'Generation requires openapi-typescript-codegen'"
   },
   "dependencies": {
     "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "openapi-typescript-codegen": "^0.26.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

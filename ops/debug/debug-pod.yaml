@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-toolbox
+  namespace: tools
+  labels:
+    app: debug-toolbox
+    purpose: debugging
+spec:
+  serviceAccountName: debug-toolbox
+  containers:
+    - name: toolbox
+      image: bitnami/kubectl:1.30
+      command: ["/bin/bash", "-c", "sleep infinity"]
+      env:
+        - name: KUBECONFIG
+          value: "/.kube/config"
+        - name: GITLAB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-readonly-token
+              key: token
+              optional: true
+        - name: GITLAB_HOST
+          value: "gitlab.com"
+      volumeMounts:
+        - name: kubeconfig
+          mountPath: /.kube
+          readOnly: true
+        - name: scripts
+          mountPath: /scripts
+        - name: gitlab-token
+          mountPath: /etc/gitlab
+          readOnly: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+  volumes:
+    - name: kubeconfig
+      projected:
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3600
+              path: token
+              audience: kubernetes
+    - name: scripts
+      configMap:
+        name: debug-scripts
+        defaultMode: 0755
+    - name: gitlab-token
+      secret:
+        secretName: gitlab-readonly-token
+        optional: true
+

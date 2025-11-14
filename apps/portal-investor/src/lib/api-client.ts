@@ -26,9 +26,14 @@ export const apiClient = {
   },
 
   // Orders
-  async createOrder(data: any, options?: { headers?: Record<string, string> }) {
+  async createOrder(
+    data: any,
+    options?: { headers?: Record<string, string> }
+  ) {
     const client = await getClient();
-    const orderData = await client.createOrder(data);
+    const orderData = await client.createOrder(data, {
+      headers: options?.headers,
+    });
     return { data: orderData };
   },
 

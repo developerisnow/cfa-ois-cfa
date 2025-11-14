@@ -6,6 +6,10 @@ using OIS.Settlement;
 using OIS.Settlement.DTOs;
 using OIS.Settlement.Services;
 using Serilog;
+using OIS.Settlement.Background;
+using OIS.Settlement.Infrastructure;
+using MassTransit;
+using OIS.Contracts.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +30,9 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
-        .AddConsoleExporter());
+        .AddConsoleExporter()
+        .AddPrometheusExporter()
+        .AddMeter(Metrics.MeterName));
 
 // Database
 var settlementMigrationsAssembly = typeof(SettlementDbContext).Assembly.GetName().Name;
@@ -43,6 +49,64 @@ builder.Services.AddHttpClient<IBankNominalClient, BankNominalClient>();
 // Services
 builder.Services.AddScoped<IOutboxService, OutboxService>();
 builder.Services.AddScoped<ISettlementService, SettlementService>();
+
+// MassTransit + Kafka
+var kafkaEnabled = builder.Configuration.GetValue<bool>("Kafka:Enabled", true);
+if (kafkaEnabled)
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>();
+
+        x.UsingKafka((context, cfg) =>
+        {
+            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+
+            // Map message types to topics according to AsyncAPI
+            cfg.Message<OrderPaid>(m => m.SetEntityName("ois.order.paid"));
+            cfg.Message<PayoutExecuted>(m => m.SetEntityName("ois.payout.executed"));
+            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+
+            cfg.TopicEndpoint<OrderPaid>("ois.order.paid", "settlement-orderpaid", e =>
+            {
+                e.ConfigureConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>(context);
+                e.ConcurrentMessageLimit = 4;
+            });
+        });
+    });
+
+    builder.Services.AddHostedService<OutboxPublisher>();
+}
+
+// AuthN/Z
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var authority = builder.Configuration["Keycloak:Authority"];
+        if (!string.IsNullOrEmpty(authority))
+        {
+            options.Authority = authority;
+        }
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            RoleClaimType = ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx => { MapKeycloakRoles(ctx); return Task.CompletedTask; }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("role:issuer", p => p.RequireRole("issuer"));
+    options.AddPolicy("role:backoffice", p => p.RequireRole("backoffice"));
+    options.AddPolicy("role:issuer-or-backoffice", p =>
+        p.RequireAssertion(ctx => ctx.User.IsInRole("issuer") || ctx.User.IsInRole("backoffice")));
+});
 
 // API
 builder.Services.AddEndpointsApiExplorer();
@@ -69,10 +133,39 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
+app.MapPrometheusScrapingEndpoint("/metrics");
+app.UseRateLimiter();
+
+// Correlation + request metrics
+app.Use(async (ctx, next) =>
+{
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    if (!ctx.Request.Headers.TryGetValue("X-Request-ID", out var reqId) || string.IsNullOrWhiteSpace(reqId))
+    {
+        reqId = Guid.NewGuid().ToString();
+        ctx.Request.Headers["X-Request-ID"] = reqId;
+    }
+    ctx.Response.Headers["X-Request-ID"] = reqId.ToString();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        sw.Stop();
+        var status = ctx.Response.StatusCode;
+        var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
+        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+    }
+});
 
 // API Endpoints
-var api = app.MapGroup("/v1").WithTags("Settlement");
+var api = app.MapGroup("/v1").WithTags("Settlement").RequireAuthorization();
 
 api.MapPost("/settlement/run", async (
     DateOnly? date,
@@ -93,6 +186,8 @@ api.MapPost("/settlement/run", async (
     }
 })
 .WithName("RunSettlement")
+.RequireAuthorization("role:backoffice")
+.RequireRateLimiting("sensitive")
 .WithOpenApi();
 
 api.MapGet("/reports/payouts", async (
@@ -116,6 +211,34 @@ api.MapGet("/reports/payouts", async (
     return Results.Ok(result);
 })
 .WithName("GetPayoutsReport")
+.RequireAuthorization("role:issuer-or-backoffice")
 .WithOpenApi();
 
 app.Run();
+
+static void MapKeycloakRoles(TokenValidatedContext ctx)
+{
+    try
+    {
+        if (ctx.Principal?.Identity is not ClaimsIdentity identity) return;
+        var realmAccessJson = identity.FindFirst("realm_access")?.Value;
+        if (!string.IsNullOrEmpty(realmAccessJson))
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(realmAccessJson);
+            if (doc.RootElement.TryGetProperty("roles", out var rolesEl) && rolesEl.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var r in rolesEl.EnumerateArray())
+                {
+                    var role = r.GetString();
+                    if (!string.IsNullOrEmpty(role))
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
+    }
+    catch { }
+}
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;

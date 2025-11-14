@@ -18,8 +18,7 @@
     "quantity": {
       "type": "number",
       "format": "decimal",
-      "minimum": 0,
-      "exclusiveMinimum": true,
+      "exclusiveMinimum": 0,
       "description": "Количество ЦФА"
     },
     "updatedAt": {

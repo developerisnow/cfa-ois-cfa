@@ -1,0 +1,122 @@
+{{- range .Values.chaincode }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaincode-commit-{{ .name }}-{{ .version }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "chaincode-lifecycle.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: chaincode-commit
+    chaincode: {{ .name }}
+    version: {{ .version }}
+spec:
+  ttlSecondsAfterFinished: {{ $.Values.job.ttlSecondsAfterFinished }}
+  backoffLimit: {{ $.Values.job.backoffLimit }}
+  activeDeadlineSeconds: {{ $.Values.job.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "chaincode-lifecycle.selectorLabels" $ | nindent 8 }}
+        chaincode: {{ .name }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: chaincode-lifecycle
+      containers:
+        - name: commit
+          image: hyperledger/fabric-tools:2.5
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Committing chaincode {{ .name }} v{{ .version }} sequence {{ .sequence }}"
+              
+              # Build peer addresses and TLS certs
+              PEER_ADDRESSES=""
+              TLS_ROOT_CERT_FILES=""
+              
+              {{- range $i, $peer := $.Values.peers }}
+              {{- if $i }}
+              PEER_ADDRESSES="$PEER_ADDRESSES {{ $peer.service }}.{{ $.Values.namespace }}.svc.cluster.local:{{ $peer.port }}"
+              TLS_ROOT_CERT_FILES="$TLS_ROOT_CERT_FILES /etc/hyperledger/fabric/tls/ca.crt"
+              {{- else }}
+              PEER_ADDRESSES="{{ $peer.service }}.{{ $.Values.namespace }}.svc.cluster.local:{{ $peer.port }}"
+              TLS_ROOT_CERT_FILES="/etc/hyperledger/fabric/tls/ca.crt"
+              {{- end }}
+              {{- end }}
+              
+              # Convert to comma-separated
+              PEER_ADDRESSES=$(echo $PEER_ADDRESSES | tr ' ' ',')
+              TLS_ROOT_CERT_FILES=$(echo $TLS_ROOT_CERT_FILES | tr ' ' ',')
+              
+              # Wait for peer to be ready
+              until peer node status; do
+                echo "Waiting for peer to be ready..."
+                sleep 5
+              done
+              
+              # Commit chaincode
+              peer lifecycle chaincode commit \
+                -o {{ $.Values.orderer.service }}.{{ $.Values.namespace }}.svc.cluster.local:{{ $.Values.orderer.port }} \
+                --channelID {{ .channel }} \
+                --name {{ .name }} \
+                --version {{ .version }} \
+                --sequence {{ .sequence }} \
+                {{- if $.Values.orderer.tls.enabled }}
+                --tls \
+                --cafile /etc/hyperledger/fabric/orderer-tlsca.crt \
+                {{- end }}
+                --peerAddresses $PEER_ADDRESSES \
+                --tlsRootCertFiles $TLS_ROOT_CERT_FILES
+              
+              echo "Chaincode {{ .name }} committed successfully"
+              
+              # Query committed chaincode
+              echo "Querying committed chaincode..."
+              peer lifecycle chaincode querycommitted \
+                --channelID {{ .channel }} \
+                {{- if $.Values.orderer.tls.enabled }}
+                --tls \
+                --cafile /etc/hyperledger/fabric/orderer-tlsca.crt
+                {{- end }}
+          env:
+            - name: CORE_PEER_LOCALMSPID
+              value: {{ $.Values.organization.mspId | quote }}
+            - name: CORE_PEER_TLS_ENABLED
+              value: "{{ $.Values.orderer.tls.enabled }}"
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: "/etc/hyperledger/fabric/tls/ca.crt"
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: {{ $.Values.organization.mspPath | quote }}
+            - name: CORE_PEER_ADDRESS
+              value: "{{ (index $.Values.peers 0).service }}.{{ $.Values.namespace }}.svc.cluster.local:{{ (index $.Values.peers 0).port }}"
+          volumeMounts:
+            - name: msp
+              mountPath: {{ $.Values.organization.mspPath }}
+              readOnly: true
+            - name: tls
+              mountPath: /etc/hyperledger/fabric/tls
+              readOnly: true
+            - name: orderer-tls
+              mountPath: /etc/hyperledger/fabric
+              readOnly: true
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: msp
+          secret:
+            secretName: {{ $.Values.secrets.msp.name }}
+        - name: tls
+          secret:
+            secretName: {{ $.Values.secrets.tls.name }}
+        - name: orderer-tls
+          secret:
+            secretName: {{ $.Values.secrets.ordererTls.name }}
+{{- end }}
+

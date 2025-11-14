@@ -16,7 +16,7 @@ import type { TxHistoryItem, PayoutItem } from '@ois/api-client';
 export default function HistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'transactions' | 'payouts'>('transactions');
+  const [activeTab, setActiveTab] = useState<'orders' | 'payouts' | 'redemptions'>('orders');
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0],
@@ -30,17 +30,30 @@ export default function HistoryPage() {
     }
   }, [status, router]);
 
-  const { data: transactions, isLoading: txLoading } = useQuery({
-    queryKey: ['investor-transactions', investorId, dateRange],
+  const { data: ordersTx, isLoading: ordersLoading } = useQuery({
+    queryKey: ['investor-orders', investorId, dateRange],
     queryFn: async () => {
       const response = await apiClient.getInvestorTransactions(investorId, {
         from: dateRange.from,
         to: dateRange.to,
-        type: 'all',
+        type: 'transfer',
       });
       return response.data;
     },
-    enabled: activeTab === 'transactions' && !!investorId && status === 'authenticated',
+    enabled: activeTab === 'orders' && !!investorId && status === 'authenticated',
+  });
+
+  const { data: redemptionsTx, isLoading: redemptionsLoading } = useQuery({
+    queryKey: ['investor-redemptions', investorId, dateRange],
+    queryFn: async () => {
+      const response = await apiClient.getInvestorTransactions(investorId, {
+        from: dateRange.from,
+        to: dateRange.to,
+        type: 'redeem',
+      });
+      return response.data;
+    },
+    enabled: activeTab === 'redemptions' && !!investorId && status === 'authenticated',
   });
 
   const { data: payouts, isLoading: payoutsLoading } = useQuery({
@@ -200,12 +213,13 @@ export default function HistoryPage() {
   const exportToCSV = (data: any[], filename: string) => {
     if (!data || data.length === 0) return;
 
-    const headers = activeTab === 'transactions' 
-      ? ['Date', 'Type', 'Issuance', 'Amount', 'Status', 'DLT Hash']
-      : ['Date', 'Issuance ID', 'Amount', 'Status'];
+    const headers =
+      activeTab === 'payouts'
+        ? ['Date', 'Issuance ID', 'Amount', 'Status']
+        : ['Date', 'Type', 'Issuance', 'Amount', 'Status', 'DLT Hash'];
 
     const rows = data.map((item) => {
-      if (activeTab === 'transactions') {
+      if (activeTab !== 'payouts') {
         return [
           new Date(item.createdAt).toLocaleDateString(),
           item.type,
@@ -250,23 +264,27 @@ export default function HistoryPage() {
       }}
     >
       <PageHeader
-        title="Transaction History"
-        description="View your transactions and payouts"
+        title="History"
+        description="View your orders, payouts and redemptions"
         actions={
           <button
             onClick={() =>
               exportToCSV(
-                activeTab === 'transactions'
-                  ? transactions?.items || []
-                  : payouts?.items || [],
-                activeTab === 'transactions' ? 'transactions' : 'payouts'
+                activeTab === 'payouts'
+                  ? payouts?.items || []
+                  : activeTab === 'orders'
+                  ? ordersTx?.items || []
+                  : redemptionsTx?.items || [],
+                activeTab
               )
             }
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-md bg-surface text-text-primary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary-500"
             disabled={
-              activeTab === 'transactions'
-                ? !transactions?.items?.length
-                : !payouts?.items?.length
+              activeTab === 'payouts'
+                ? !payouts?.items?.length
+                : activeTab === 'orders'
+                ? !ordersTx?.items?.length
+                : !redemptionsTx?.items?.length
             }
           >
             <Download className="h-4 w-4" />
@@ -317,14 +335,14 @@ export default function HistoryPage() {
       <div className="mb-6 border-b border-border">
         <div className="flex gap-4">
           <button
-            onClick={() => setActiveTab('transactions')}
+            onClick={() => setActiveTab('orders')}
             className={`px-4 py-2 font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-t ${
-              activeTab === 'transactions'
+              activeTab === 'orders'
                 ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
-            Transactions ({transactions?.total || 0})
+            Orders ({ordersTx?.total || 0})
           </button>
           <button
             onClick={() => setActiveTab('payouts')}
@@ -336,26 +354,36 @@ export default function HistoryPage() {
           >
             Payouts ({payouts?.total || 0})
           </button>
+          <button
+            onClick={() => setActiveTab('redemptions')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-t ${
+              activeTab === 'redemptions'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Redemptions ({redemptionsTx?.total || 0})
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      {activeTab === 'transactions' && (
+      {activeTab === 'orders' && (
         <>
-          {txLoading && <Skeleton className="h-64 w-full" variant="rectangular" />}
-          {!txLoading && transactions && (
+          {ordersLoading && <Skeleton className="h-64 w-full" variant="rectangular" />}
+          {!ordersLoading && ordersTx && (
             <DataTable
               columns={txColumns}
-              data={transactions.items || []}
+              data={ordersTx.items || []}
               searchable
-              searchPlaceholder="Search transactions..."
+              searchPlaceholder="Search orders..."
               pageSize={10}
             />
           )}
-          {!txLoading && (!transactions || transactions.items?.length === 0) && (
+          {!ordersLoading && (!ordersTx || ordersTx.items?.length === 0) && (
             <EmptyState
-              title="No transactions found"
-              description="Your transaction history will appear here"
+              title="No orders found"
+              description="Your orders will appear here"
             />
           )}
         </>
@@ -388,6 +416,27 @@ export default function HistoryPage() {
             <EmptyState
               title="No payouts found"
               description="Your payout history will appear here"
+            />
+          )}
+        </>
+      )}
+
+      {activeTab === 'redemptions' && (
+        <>
+          {redemptionsLoading && <Skeleton className="h-64 w-full" variant="rectangular" />}
+          {!redemptionsLoading && redemptionsTx && (
+            <DataTable
+              columns={txColumns}
+              data={redemptionsTx.items || []}
+              searchable
+              searchPlaceholder="Search redemptions..."
+              pageSize={10}
+            />
+          )}
+          {!redemptionsLoading && (!redemptionsTx || redemptionsTx.items?.length === 0) && (
+            <EmptyState
+              title="No redemptions found"
+              description="Your redemptions will appear here"
             />
           )}
         </>

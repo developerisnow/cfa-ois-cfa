@@ -1,7 +1,9 @@
 # Default values for fabric-orderer
 # This is a YAML-formatted file.
 
-replicaCount: 3
+# High Availability: Raft consensus requires 3 or 5 nodes (odd number)
+# For production: use 5 nodes for better fault tolerance
+replicaCount: 5  # 3 for dev, 5 for prod
 
 image:
   repository: hyperledger/fabric-orderer

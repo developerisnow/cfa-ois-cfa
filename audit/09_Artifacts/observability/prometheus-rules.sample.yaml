@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ois-cfa-slo-rules
+  namespace: observability
+spec:
+  groups:
+    - name: http-slo
+      rules:
+        - alert: HighErrorRate
+          expr: sum(rate(http_requests_total{status=~"5.."}[5m]))
+                / sum(rate(http_requests_total[5m])) > 0.01
+          for: 10m
+          labels: { severity: critical }
+          annotations:
+            summary: "Высокий уровень 5xx"
+        - alert: HighLatencyP95
+          expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "p95 latency превышает бюджет"
+    - name: k8s-saturation
+      rules:
+        - alert: PodCPUHigh
+          expr: sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod) / sum(kube_pod_container_resource_limits{resource="cpu"}) by (pod) > 0.9
+          for: 15m
+          labels: { severity: warning }
+          annotations:
+            summary: "Высокая нагрузка CPU"
+

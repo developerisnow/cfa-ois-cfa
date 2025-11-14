@@ -15,6 +15,7 @@ public class IssuanceServiceTests
     private readonly Mock<ILogger<IssuanceService>> _logger;
     private readonly Mock<IOutboxService> _outbox;
     private readonly IssuanceService _service;
+    private readonly Mock<ILedgerIssuance> _ledger;
 
     public IssuanceServiceTests()
     {
@@ -25,7 +26,12 @@ public class IssuanceServiceTests
         _db = new IssuanceDbContext(options);
         _logger = new Mock<ILogger<IssuanceService>>();
         _outbox = new Mock<IOutboxService>();
-        _service = new IssuanceService(_db, _logger.Object, _outbox.Object);
+        _ledger = new Mock<ILedgerIssuance>();
+        _ledger.Setup(l => l.IssueAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<DateOnly>(), It.IsAny<DateOnly>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync("txhash-issue");
+        _ledger.Setup(l => l.CloseAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync("txhash-close");
+        _service = new IssuanceService(_db, _logger.Object, _outbox.Object, _ledger.Object);
     }
 
     [Fact]

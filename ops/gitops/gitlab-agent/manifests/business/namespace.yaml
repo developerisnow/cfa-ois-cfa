@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ois-cfa
+  labels:
+    name: ois-cfa
+    app.kubernetes.io/name: ois-cfa
+

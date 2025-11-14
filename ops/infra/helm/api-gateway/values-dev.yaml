@@ -1,0 +1,33 @@
+# Development environment values
+replicaCount: 1
+
+image:
+  tag: "dev"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: api.dev.ois-cfa.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: api-gateway-tls-dev
+      hosts:
+        - api.dev.ois-cfa.example.com
+
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Development"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+

@@ -39,7 +39,7 @@ public class QualificationPolicyService : IQualificationPolicyService
             _ => QualificationTier.Unqualified
         };
 
-        _logger.LogInformation("Evaluated tier for investor {InvestorId}: {Tier}", investorId, tier);
+        _logger.LogInformation("Evaluated tier for investor {Investor}: {Tier}", OIS.Domain.Security.MaskGuid(investorId), tier);
         return Task.FromResult(tier);
     }
 

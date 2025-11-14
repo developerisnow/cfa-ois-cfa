@@ -1,0 +1,269 @@
+{
+  "dashboards": [
+    {
+      "name": "Hyperledger Fabric - Peer Metrics",
+      "uid": "fabric-peer",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Peer Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "fabric_peer_status",
+              "legendFormat": "{{peer}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+        },
+        {
+          "id": 2,
+          "title": "Block Height",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "fabric_peer_block_height",
+              "legendFormat": "{{peer}} - {{channel}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+        },
+        {
+          "id": 3,
+          "title": "Transaction Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_transactions_total[5m])",
+              "legendFormat": "{{peer}} - {{channel}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+        },
+        {
+          "id": 4,
+          "title": "Chaincode Invocations",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_chaincode_invocations_total[5m])",
+              "legendFormat": "{{peer}} - {{chaincode}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+        },
+        {
+          "id": 5,
+          "title": "Gossip Messages",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_gossip_messages_total[5m])",
+              "legendFormat": "{{peer}} - {{type}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+        },
+        {
+          "id": 6,
+          "title": "CouchDB Operations",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_couchdb_operations_total[5m])",
+              "legendFormat": "{{peer}} - {{operation}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+        },
+        {
+          "id": 7,
+          "title": "Memory Usage",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "container_memory_usage_bytes{pod=~\"fabric-peer-.*\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+        },
+        {
+          "id": 8,
+          "title": "CPU Usage",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(container_cpu_usage_seconds_total{pod=~\"fabric-peer-.*\"}[5m])",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+        }
+      ],
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" }
+    },
+    {
+      "name": "Hyperledger Fabric - Orderer Metrics",
+      "uid": "fabric-orderer",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Orderer Status",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "fabric_orderer_status",
+              "legendFormat": "{{orderer}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+        },
+        {
+          "id": 2,
+          "title": "Block Creation Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_orderer_blocks_created_total[5m])",
+              "legendFormat": "{{orderer}} - {{channel}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+        },
+        {
+          "id": 3,
+          "title": "Raft Leader",
+          "type": "stat",
+          "targets": [
+            {
+              "expr": "fabric_orderer_raft_leader",
+              "legendFormat": "{{orderer}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+        },
+        {
+          "id": 4,
+          "title": "Raft Term",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "fabric_orderer_raft_term",
+              "legendFormat": "{{orderer}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+        },
+        {
+          "id": 5,
+          "title": "Transaction Rate",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_orderer_transactions_total[5m])",
+              "legendFormat": "{{orderer}} - {{channel}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+        },
+        {
+          "id": 6,
+          "title": "Batch Size",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "fabric_orderer_batch_size_bytes",
+              "legendFormat": "{{orderer}} - {{channel}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+        },
+        {
+          "id": 7,
+          "title": "Memory Usage",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "container_memory_usage_bytes{pod=~\"fabric-orderer-.*\"}",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+        },
+        {
+          "id": 8,
+          "title": "CPU Usage",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(container_cpu_usage_seconds_total{pod=~\"fabric-orderer-.*\"}[5m])",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+        }
+      ],
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" }
+    },
+    {
+      "name": "Hyperledger Fabric - Chaincode Metrics",
+      "uid": "fabric-chaincode",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Chaincode Invocations (Issuance)",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_chaincode_invocations_total{chaincode=\"issuance\"}[5m])",
+              "legendFormat": "{{peer}} - {{function}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+        },
+        {
+          "id": 2,
+          "title": "Chaincode Invocations (Registry)",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_chaincode_invocations_total{chaincode=\"registry\"}[5m])",
+              "legendFormat": "{{peer}} - {{function}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+        },
+        {
+          "id": 3,
+          "title": "Chaincode Latency",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(fabric_peer_chaincode_invocation_duration_seconds_bucket[5m]))",
+              "legendFormat": "{{peer}} - {{chaincode}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+        },
+        {
+          "id": 4,
+          "title": "Chaincode Errors",
+          "type": "graph",
+          "targets": [
+            {
+              "expr": "rate(fabric_peer_chaincode_errors_total[5m])",
+              "legendFormat": "{{peer}} - {{chaincode}} - {{error}}"
+            }
+          ],
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+        }
+      ],
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" }
+    }
+  ]
+}
+

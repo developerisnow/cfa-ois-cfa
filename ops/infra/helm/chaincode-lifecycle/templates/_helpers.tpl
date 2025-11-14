@@ -1,0 +1,47 @@
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "chaincode-lifecycle.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+*/}}
+{{- define "chaincode-lifecycle.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "chaincode-lifecycle.labels" -}}
+helm.sh/chart: {{ include "chaincode-lifecycle.chart" . }}
+{{ include "chaincode-lifecycle.selectorLabels" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "chaincode-lifecycle.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "chaincode-lifecycle.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Chart name and version
+*/}}
+{{- define "chaincode-lifecycle.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+

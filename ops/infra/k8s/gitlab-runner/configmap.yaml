@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-runner-config
+  namespace: gitlab-runner
+data:
+  config.toml: |
+    concurrent = 2
+    check_interval = 3
+    log_level = "info"
+    # State file must be in writable location (not ConfigMap)
+    state_file = "/home/gitlab-runner/.runner_system_id"
+
+    [[runners]]
+      name = "ois-cfa-runner"
+      url = "https://git.telex.global"
+      token = "__REPLACE_WITH_RUNNER_TOKEN__"
+      executor = "kubernetes"
+      # Fix long polling issues
+      request_concurrency = 3
+      environment = ["FF_USE_ADAPTIVE_REQUEST_CONCURRENCY=true"]
+      # Force re-registration: uncomment to force runner to re-register
+      # This will cause runner to ignore saved authentication token
+      # locked = false
+      # No tags specified - can run any job
+      # If you need tags, add: tags = ["docker", "kubernetes", "kubectl"]
+      [runners.kubernetes]
+        namespace = "gitlab-runner"
+        image = "alpine:latest"
+        privileged = true
+        cpu_limit = "1"
+        memory_limit = "1Gi"
+        cpu_request = "200m"
+        memory_request = "256Mi"
+        service_cpu_limit = "500m"
+        service_memory_limit = "512Mi"
+        service_cpu_request = "50m"
+        service_memory_request = "64Mi"
+        helper_cpu_limit = "200m"
+        helper_memory_limit = "256Mi"
+        helper_cpu_request = "50m"
+        helper_memory_request = "32Mi"
+        # Docker-in-Docker support
+        [runners.kubernetes.volumes]
+          [[runners.kubernetes.volumes.host_path]]
+            name = "docker-sock"
+            mount_path = "/var/run/docker.sock"
+            host_path = "/var/run/docker.sock"
+            mount_propagation = "None"
+        # Persistent volumes for build cache
+        [runners.kubernetes.pod_annotations]
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port" = "9252"
+          "prometheus.io/path" = "/metrics"
+        # Node selector (optional)
+        # [runners.kubernetes.node_selector]
+        #   "kubernetes.io/os" = "linux"
+        # Tolerations (optional)
+        # [[runners.kubernetes.tolerations]]
+        #   key = "gitlab-runner"
+        #   operator = "Equal"
+        #   value = "true"
+        #   effect = "NoSchedule"
+      [runners.cache]
+        Type = "s3"
+        ServerAddress = "s3.amazonaws.com"
+        BucketName = "__REPLACE_WITH_S3_BUCKET__"
+        BucketLocation = "us-east-1"
+        Insecure = false
+        Shared = true
+        # Optional: S3 credentials via environment variables
+        # [runners.cache.s3]
+        #   ServerAddress = "s3.amazonaws.com"
+        #   AccessKey = "__REPLACE_WITH_ACCESS_KEY__"
+        #   SecretKey = "__REPLACE_WITH_SECRET_KEY__"
+

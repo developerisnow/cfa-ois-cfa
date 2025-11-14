@@ -1,0 +1,20 @@
+# Production environment values for fabric-orderer
+replicaCount: 5  # Better fault tolerance for Raft
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+storage:
+  size: 50Gi
+
+secrets:
+  type: "vault"
+  rotation:
+    enabled: true
+    schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
+

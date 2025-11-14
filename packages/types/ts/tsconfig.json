@@ -1,0 +1,12 @@
+{
+  "extends": "../../../apps/portal-investor/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
+
