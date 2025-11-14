@@ -1832,7 +1832,8 @@ namespace Org.OpenAPITools.Api
 
                     List<KeyValuePair<string?, string?>> formParameterLocalVars = new List<KeyValuePair<string?, string?>>();
 
-                    multipartContentLocalVar.Add(new FormUrlEncodedContent(formParameterLocalVars));                    multipartContentLocalVar.Add(new StreamContent(files));
+                    multipartContentLocalVar.Add(new FormUrlEncodedContent(formParameterLocalVars));
+                    //TODO Пофиксить ошибку - multipartContentLocalVar.Add(new StreamContent(files));
 
                     if (documentType.IsSet)
                         formParameterLocalVars.Add(new KeyValuePair<string?, string?>("documentType", ClientUtils.ParameterToString(documentType.Value)));

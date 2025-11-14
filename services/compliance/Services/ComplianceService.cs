@@ -297,8 +297,9 @@ public class ComplianceService : IComplianceService
         _db.Complaints.Add(complaint);
         await _db.SaveChangesAsync(ct);
 
+        var investorMasked = request.InvestorId.HasValue ? OIS.Domain.Security.MaskGuid(request.InvestorId.Value) : "(null)";
         _logger.LogInformation("Created complaint {ComplaintId} for investor {Investor}, category {Category}",
-            complaint.Id, OIS.Domain.Security.MaskGuid(request.InvestorId), request.Category);
+            complaint.Id, investorMasked, request.Category);
 
         return MapToComplaintResponse(complaint);
     }

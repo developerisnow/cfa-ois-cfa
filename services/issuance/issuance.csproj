@@ -26,12 +26,18 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
     <PackageReference Include="Confluent.Kafka" Version="2.5.3" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Polly" Version="8.4.1" />
     <PackageReference Include="MassTransit" Version="8.2.0" />
     <PackageReference Include="MassTransit.Kafka" Version="8.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\packages\domain\domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="issuance.Tests/**/*.cs" />
   </ItemGroup>
 
 </Project>

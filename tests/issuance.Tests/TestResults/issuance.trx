@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="b29f05a9-ec09-42d0-b7b5-a3a1cb2519b1" name="@god 2025-11-12 23:04:38" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-11-12T23:04:38.2146963+03:00" queuing="2025-11-12T23:04:38.2146964+03:00" start="2025-11-12T23:04:35.9528598+03:00" finish="2025-11-12T23:04:40.1415178+03:00" />
+  <TestSettings name="default" id="cc02bc47-792f-409f-9a00-690429400f65">
+    <Deployment runDeploymentRoot="_god_2025-11-12_23_04_38" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="23e417d4-3730-44cd-88b1-83ce810d0d58" testId="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec" testName="OIS.Issuance.Tests.IssuanceServiceTests.CreateAsync_ShouldCreateDraftIssuance" computerName="god" duration="00:00:00.8824920" startTime="2025-11-12T23:04:37.8700265+03:00" endTime="2025-11-12T23:04:37.8700594+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="23e417d4-3730-44cd-88b1-83ce810d0d58" />
+    <UnitTestResult executionId="30dbc4a8-66d7-4181-a79d-555044766c66" testId="6a93f21e-872c-d16b-a12b-55f7ab85847f" testName="OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404" computerName="god" duration="00:00:02.9668718" startTime="2025-11-12T23:04:39.9760835+03:00" endTime="2025-11-12T23:04:39.9760837+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="30dbc4a8-66d7-4181-a79d-555044766c66">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ
+Expected: NotFound
+Actual:   InternalServerError</Message>
+          <StackTrace>   at OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404() in /mnt/w/development/ois-cfa/tests/issuance.Tests/IssuanceApiTests.cs:line 42
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404" storage="/mnt/w/development/ois-cfa/tests/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="6a93f21e-872c-d16b-a12b-55f7ab85847f">
+      <Execution id="30dbc4a8-66d7-4181-a79d-555044766c66" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/tests/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceApiTests" name="Publish_NonExistent_Should_Return_404" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.CreateAsync_ShouldCreateDraftIssuance" storage="/mnt/w/development/ois-cfa/tests/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec">
+      <Execution id="23e417d4-3730-44cd-88b1-83ce810d0d58" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/tests/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="CreateAsync_ShouldCreateDraftIssuance" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec" executionId="23e417d4-3730-44cd-88b1-83ce810d0d58" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a93f21e-872c-d16b-a12b-55f7ab85847f" executionId="30dbc4a8-66d7-4181-a79d-555044766c66" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="2" executed="2" passed="1" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.11)
+[xUnit.net 00:00:00.17]   Discovering: issuance.Tests
+[xUnit.net 00:00:00.23]   Discovered:  issuance.Tests
+[xUnit.net 00:00:00.24]   Starting:    issuance.Tests
+2025-11-12 23:04:39.888 +03:00 [WRN] Ledger adapter running in MOCK mode
+{"Timestamp":"2025-11-12T23:04:39.8887466+03:00","Level":"Warning","MessageTemplate":"Ledger adapter running in MOCK mode","TraceId":"4a8f072f156f3c07f89490e5feaaf988","SpanId":"0b47146b4c8deb31","Properties":{"SourceContext":"OIS.Issuance.Services.LedgerIssuanceAdapter","RequestId":"0HNH24QR6MLPB","RequestPath":"/v1/issuances/a2033239-085f-432f-bae5-1ffa619f1bd7/publish"}}
+2025-11-12 23:04:39.917 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()
+   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11
+   at OIS.Issuance.Services.IssuanceService.GetByIdAsync(Guid id, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 64
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_11&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 233
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+{"Timestamp":"2025-11-12T23:04:39.9177878+03:00","Level":"Error","MessageTemplate":"An unhandled exception has occurred while executing the request.","TraceId":"4a8f072f156f3c07f89490e5feaaf988","SpanId":"0b47146b4c8deb31","Exception":"System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.\n   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)\n   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()\n   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()\n   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()\n   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()\n   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11\n   at OIS.Issuance.Services.IssuanceService.GetByIdAsync(Guid id, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 64\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_11&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 233\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","Properties":{"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware","RequestId":"0HNH24QR6MLPB","RequestPath":"/v1/issuances/a2033239-085f-432f-bae5-1ffa619f1bd7/publish"}}
+[xUnit.net 00:00:03.28]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:03.28]       Expected: NotFound
+[xUnit.net 00:00:03.28]       Actual:   InternalServerError
+[xUnit.net 00:00:03.28]       Stack Trace:
+[xUnit.net 00:00:03.28]         /mnt/w/development/ois-cfa/tests/issuance.Tests/IssuanceApiTests.cs(42,0): at OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404()
+[xUnit.net 00:00:03.28]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.29]   Finished:    issuance.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="god" outcome="Error" timestamp="2025-11-12T23:04:39.9731328+03:00">
+        <Text>[xUnit.net 00:00:03.28]     OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

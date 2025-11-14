@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -40,8 +41,7 @@ builder.Services.AddOpenTelemetry()
         .AddPrometheusExporter()
         .AddMeter(Metrics.MeterName));
 
-// Prometheus metrics endpoint
-builder.Services.AddPrometheusExporter();
+// Prometheus metrics endpoint is added via OpenTelemetry above
 
 // Database
 builder.Services.AddDbContext<IssuanceDbContext>(options =>
@@ -63,12 +63,12 @@ if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
 {
     builder.Services.AddMassTransit(x =>
     {
-        x.UsingKafka((context, cfg) =>
+        x.AddRider(rider =>
         {
-            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
-            cfg.Message<IssuancePublished>(m => m.SetEntityName("ois.issuance.published"));
-            cfg.Message<IssuanceClosed>(m => m.SetEntityName("ois.issuance.closed"));
-            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+            rider.UsingKafka((context, cfg) =>
+            {
+                cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            });
         });
     });
 
@@ -112,11 +112,14 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (can be disabled via RunMigrations=false for tests)
+if (builder.Configuration.GetValue<bool>("RunMigrations", true))
 {
-    var db = scope.ServiceProvider.GetRequiredService<IssuanceDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<IssuanceDbContext>();
+        db.Database.Migrate();
+    }
 }
 
 // Configure pipeline
@@ -126,7 +129,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+var disableHttpsRedirect = builder.Configuration.GetValue<bool>("DisableHttpsRedirection", false);
+if (!disableHttpsRedirect)
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/health");
@@ -153,8 +160,22 @@ app.Use(async (ctx, next) =>
         sw.Stop();
         var status = ctx.Response.StatusCode;
         var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
-        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
-        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+        var tags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+        {
+            new("route", route),
+            new("method", ctx.Request.Method),
+            new("status", status.ToString())
+        };
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, tags);
+        if (status >= 500)
+        {
+            var errTags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+            {
+                new("route", route),
+                new("method", ctx.Request.Method)
+            };
+            Metrics.RequestErrors.Add(1, errTags);
+        }
     }
 });
 
@@ -164,10 +185,29 @@ var api = app.MapGroup("/v1").WithTags("Issuances").RequireAuthorization();
 api.MapPost("/issuances", async (
     CreateIssuanceRequest request,
     IIssuanceService service,
+    ILoggerFactory loggerFactory,
     CancellationToken ct) =>
 {
-    var result = await service.CreateAsync(request, ct);
-    return Results.Created($"/v1/issuances/{result.Id}", result);
+    try
+    {
+        var result = await service.CreateAsync(request, ct);
+        return Results.Created($"/v1/issuances/{result.Id}", result);
+    }
+    catch (FluentValidation.ValidationException vex)
+    {
+        var logger = loggerFactory.CreateLogger("CreateIssuance");
+        logger.LogWarning(vex, "Validation failed for CreateIssuance");
+        var errors = vex.Errors
+            .GroupBy(e => e.PropertyName)
+            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+        return Results.ValidationProblem(errors, statusCode: 400, title: "Validation Failed");
+    }
+    catch (Exception ex)
+    {
+        var logger = loggerFactory.CreateLogger("CreateIssuance");
+        logger.LogError(ex, "CreateIssuance failed");
+        return Results.Problem(detail: ex.Message, statusCode: 500, title: "Internal Server Error");
+    }
 })
 .WithName("CreateIssuance")
 .RequireAuthorization("role:issuer")
@@ -237,8 +277,6 @@ api.MapPost("/issuances/{id:guid}/close", async (
 
 app.Run();
 
-public partial class Program { }
-
 static void MapKeycloakRoles(TokenValidatedContext ctx)
 {
     try
@@ -262,3 +300,4 @@ static void MapKeycloakRoles(TokenValidatedContext ctx)
     catch { }
 }
 
+public partial class Program { }

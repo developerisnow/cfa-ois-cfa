@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -102,6 +106,23 @@ builder.Services.AddAuthorization(options =>
         p.RequireAssertion(ctx => ctx.User.IsInRole("investor") || ctx.User.IsInRole("backoffice")));
 });
 
+// MassTransit + Kafka for publishing
+if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
+{
+    builder.Services.AddMassTransit(x =>
+    {
+        x.AddRider(rider =>
+        {
+            rider.UsingKafka((context, cfg) =>
+            {
+                cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            });
+        });
+    });
+
+    builder.Services.AddHostedService<OIS.Compliance.Background.OutboxPublisher>();
+}
+
 var app = builder.Build();
 
 // Apply migrations
@@ -144,27 +165,26 @@ app.Use(async (ctx, next) =>
         sw.Stop();
         var status = ctx.Response.StatusCode;
         var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
-        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
-        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+        var tags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+        {
+            new("route", route),
+            new("method", ctx.Request.Method),
+            new("status", status.ToString())
+        };
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, tags);
+        if (status >= 500)
+        {
+            var errTags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+            {
+                new("route", route),
+                new("method", ctx.Request.Method)
+            };
+            Metrics.RequestErrors.Add(1, errTags);
+        }
     }
 });
 
-// MassTransit + Kafka publish setup
-if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
-{
-    builder.Services.AddMassTransit(x =>
-    {
-        x.UsingKafka((context, cfg) =>
-        {
-            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
-            cfg.Message<ComplianceFlagged>(m => m.SetEntityName("ois.compliance.flagged"));
-            cfg.Message<KycUpdated>(m => m.SetEntityName("ois.kyc.updated"));
-            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
-        });
-    });
-
-    builder.Services.AddHostedService<OIS.Compliance.Background.OutboxPublisher>();
-}
+// (Kafka rider configured above)
 
 // API Endpoints
 var api = app.MapGroup("/v1").WithTags("Compliance").RequireAuthorization();
@@ -520,25 +540,6 @@ static object MapAudit(OutboxMessage m)
 
 app.Run();
 
-public partial class Program { }
-
-// MassTransit + Kafka for publishing
-if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
-{
-    builder.Services.AddMassTransit(x =>
-    {
-        x.UsingKafka((context, cfg) =>
-        {
-            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
-            cfg.Message<ComplianceFlagged>(m => m.SetEntityName("ois.compliance.flagged"));
-            cfg.Message<KycUpdated>(m => m.SetEntityName("ois.kyc.updated"));
-            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
-        });
-    });
-
-    builder.Services.AddHostedService<OIS.Compliance.Background.OutboxPublisher>();
-}
-
 static void MapKeycloakRoles(TokenValidatedContext ctx)
 {
     try
@@ -562,6 +563,4 @@ static void MapKeycloakRoles(TokenValidatedContext ctx)
     catch { }
 }
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
+public partial class Program { }
