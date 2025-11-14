@@ -29,10 +29,11 @@ builder.Services.AddOpenTelemetry()
         .AddConsoleExporter());
 
 // Database
+var settlementMigrationsAssembly = typeof(SettlementDbContext).Assembly.GetName().Name;
 builder.Services.AddDbContext<SettlementDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Settlement")));
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly(settlementMigrationsAssembly)));
 
 // HTTP Clients
 builder.Services.AddHttpClient<IRegistryClient, RegistryClient>();
@@ -116,4 +117,3 @@ api.MapGet("/reports/payouts", async (
 .WithOpenApi();
 
 app.Run();
-

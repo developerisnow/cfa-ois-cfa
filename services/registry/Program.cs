@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -5,6 +7,7 @@ using OpenTelemetry.Trace;
 using OIS.Registry;
 using OIS.Registry.DTOs;
 using OIS.Registry.Services;
+using OIS.Registry.Validators;
 using Serilog;
 using System.Diagnostics;
 
@@ -30,10 +33,11 @@ builder.Services.AddOpenTelemetry()
         .AddConsoleExporter());
 
 // Database
+var registryMigrationsAssembly = typeof(RegistryDbContext).Assembly.GetName().Name;
 builder.Services.AddDbContext<RegistryDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Registry")));
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly(registryMigrationsAssembly)));
 
 // HTTP Clients
 builder.Services.AddHttpClient<IBankNominalService, BankNominalServiceClient>();
@@ -146,4 +150,3 @@ api.MapPost("/issuances/{id:guid}/redeem", async (
 .WithOpenApi();
 
 app.Run();
-

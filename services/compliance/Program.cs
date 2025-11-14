@@ -29,10 +29,11 @@ builder.Services.AddOpenTelemetry()
         .AddConsoleExporter());
 
 // Database
+var complianceMigrationsAssembly = typeof(ComplianceDbContext).Assembly.GetName().Name;
 builder.Services.AddDbContext<ComplianceDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Compliance")));
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly(complianceMigrationsAssembly)));
 
 // Services
 builder.Services.AddScoped<IWatchlistsService, WatchlistsServiceStub>();
@@ -133,4 +134,3 @@ complaintsApi.MapGet("/{id:guid}", async (
 .WithOpenApi();
 
 app.Run();
-

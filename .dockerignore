@@ -1,0 +1,15 @@
+.git
+.gitignore
+.github
+memory-bank
+archives
+ARCHIVE
+node_modules
+**/node_modules
+apps/portal-issuer
+apps/portal-investor
+apps/backoffice
+apps/shared-ui
+packages/sdks/ts
+tests
+**/*.md

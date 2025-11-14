@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -34,13 +35,15 @@ builder.Services.AddOpenTelemetry()
         .AddPrometheusExporter());
 
 // Prometheus metrics endpoint
-builder.Services.AddPrometheusExporter();
+// Prometheus exporter disabled in this deployment; re-enable when collector is ready.
+// builder.Services.AddPrometheusExporter();
 
 // Database
+var issuanceMigrationsAssembly = typeof(IssuanceDbContext).Assembly.GetName().Name;
 builder.Services.AddDbContext<IssuanceDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.MigrationsAssembly("OIS.Issuance")));
+        npgsqlOptions => npgsqlOptions.MigrationsAssembly(issuanceMigrationsAssembly)));
 
 // HTTP Client for Ledger Adapter
 builder.Services.AddHttpClient<LedgerIssuanceAdapter>()
@@ -149,4 +152,3 @@ api.MapPost("/issuances/{id:guid}/close", async (
 .WithOpenApi();
 
 app.Run();
-
