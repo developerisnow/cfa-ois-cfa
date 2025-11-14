@@ -7,7 +7,9 @@ WORKDIR /src
 COPY ["services/compliance/compliance.csproj", "services/compliance/"]
 COPY ["packages/domain/domain.csproj", "packages/domain/"]
 RUN dotnet restore "services/compliance/compliance.csproj"
-COPY . .
+COPY packages/domain/ packages/domain/
+COPY services/compliance/ services/compliance/
+RUN rm -rf services/compliance/compliance.Tests || true
 WORKDIR "/src/services/compliance"
 RUN dotnet build "compliance.csproj" -c Release -o /app/build
 
@@ -18,4 +20,3 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "compliance.dll"]
-

@@ -13,6 +13,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.9.0" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.2.0" />
+    <!-- Rate limiting available in shared framework; explicit package not required for net9.0 -->
   </ItemGroup>
 
 </Project>

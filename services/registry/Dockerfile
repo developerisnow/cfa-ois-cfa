@@ -7,7 +7,10 @@ WORKDIR /src
 COPY ["services/registry/registry.csproj", "services/registry/"]
 COPY ["packages/domain/domain.csproj", "packages/domain/"]
 RUN dotnet restore "services/registry/registry.csproj"
-COPY . .
+# Copy only required source to keep context minimal and exclude tests
+COPY packages/domain/ packages/domain/
+COPY services/registry/ services/registry/
+RUN rm -rf services/registry/registry.Tests || true
 WORKDIR "/src/services/registry"
 RUN dotnet build "registry.csproj" -c Release -o /app/build
 
@@ -18,4 +21,3 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "registry.dll"]
-

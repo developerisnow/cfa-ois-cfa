@@ -49,9 +49,11 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (optional, via MIGRATE_ON_STARTUP=true)
+var migrateOnStartup = Environment.GetEnvironmentVariable("MIGRATE_ON_STARTUP");
+if (string.Equals(migrateOnStartup, "true", StringComparison.OrdinalIgnoreCase))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ComplianceDbContext>();
     db.Database.Migrate();
 }
@@ -80,57 +82,25 @@ api.MapPost("/compliance/kyc/check", async (
 .WithName("CheckKyc")
 .WithOpenApi();
 
-api.MapPost("/compliance/qualification/evaluate", async (
-    QualificationEvaluateRequest request,
-    IComplianceService service,
+api.MapGet("/complaints", async (
+    IComplaintsService service,
     CancellationToken ct) =>
 {
-    var result = await service.EvaluateQualificationAsync(request, ct);
-    return Results.Ok(result);
+    var complaints = await service.GetComplaintsAsync(ct);
+    return Results.Ok(complaints);
 })
-.WithName("EvaluateQualification")
+.WithName("GetComplaints")
 .WithOpenApi();
 
-api.MapGet("/compliance/investors/{id:guid}/status", async (
-    Guid id,
-    IComplianceService service,
-    CancellationToken ct) =>
-{
-    var result = await service.GetInvestorStatusAsync(id, ct);
-    return result != null ? Results.Ok(result) : Results.NotFound();
-})
-.WithName("GetInvestorStatus")
-.WithOpenApi();
-
-var complaintsApi = app.MapGroup("/v1/complaints").WithTags("Complaints");
-
-complaintsApi.MapPost("", async (
+api.MapPost("/complaints", async (
     CreateComplaintRequest request,
-    HttpContext httpContext,
-    IComplianceService service,
+    IComplaintsService service,
     CancellationToken ct) =>
 {
-    string? idemKey = null;
-    if (httpContext.Request.Headers.TryGetValue("Idempotency-Key", out var idemKeyValues))
-    {
-        idemKey = idemKeyValues.FirstOrDefault();
-    }
-
-    var result = await service.CreateComplaintAsync(request, idemKey, ct);
-    return Results.Created($"/v1/complaints/{result.Id}", result);
+    var complaintId = await service.CreateComplaintAsync(request, ct);
+    return Results.Ok(new { complaintId });
 })
 .WithName("CreateComplaint")
-.WithOpenApi();
-
-complaintsApi.MapGet("/{id:guid}", async (
-    Guid id,
-    IComplianceService service,
-    CancellationToken ct) =>
-{
-    var result = await service.GetComplaintAsync(id, ct);
-    return result != null ? Results.Ok(result) : Results.NotFound();
-})
-.WithName("GetComplaint")
 .WithOpenApi();
 
 app.Run();

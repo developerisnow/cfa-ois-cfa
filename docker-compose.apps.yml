@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  portal-issuer:
+    build:
+      context: .
+      dockerfile: apps/portal-issuer/Dockerfile
+    container_name: portal-issuer
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${API_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: portal-issuer
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      NEXTAUTH_URL: ${ISSUER_PUBLIC_URL}
+    ports:
+      - "${ISSUER_HOST_PORT}:3001"
+    networks:
+      - default
+
+  portal-investor:
+    build:
+      context: .
+      dockerfile: apps/portal-investor/Dockerfile
+    container_name: portal-investor
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${API_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: portal-investor
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      NEXTAUTH_URL: ${INVESTOR_PUBLIC_URL}
+    ports:
+      - "${INVESTOR_HOST_PORT}:3002"
+    networks:
+      - default
+
+  backoffice:
+    build:
+      context: .
+      dockerfile: apps/backoffice/Dockerfile
+    container_name: backoffice
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${API_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL}
+      NEXT_PUBLIC_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: backoffice
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      NEXTAUTH_URL: ${BACKOFFICE_PUBLIC_URL}
+    ports:
+      - "${BACKOFFICE_HOST_PORT}:3003"
+    networks:
+      - default
+
+networks:
+  default:
+    name: ois-cfa-net

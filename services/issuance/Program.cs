@@ -34,8 +34,7 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddPrometheusExporter());
 
-// Prometheus metrics endpoint
-// Prometheus exporter disabled in this deployment; re-enable when collector is ready.
+// Prometheus metrics endpoint (disabled in this deployment; enable when collector scrapes directly)
 // builder.Services.AddPrometheusExporter();
 
 // Database
@@ -66,9 +65,11 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+// Apply migrations (optional, via MIGRATE_ON_STARTUP=true)
+var migrateOnStartup = Environment.GetEnvironmentVariable("MIGRATE_ON_STARTUP");
+if (string.Equals(migrateOnStartup, "true", StringComparison.OrdinalIgnoreCase))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<IssuanceDbContext>();
     db.Database.Migrate();
 }
@@ -81,72 +82,41 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
-app.MapPrometheusScrapingEndpoint("/metrics");
 
-// API Endpoints
-var api = app.MapGroup("/v1").WithTags("Issuances");
+var api = app.MapGroup("/v1/issuances").WithTags("Issuances");
 
-api.MapPost("/issuances", async (
+api.MapPost("/", async (
     CreateIssuanceRequest request,
     IIssuanceService service,
     CancellationToken ct) =>
 {
-    var result = await service.CreateAsync(request, ct);
-    return Results.Created($"/v1/issuances/{result.Id}", result);
+    var id = await service.CreateIssuanceAsync(request, ct);
+    return Results.Ok(new { id });
 })
 .WithName("CreateIssuance")
 .WithOpenApi();
 
-api.MapGet("/issuances/{id:guid}", async (
+api.MapPost("/{id:guid}/publish", async (
     Guid id,
     IIssuanceService service,
     CancellationToken ct) =>
 {
-    var result = await service.GetByIdAsync(id, ct);
-    return result != null ? Results.Ok(result) : Results.NotFound();
-})
-.WithName("GetIssuance")
-.WithOpenApi();
-
-api.MapPost("/issuances/{id:guid}/publish", async (
-    Guid id,
-    IIssuanceService service,
-    CancellationToken ct) =>
-{
-    try
-    {
-        var result = await service.PublishAsync(id, ct);
-        return Results.Ok(result);
-    }
-    catch (InvalidOperationException ex)
-    {
-        return Results.Problem(
-            detail: ex.Message,
-            statusCode: 400,
-            title: "Bad Request");
-    }
+    await service.PublishIssuanceAsync(id, ct);
+    return Results.Accepted();
 })
 .WithName("PublishIssuance")
 .WithOpenApi();
 
-api.MapPost("/issuances/{id:guid}/close", async (
+api.MapPost("/{id:guid}/close", async (
     Guid id,
     IIssuanceService service,
     CancellationToken ct) =>
 {
-    try
-    {
-        var result = await service.CloseAsync(id, ct);
-        return Results.Ok(result);
-    }
-    catch (InvalidOperationException ex)
-    {
-        return Results.Problem(
-            detail: ex.Message,
-            statusCode: 400,
-            title: "Bad Request");
-    }
+    await service.CloseIssuanceAsync(id, ct);
+    return Results.Accepted();
 })
 .WithName("CloseIssuance")
 .WithOpenApi();
