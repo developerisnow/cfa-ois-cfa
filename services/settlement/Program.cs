@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -56,21 +59,19 @@ if (kafkaEnabled)
 {
     builder.Services.AddMassTransit(x =>
     {
-        x.AddConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>();
-
-        x.UsingKafka((context, cfg) =>
+        x.AddRider(rider =>
         {
-            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            rider.AddConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>();
 
-            // Map message types to topics according to AsyncAPI
-            cfg.Message<OrderPaid>(m => m.SetEntityName("ois.order.paid"));
-            cfg.Message<PayoutExecuted>(m => m.SetEntityName("ois.payout.executed"));
-            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
-
-            cfg.TopicEndpoint<OrderPaid>("ois.order.paid", "settlement-orderpaid", e =>
+            rider.UsingKafka((context, cfg) =>
             {
-                e.ConfigureConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>(context);
-                e.ConcurrentMessageLimit = 4;
+                cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+
+                cfg.TopicEndpoint<OrderPaid>("ois.order.paid", "settlement-orderpaid", e =>
+                {
+                    e.ConfigureConsumer<OIS.Settlement.Consumers.OrderPaidEventConsumer>(context);
+                    e.ConcurrentMessageLimit = 4;
+                });
             });
         });
     });
@@ -159,8 +160,22 @@ app.Use(async (ctx, next) =>
         sw.Stop();
         var status = ctx.Response.StatusCode;
         var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
-        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
-        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+        var tags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+        {
+            new("route", route),
+            new("method", ctx.Request.Method),
+            new("status", status.ToString())
+        };
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, tags);
+        if (status >= 500)
+        {
+            var errTags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+            {
+                new("route", route),
+                new("method", ctx.Request.Method)
+            };
+            Metrics.RequestErrors.Add(1, errTags);
+        }
     }
 });
 
@@ -238,7 +253,3 @@ static void MapKeycloakRoles(TokenValidatedContext ctx)
     }
     catch { }
 }
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;

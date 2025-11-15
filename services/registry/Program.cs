@@ -1,4 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using OIS.Registry.Validators;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -102,14 +108,12 @@ if (builder.Configuration.GetValue<bool>("Kafka:Enabled", true))
 {
     builder.Services.AddMassTransit(x =>
     {
-        x.UsingKafka((context, cfg) =>
+        x.AddRider(rider =>
         {
-            cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
-            cfg.Message<OrderCreated>(m => m.SetEntityName("ois.order.created"));
-            cfg.Message<OrderReserved>(m => m.SetEntityName("ois.order.reserved"));
-            cfg.Message<OrderPaid>(m => m.SetEntityName("ois.order.paid"));
-            cfg.Message<RegistryTransferred>(m => m.SetEntityName("ois.registry.transferred"));
-            cfg.Message<AuditLogged>(m => m.SetEntityName("ois.audit.logged"));
+            rider.UsingKafka((context, cfg) =>
+            {
+                cfg.Host(builder.Configuration["Kafka:BootstrapServers"] ?? "localhost:9092");
+            });
         });
     });
 
@@ -186,8 +190,22 @@ app.Use(async (ctx, next) =>
         sw.Stop();
         var status = ctx.Response.StatusCode;
         var route = ctx.GetEndpoint()?.DisplayName ?? "unknown";
-        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, new("route", route), new("method", ctx.Request.Method), new("status", status.ToString()));
-        if (status >= 500) Metrics.RequestErrors.Add(1, new("route", route), new("method", ctx.Request.Method));
+        var tags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+        {
+            new("route", route),
+            new("method", ctx.Request.Method),
+            new("status", status.ToString())
+        };
+        Metrics.RequestDurationMs.Record(sw.Elapsed.TotalMilliseconds, tags);
+        if (status >= 500)
+        {
+            var errTags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+            {
+                new("route", route),
+                new("method", ctx.Request.Method)
+            };
+            Metrics.RequestErrors.Add(1, errTags);
+        }
     }
 });
 
@@ -314,10 +332,6 @@ api.MapPost("/orders/{id:guid}/mark-paid", async (
 .WithOpenApi();
 
 app.Run();
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
 static Func<Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext, bool> HasScope(string scope) => ctx =>
 {
     var scp = ctx.User.FindFirst("scope")?.Value ?? ctx.User.FindFirst("scp")?.Value;

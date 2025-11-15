@@ -7,9 +7,8 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);domain.Tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
-  <!-- Exclude nested test project sources from library build -->
   <ItemGroup>
     <Compile Remove="domain.Tests/**/*.cs" />
   </ItemGroup>
-
+  <!-- Exclude nested test project sources from library build -->
 </Project>

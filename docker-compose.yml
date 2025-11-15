@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   kafka:
-    image: apache/kafka:3.6
+    image: apache/kafka:3.5.1
     container_name: ois-kafka
     ports:
       - "9092:9092"

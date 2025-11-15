@@ -56,7 +56,11 @@ public class OutboxPublisher : BackgroundService
                     });
 
                     msg.ProcessedAt = DateTime.UtcNow;
-                    Metrics.OutboxPublished.Add(1, new("topic", msg.Topic));
+                    var tags = new System.Collections.Generic.KeyValuePair<string, object?>[]
+                    {
+                        new("topic", msg.Topic)
+                    };
+                    Metrics.OutboxPublished.Add(1, tags);
                 }
 
                 await db.SaveChangesAsync(stoppingToken);

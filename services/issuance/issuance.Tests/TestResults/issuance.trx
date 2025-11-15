@@ -1,0 +1,314 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a621d767-2977-4c8f-8efd-de7cb1965760" name="@god 2025-11-12 22:57:35" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-11-12T22:57:35.8259960+03:00" queuing="2025-11-12T22:57:35.8259960+03:00" start="2025-11-12T22:57:33.5915440+03:00" finish="2025-11-12T22:57:37.3468669+03:00" />
+  <TestSettings name="default" id="e56a73df-519e-4e0d-a755-3afe4308f849">
+    <Deployment runDeploymentRoot="_god_2025-11-12_22_57_35" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="bf8ffb69-e951-4d06-bd54-f18aac134af0" testId="b578e133-b828-4a7e-0a9f-fc28e429ed5c" testName="OIS.Issuance.Tests.IssuanceApiTests.Create_Invalid_Should_Return_400" computerName="god" duration="00:00:00.0076138" startTime="2025-11-12T22:57:37.1995144+03:00" endTime="2025-11-12T22:57:37.1995144+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bf8ffb69-e951-4d06-bd54-f18aac134af0">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.InternalServerError {value: 500}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at OIS.Issuance.Tests.IssuanceApiTests.Create_Invalid_Should_Return_400() in /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs:line 93
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="81757ce4-446a-4860-ba70-ec767d45ad15" testId="acbbf9bc-637e-f581-d6c7-953059561031" testName="OIS.Issuance.Tests.IssuanceServiceTests.CloseAsync_FromPublished_ShouldSucceed" computerName="god" duration="00:00:00.0054905" startTime="2025-11-12T22:57:35.4351130+03:00" endTime="2025-11-12T22:57:35.4351131+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="81757ce4-446a-4860-ba70-ec767d45ad15" />
+    <UnitTestResult executionId="b3dac4c4-4ac7-4dfa-85f9-3629e189ebaa" testId="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec" testName="OIS.Issuance.Tests.IssuanceServiceTests.CreateAsync_ShouldCreateDraftIssuance" computerName="god" duration="00:00:00.7231448" startTime="2025-11-12T22:57:35.3295831+03:00" endTime="2025-11-12T22:57:35.3296657+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b3dac4c4-4ac7-4dfa-85f9-3629e189ebaa" />
+    <UnitTestResult executionId="d35a9190-c334-4ed1-914d-f945cbcc8d42" testId="32b0aa8e-1e82-1a6a-15af-30efc0e73a02" testName="OIS.Issuance.Tests.IssuanceApiTests.Publish_Then_Close_Should_Succeed" computerName="god" duration="00:00:00.0358204" startTime="2025-11-12T22:57:37.1912076+03:00" endTime="2025-11-12T22:57:37.1912078+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d35a9190-c334-4ed1-914d-f945cbcc8d42">
+      <Output>
+        <ErrorInfo>
+          <Message>System.Text.Json.JsonException : 'S' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+---- System.Text.Json.JsonReaderException : 'S' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.</Message>
+          <StackTrace>   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack&amp; state, JsonReaderException ex)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.ContinueDeserialize(ReadBufferState&amp; bufferState, JsonReaderState&amp; jsonReaderState, ReadStack&amp; readStack, T&amp; value)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsync(Stream utf8Json, CancellationToken cancellationToken)
+   at System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsyncCore[T](HttpContent content, JsonSerializerOptions options, CancellationToken cancellationToken)
+   at OIS.Issuance.Tests.IssuanceApiTests.Publish_Then_Close_Should_Succeed() in /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs:line 111
+--- End of stack trace from previous location ---
+----- Inner Stack Trace -----
+   at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+   at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+   at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+   at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+   at System.Text.Json.Utf8JsonReader.Read()
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7010f237-c0d9-4eb4-96d0-1103619ae190" testId="cf556f3d-20d5-97bf-3831-c0e7d2f487ac" testName="OIS.Issuance.Tests.IssuanceServiceTests.PublishAsync_FromNonDraft_ShouldThrow" computerName="god" duration="00:00:00.0025104" startTime="2025-11-12T22:57:35.4294247+03:00" endTime="2025-11-12T22:57:35.4294247+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7010f237-c0d9-4eb4-96d0-1103619ae190" />
+    <UnitTestResult executionId="5aadd27a-fb1f-4fa8-93c7-1f56a4f83e5e" testId="6a93f21e-872c-d16b-a12b-55f7ab85847f" testName="OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404" computerName="god" duration="00:00:00.0160388" startTime="2025-11-12T22:57:37.1688341+03:00" endTime="2025-11-12T22:57:37.1688341+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5aadd27a-fb1f-4fa8-93c7-1f56a4f83e5e">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected res.StatusCode to be HttpStatusCode.NotFound {value: 404}, but found HttpStatusCode.InternalServerError {value: 500}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404() in /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs:line 75
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="aceea3c5-7b34-4ca5-9526-80e40f6650a2" testId="4904500a-1114-aa1a-fcd9-45e46f3a4c3e" testName="OIS.Issuance.Tests.IssuanceServiceTests.CloseAsync_FromNonPublished_ShouldThrow" computerName="god" duration="00:00:00.0276405" startTime="2025-11-12T22:57:35.4267623+03:00" endTime="2025-11-12T22:57:35.4267624+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aceea3c5-7b34-4ca5-9526-80e40f6650a2" />
+    <UnitTestResult executionId="1b0a3706-f917-43a0-8170-cc63cd36aba2" testId="ca7063cf-4e58-a6e2-5d37-4029607b328e" testName="OIS.Issuance.Tests.IssuanceServiceTests.PublishAsync_FromDraft_ShouldSucceed" computerName="god" duration="00:00:00.0700479" startTime="2025-11-12T22:57:35.3990660+03:00" endTime="2025-11-12T22:57:35.3990661+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1b0a3706-f917-43a0-8170-cc63cd36aba2" />
+    <UnitTestResult executionId="ca98ecca-cf7d-4494-b842-3c3095e736b2" testId="b89bc89f-c173-ad53-d0a1-6296deb84cda" testName="OIS.Issuance.Tests.IssuanceApiTests.Create_Then_Get_Should_Return_Issuance" computerName="god" duration="00:00:02.5231499" startTime="2025-11-12T22:57:37.1395254+03:00" endTime="2025-11-12T22:57:37.1395255+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ca98ecca-cf7d-4494-b842-3c3095e736b2">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected created.StatusCode to be HttpStatusCode.Created {value: 201}, but found HttpStatusCode.InternalServerError {value: 500}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at OIS.Issuance.Tests.IssuanceApiTests.Create_Then_Get_Should_Return_Issuance() in /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs:line 58
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.PublishAsync_FromNonDraft_ShouldThrow" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="cf556f3d-20d5-97bf-3831-c0e7d2f487ac">
+      <Execution id="7010f237-c0d9-4eb4-96d0-1103619ae190" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="PublishAsync_FromNonDraft_ShouldThrow" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.PublishAsync_FromDraft_ShouldSucceed" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="ca7063cf-4e58-a6e2-5d37-4029607b328e">
+      <Execution id="1b0a3706-f917-43a0-8170-cc63cd36aba2" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="PublishAsync_FromDraft_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceApiTests.Publish_Then_Close_Should_Succeed" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="32b0aa8e-1e82-1a6a-15af-30efc0e73a02">
+      <Execution id="d35a9190-c334-4ed1-914d-f945cbcc8d42" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceApiTests" name="Publish_Then_Close_Should_Succeed" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceApiTests.Create_Invalid_Should_Return_400" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="b578e133-b828-4a7e-0a9f-fc28e429ed5c">
+      <Execution id="bf8ffb69-e951-4d06-bd54-f18aac134af0" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceApiTests" name="Create_Invalid_Should_Return_400" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.CloseAsync_FromPublished_ShouldSucceed" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="acbbf9bc-637e-f581-d6c7-953059561031">
+      <Execution id="81757ce4-446a-4860-ba70-ec767d45ad15" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="CloseAsync_FromPublished_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="6a93f21e-872c-d16b-a12b-55f7ab85847f">
+      <Execution id="5aadd27a-fb1f-4fa8-93c7-1f56a4f83e5e" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceApiTests" name="Publish_NonExistent_Should_Return_404" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.CloseAsync_FromNonPublished_ShouldThrow" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="4904500a-1114-aa1a-fcd9-45e46f3a4c3e">
+      <Execution id="aceea3c5-7b34-4ca5-9526-80e40f6650a2" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="CloseAsync_FromNonPublished_ShouldThrow" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceServiceTests.CreateAsync_ShouldCreateDraftIssuance" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec">
+      <Execution id="b3dac4c4-4ac7-4dfa-85f9-3629e189ebaa" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceServiceTests" name="CreateAsync_ShouldCreateDraftIssuance" />
+    </UnitTest>
+    <UnitTest name="OIS.Issuance.Tests.IssuanceApiTests.Create_Then_Get_Should_Return_Issuance" storage="/mnt/w/development/ois-cfa/services/issuance/issuance.tests/bin/release/net9.0/issuance.tests.dll" id="b89bc89f-c173-ad53-d0a1-6296deb84cda">
+      <Execution id="ca98ecca-cf7d-4494-b842-3c3095e736b2" />
+      <TestMethod codeBase="/mnt/w/development/ois-cfa/services/issuance/issuance.Tests/bin/Release/net9.0/issuance.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="OIS.Issuance.Tests.IssuanceApiTests" name="Create_Then_Get_Should_Return_Issuance" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="b578e133-b828-4a7e-0a9f-fc28e429ed5c" executionId="bf8ffb69-e951-4d06-bd54-f18aac134af0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="acbbf9bc-637e-f581-d6c7-953059561031" executionId="81757ce4-446a-4860-ba70-ec767d45ad15" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bf851f9a-f7ba-90b7-6ecb-9870f2fd56ec" executionId="b3dac4c4-4ac7-4dfa-85f9-3629e189ebaa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="32b0aa8e-1e82-1a6a-15af-30efc0e73a02" executionId="d35a9190-c334-4ed1-914d-f945cbcc8d42" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cf556f3d-20d5-97bf-3831-c0e7d2f487ac" executionId="7010f237-c0d9-4eb4-96d0-1103619ae190" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6a93f21e-872c-d16b-a12b-55f7ab85847f" executionId="5aadd27a-fb1f-4fa8-93c7-1f56a4f83e5e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4904500a-1114-aa1a-fcd9-45e46f3a4c3e" executionId="aceea3c5-7b34-4ca5-9526-80e40f6650a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ca7063cf-4e58-a6e2-5d37-4029607b328e" executionId="1b0a3706-f917-43a0-8170-cc63cd36aba2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b89bc89f-c173-ad53-d0a1-6296deb84cda" executionId="ca98ecca-cf7d-4494-b842-3c3095e736b2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="9" executed="9" passed="5" failed="4" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.11)
+[xUnit.net 00:00:00.17]   Discovering: issuance.Tests
+[xUnit.net 00:00:00.23]   Discovered:  issuance.Tests
+[xUnit.net 00:00:00.23]   Starting:    issuance.Tests
+2025-11-12 22:57:36.932 +03:00 [DBG] AuthenticationScheme: Test was successfully authenticated.
+{"Timestamp":"2025-11-12T22:57:36.9324716+03:00","Level":"Debug","MessageTemplate":"AuthenticationScheme: {AuthenticationScheme} was successfully authenticated.","TraceId":"ca306ca9686fd353430fbf1107a5e75b","SpanId":"ce5913b20c111d17","Properties":{"AuthenticationScheme":"Test","EventId":{"Id":8,"Name":"AuthenticationSchemeAuthenticated"},"SourceContext":"OIS.Issuance.Tests.TestAuthHandler","RequestId":"0HNH24MT5F0NC","RequestPath":"/v1/issuances"}}
+2025-11-12 22:57:37.016 +03:00 [WRN] Ledger adapter running in MOCK mode
+{"Timestamp":"2025-11-12T22:57:37.0165290+03:00","Level":"Warning","MessageTemplate":"Ledger adapter running in MOCK mode","TraceId":"ca306ca9686fd353430fbf1107a5e75b","SpanId":"ce5913b20c111d17","Properties":{"SourceContext":"OIS.Issuance.Services.LedgerIssuanceAdapter","RequestId":"0HNH24MT5F0NC","RequestPath":"/v1/issuances"}}
+2025-11-12 22:57:37.028 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()
+   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11
+   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+{"Timestamp":"2025-11-12T22:57:37.0289648+03:00","Level":"Error","MessageTemplate":"An unhandled exception has occurred while executing the request.","TraceId":"ca306ca9686fd353430fbf1107a5e75b","SpanId":"ce5913b20c111d17","Exception":"System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.\n   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)\n   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()\n   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()\n   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()\n   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()\n   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11\n   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()\n--- End of stack trace from previous location ---\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","Properties":{"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware","RequestId":"0HNH24MT5F0NC","RequestPath":"/v1/issuances"}}
+[xUnit.net 00:00:02.81]       Expected created.StatusCode to be HttpStatusCode.Created {value: 201}, but found HttpStatusCode.InternalServerError {value: 500}.
+[xUnit.net 00:00:02.81]       Stack Trace:
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:02.81]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.81]         /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs(58,0): at OIS.Issuance.Tests.IssuanceApiTests.Create_Then_Get_Should_Return_Issuance()
+[xUnit.net 00:00:02.81]         --- End of stack trace from previous location ---
+2025-11-12 22:57:37.141 +03:00 [DBG] AuthenticationScheme: Test was successfully authenticated.
+{"Timestamp":"2025-11-12T22:57:37.1419919+03:00","Level":"Debug","MessageTemplate":"AuthenticationScheme: {AuthenticationScheme} was successfully authenticated.","TraceId":"4607244e314dbb229e0f96a8fe856e94","SpanId":"a8ae6694fcda2989","Properties":{"AuthenticationScheme":"Test","EventId":{"Id":8,"Name":"AuthenticationSchemeAuthenticated"},"SourceContext":"OIS.Issuance.Tests.TestAuthHandler","RequestId":"0HNH24MT5F0ND","RequestPath":"/v1/issuances/4dfca955-fb4b-4a95-8914-ad007e28ecf7/publish"}}
+2025-11-12 22:57:37.143 +03:00 [WRN] Ledger adapter running in MOCK mode
+{"Timestamp":"2025-11-12T22:57:37.1438786+03:00","Level":"Warning","MessageTemplate":"Ledger adapter running in MOCK mode","TraceId":"4607244e314dbb229e0f96a8fe856e94","SpanId":"a8ae6694fcda2989","Properties":{"SourceContext":"OIS.Issuance.Services.LedgerIssuanceAdapter","RequestId":"0HNH24MT5F0ND","RequestPath":"/v1/issuances/4dfca955-fb4b-4a95-8914-ad007e28ecf7/publish"}}
+2025-11-12 22:57:37.145 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()
+   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11
+   at OIS.Issuance.Services.IssuanceService.GetByIdAsync(Guid id, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 64
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_11&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 214
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+{"Timestamp":"2025-11-12T22:57:37.1456021+03:00","Level":"Error","MessageTemplate":"An unhandled exception has occurred while executing the request.","TraceId":"4607244e314dbb229e0f96a8fe856e94","SpanId":"a8ae6694fcda2989","Exception":"System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.\n   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)\n   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()\n   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()\n   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()\n   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()\n   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11\n   at OIS.Issuance.Services.IssuanceService.GetByIdAsync(Guid id, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 64\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_11&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 214\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","Properties":{"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware","RequestId":"0HNH24MT5F0ND","RequestPath":"/v1/issuances/4dfca955-fb4b-4a95-8914-ad007e28ecf7/publish"}}
+[xUnit.net 00:00:02.82]       Expected res.StatusCode to be HttpStatusCode.NotFound {value: 404}, but found HttpStatusCode.InternalServerError {value: 500}.
+[xUnit.net 00:00:02.82]       Stack Trace:
+[xUnit.net 00:00:02.82]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:02.82]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:02.82]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:02.84]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.84]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.84]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:02.84]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.84]         /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs(75,0): at OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404()
+[xUnit.net 00:00:02.84]         --- End of stack trace from previous location ---
+2025-11-12 22:57:37.170 +03:00 [DBG] AuthenticationScheme: Test was successfully authenticated.
+{"Timestamp":"2025-11-12T22:57:37.1708676+03:00","Level":"Debug","MessageTemplate":"AuthenticationScheme: {AuthenticationScheme} was successfully authenticated.","TraceId":"ad7bb7d44865b5e21cceed14088770fa","SpanId":"6501f3b628784934","Properties":{"AuthenticationScheme":"Test","EventId":{"Id":8,"Name":"AuthenticationSchemeAuthenticated"},"SourceContext":"OIS.Issuance.Tests.TestAuthHandler","RequestId":"0HNH24MT5F0NE","RequestPath":"/v1/issuances"}}
+2025-11-12 22:57:37.175 +03:00 [WRN] Ledger adapter running in MOCK mode
+{"Timestamp":"2025-11-12T22:57:37.1751653+03:00","Level":"Warning","MessageTemplate":"Ledger adapter running in MOCK mode","TraceId":"ad7bb7d44865b5e21cceed14088770fa","SpanId":"6501f3b628784934","Properties":{"SourceContext":"OIS.Issuance.Services.LedgerIssuanceAdapter","RequestId":"0HNH24MT5F0NE","RequestPath":"/v1/issuances"}}
+2025-11-12 22:57:37.175 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()
+   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11
+   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+{"Timestamp":"2025-11-12T22:57:37.1759715+03:00","Level":"Error","MessageTemplate":"An unhandled exception has occurred while executing the request.","TraceId":"ad7bb7d44865b5e21cceed14088770fa","SpanId":"6501f3b628784934","Exception":"System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.\n   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)\n   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()\n   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()\n   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()\n   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()\n   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11\n   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()\n--- End of stack trace from previous location ---\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","Properties":{"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware","RequestId":"0HNH24MT5F0NE","RequestPath":"/v1/issuances"}}
+[xUnit.net 00:00:02.86]       System.Text.Json.JsonException : 'S' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0.
+[xUnit.net 00:00:02.86]       ---- System.Text.Json.JsonReaderException : 'S' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 0.
+[xUnit.net 00:00:02.86]       Stack Trace:
+[xUnit.net 00:00:02.86]            at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack&amp; state, JsonReaderException ex)
+[xUnit.net 00:00:02.86]            at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+[xUnit.net 00:00:02.86]            at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.ContinueDeserialize(ReadBufferState&amp; bufferState, JsonReaderState&amp; jsonReaderState, ReadStack&amp; readStack, T&amp; value)
+[xUnit.net 00:00:02.86]            at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsync(Stream utf8Json, CancellationToken cancellationToken)
+[xUnit.net 00:00:02.86]            at System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsyncCore[T](HttpContent content, JsonSerializerOptions options, CancellationToken cancellationToken)
+[xUnit.net 00:00:02.86]         /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs(111,0): at OIS.Issuance.Tests.IssuanceApiTests.Publish_Then_Close_Should_Succeed()
+[xUnit.net 00:00:02.86]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.86]         ----- Inner Stack Trace -----
+[xUnit.net 00:00:02.86]            at System.Text.Json.ThrowHelper.ThrowJsonReaderException(Utf8JsonReader&amp; json, ExceptionResource resource, Byte nextByte, ReadOnlySpan`1 bytes)
+[xUnit.net 00:00:02.86]            at System.Text.Json.Utf8JsonReader.ConsumeValue(Byte marker)
+[xUnit.net 00:00:02.86]            at System.Text.Json.Utf8JsonReader.ReadFirstToken(Byte first)
+2025-11-12 22:57:37.191 +03:00 [DBG] AuthenticationScheme: Test was successfully authenticated.
+[xUnit.net 00:00:02.86]            at System.Text.Json.Utf8JsonReader.ReadSingleSegment()
+{"Timestamp":"2025-11-12T22:57:37.1915720+03:00","Level":"Debug","MessageTemplate":"AuthenticationScheme: {AuthenticationScheme} was successfully authenticated.","TraceId":"72698552894bc85e0de4e798426ec458","SpanId":"6b098f0a470da2e6","Properties":{"AuthenticationScheme":"Test","EventId":{"Id":8,"Name":"AuthenticationSchemeAuthenticated"},"SourceContext":"OIS.Issuance.Tests.TestAuthHandler","RequestId":"0HNH24MT5F0NF","RequestPath":"/v1/issuances"}}
+[xUnit.net 00:00:02.86]            at System.Text.Json.Utf8JsonReader.Read()
+[xUnit.net 00:00:02.86]            at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader&amp; reader, T&amp; value, JsonSerializerOptions options, ReadStack&amp; state)
+2025-11-12 22:57:37.192 +03:00 [WRN] Ledger adapter running in MOCK mode
+{"Timestamp":"2025-11-12T22:57:37.1922546+03:00","Level":"Warning","MessageTemplate":"Ledger adapter running in MOCK mode","TraceId":"72698552894bc85e0de4e798426ec458","SpanId":"6b098f0a470da2e6","Properties":{"SourceContext":"OIS.Issuance.Services.LedgerIssuanceAdapter","RequestId":"0HNH24MT5F0NF","RequestPath":"/v1/issuances"}}
+2025-11-12 22:57:37.192 +03:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()
+   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11
+   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()
+--- End of stack trace from previous location ---
+   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+{"Timestamp":"2025-11-12T22:57:37.1926553+03:00","Level":"Error","MessageTemplate":"An unhandled exception has occurred while executing the request.","TraceId":"72698552894bc85e0de4e798426ec458","SpanId":"6b098f0a470da2e6","Exception":"System.InvalidOperationException: Services for database providers 'Npgsql.EntityFrameworkCore.PostgreSQL', 'Microsoft.EntityFrameworkCore.InMemory' have been registered in the service provider. Only a single database provider can be registered in a service provider. If possible, ensure that Entity Framework is managing its service provider by removing the call to 'UseInternalServiceProvider'. Otherwise, consider conditionally registering the database provider, or maintaining one service provider per database provider.\n   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.Initialize(IServiceProvider scopedProvider, DbContextOptions contextOptions, DbContext context)\n   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()\n   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()\n   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()\n   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()\n   at OIS.Issuance.IssuanceDbContext.get_Issuances() in /mnt/w/development/ois-cfa/services/issuance/IssuanceDbContext.cs:line 11\n   at OIS.Issuance.Services.IssuanceService.CreateAsync(CreateIssuanceRequest request, CancellationToken ct) in /mnt/w/development/ois-cfa/services/issuance/Services/IssuanceService.cs:line 54\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_9&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 190\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)\n   at Microsoft.AspNetCore.Http.RequestDelegateFactory.&lt;&gt;c__DisplayClass101_2.&lt;&lt;HandleRequestBodyAndCompileRequestDelegateForJson&gt;b__2&gt;d.MoveNext()\n--- End of stack trace from previous location ---\n   at Program.&lt;&gt;c.&lt;&lt;&lt;Main&gt;$&gt;b__0_8&gt;d.MoveNext() in /mnt/w/development/ois-cfa/services/issuance/Program.cs:line 156\n--- End of stack trace from previous location ---\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)","Properties":{"EventId":{"Id":1,"Name":"UnhandledException"},"SourceContext":"Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware","RequestId":"0HNH24MT5F0NF","RequestPath":"/v1/issuances"}}
+[xUnit.net 00:00:02.87]       Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.InternalServerError {value: 500}.
+[xUnit.net 00:00:02.87]       Stack Trace:
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:02.87]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:02.87]         /mnt/w/development/ois-cfa/services/issuance/issuance.Tests/IssuanceApiTests.cs(93,0): at OIS.Issuance.Tests.IssuanceApiTests.Create_Invalid_Should_Return_400()
+[xUnit.net 00:00:02.87]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:02.88]   Finished:    issuance.Tests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="god" outcome="Error" timestamp="2025-11-12T22:57:37.1372406+03:00">
+        <Text>[xUnit.net 00:00:02.81]     OIS.Issuance.Tests.IssuanceApiTests.Create_Then_Get_Should_Return_Issuance [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="god" outcome="Error" timestamp="2025-11-12T22:57:37.1535939+03:00">
+        <Text>[xUnit.net 00:00:02.82]     OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="god" outcome="Error" timestamp="2025-11-12T22:57:37.1910300+03:00">
+        <Text>[xUnit.net 00:00:02.86]     OIS.Issuance.Tests.IssuanceApiTests.Publish_Then_Close_Should_Succeed [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="god" outcome="Error" timestamp="2025-11-12T22:57:37.1992893+03:00">
+        <Text>[xUnit.net 00:00:02.87]     OIS.Issuance.Tests.IssuanceApiTests.Create_Invalid_Should_Return_400 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

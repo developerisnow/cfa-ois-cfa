@@ -65,7 +65,11 @@ public class OrderPaidConsumer : BackgroundService
                         await HandleMessageAsync(cr.Message.Key, cr.Message.Value, stoppingToken);
                     });
 
-                    Metrics.EventsProcessed.Add(1, new("event", "order.paid"));
+                    var tagsOk = new System.Collections.Generic.KeyValuePair<string, object?>[]
+                    {
+                        new("event", "order.paid")
+                    };
+                    Metrics.EventsProcessed.Add(1, tagsOk);
                 }
                 catch (OperationCanceledException)
                 {
@@ -74,7 +78,11 @@ public class OrderPaidConsumer : BackgroundService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to process message at {TopicPartitionOffset}", cr?.TopicPartitionOffset);
-                    Metrics.EventsFailed.Add(1, new("event", "order.paid"));
+                    var tagsErr = new System.Collections.Generic.KeyValuePair<string, object?>[]
+                    {
+                        new("event", "order.paid")
+                    };
+                    Metrics.EventsFailed.Add(1, tagsErr);
                 }
             }
         }
@@ -113,4 +121,3 @@ public class OrderPaidConsumer : BackgroundService
         }
     }
 }
-
