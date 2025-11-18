@@ -1,0 +1,92 @@
+### packages/contracts/schemas/AuditEvent.json
+schema packages/contracts/schemas/AuditEvent.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/BrokerClient.json
+schema packages/contracts/schemas/BrokerClient.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/BrokerOrder.json
+schema packages/contracts/schemas/BrokerOrder.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/CFA.json
+schema packages/contracts/schemas/CFA.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/CommissionRow.json
+schema packages/contracts/schemas/CommissionRow.json is invalid
+error: unknown format "decimal" ignored in schema at path "#/properties/totalAmount"
+
+### packages/contracts/schemas/Complaint.json
+schema packages/contracts/schemas/Complaint.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/FeedItem.json
+schema packages/contracts/schemas/FeedItem.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/Holding.json
+schema packages/contracts/schemas/Holding.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/issuanceId"
+
+### packages/contracts/schemas/Issuance.json
+schema packages/contracts/schemas/Issuance.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/IssuerReportRow.json
+schema packages/contracts/schemas/IssuerReportRow.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/issuanceId"
+
+### packages/contracts/schemas/KycDecision.json
+schema packages/contracts/schemas/KycDecision.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/KycDocument.json
+schema packages/contracts/schemas/KycDocument.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/KycResult.json
+schema packages/contracts/schemas/KycResult.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/investorId"
+
+### packages/contracts/schemas/MarketIssuanceCard.json
+schema packages/contracts/schemas/MarketIssuanceCard.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/Order.json
+schema packages/contracts/schemas/Order.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/PayoutBatch.json
+schema packages/contracts/schemas/PayoutBatch.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/PayoutItem.json
+schema packages/contracts/schemas/PayoutItem.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/Payout.json
+schema packages/contracts/schemas/Payout.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/QualificationResult.json
+schema packages/contracts/schemas/QualificationResult.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/investorId"
+
+### packages/contracts/schemas/ReconciliationReport.json
+schema packages/contracts/schemas/ReconciliationReport.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/batchId"
+
+### packages/contracts/schemas/RegistryTx.json
+schema packages/contracts/schemas/RegistryTx.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/TxHistoryItem.json
+schema packages/contracts/schemas/TxHistoryItem.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/id"
+
+### packages/contracts/schemas/Wallet.json
+schema packages/contracts/schemas/Wallet.json is invalid
+error: unknown format "uuid" ignored in schema at path "#/properties/investorId"
+

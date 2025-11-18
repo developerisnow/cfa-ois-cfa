@@ -1,0 +1,40 @@
+
+AsyncAPI anonymously tracks command executions to improve the specification and tools, ensuring no sensitive data reaches our servers. It aids in comprehending how AsyncAPI tools are used and adopted, facilitating ongoing improvements to our specifications and tools.
+
+To disable tracking, please run the following command:
+  asyncapi config analytics --disable
+
+Once disabled, if you want to enable tracking back again then run:
+  asyncapi config analytics --enable
+
+
+File packages/contracts/asyncapi.yaml is valid but has (itself and/or referenced documents) governance issues.
+Warnings 
+packages/contracts/asyncapi.yaml
+   1:1   warning  asyncapi-id                  AsyncAPI document should have "id" field.
+   1:1   warning  asyncapi2-tags               AsyncAPI object should have non-empty "tags" array.
+   2:6   warning  asyncapi-info-contact        Info object should have "contact" object.            info
+   2:6   warning  asyncapi-info-license        Info object should have "license" object.            info
+ 129:18  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.OrderCreated
+ 136:19  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.OrderReserved
+ 143:15  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.OrderPaid
+ 149:23  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.IssuancePublished
+ 156:20  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.IssuanceClosed
+ 163:17  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.OrderPlaced
+ 170:20  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.OrderConfirmed
+ 177:20  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.PayoutExecuted
+ 184:21  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.PayoutScheduled
+ 191:17  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.AuditLogged
+ 198:23  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.TransferCompleted
+ 205:25  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.RegistryTransferred
+ 212:23  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.ComplianceFlagged
+ 219:16  warning  asyncapi2-message-messageId  Message should have a "messageId" field defined.     components.messages.KycUpdated
+
+✖ 18 problems (0 errors, 18 warnings, 0 infos, 0 hints)
+
+Information 
+packages/contracts/asyncapi.yaml
+ 1:11  information  asyncapi-latest-version  The latest version of AsyncAPi is not used. It is recommended update to the "3.0.0" version.  asyncapi
+
+✖ 1 problem (0 errors, 0 warnings, 1 info, 0 hints)
+

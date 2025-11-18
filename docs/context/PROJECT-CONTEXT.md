@@ -1,7 +1,7 @@
 # PROJECT-CONTEXT (OIS-CFA)
 
 Generated: 2025-01-27  
-Last Updated: 2025-11-17 (context extended for frontend/backoffice sprint)
+Last Updated: 2025-11-18 (NX-01 spec validation re-check on infra.defis.deploy)
 
 ## Executive Summary
 
@@ -40,10 +40,12 @@ Last Updated: 2025-11-17 (context extended for frontend/backoffice sprint)
 
 Опорные документы (`docs/architecture/*`): C4‑снимок, последовательности ЕСИА/OIDC, модель данных, дизайн сети Fabric, NFR targets.
 
+<!-- BEGIN: PROJECT-CONTEXT:API-EVENT-MATRIX -->
+
 ## API/Event Matrix
 
 Источники: `packages/contracts/openapi-*.yaml`, `packages/contracts/asyncapi.yaml`.  
-Валидация выполнена: 2025-01-27 (NX-01). Отчёты: `artifacts/spec-lint-openapi.txt`, `artifacts/spec-validate-asyncapi.txt`, `artifacts/spec-validate-jsonschema.txt`.
+Валидация выполнена: 2025-01-27 (NX-01, initial). Перепроверено на ветке `infra.defis.deploy`: 2025-11-18 (NX-01 v2). Отчёты: `artifacts/spec-lint-openapi.txt`, `artifacts/spec-validate-asyncapi.txt`, `artifacts/spec-validate-jsonschema.txt`.
 
 ### REST API Matrix (Gateway → Services)
 
@@ -106,17 +108,21 @@ Last Updated: 2025-11-17 (context extended for frontend/backoffice sprint)
 
 **SPEC DIFF**: Топики `ois.order.placed`, `ois.order.confirmed`, `ois.payout.scheduled`, `ois.transfer.completed` объявлены в AsyncAPI, но не имеют продьюсеров в коде. Требуется либо реализация, либо удаление из AsyncAPI.
 
+<!-- END: PROJECT-CONTEXT:API-EVENT-MATRIX -->
+
 ## Quality Summary (artifacts/*)
 
 Найдено:
 - Build/Frontend/Keycloak отчёты: `artifacts/*`. Диагностики и гайды по GitLab Runner/Keycloak.
-- **Спецификации валидация (NX-01, 2025-01-27)**:
+- **Спецификации валидация (NX-01, initial 2025-01-27; re-check 2025-11-18 на infra.defis.deploy)**:
   - `artifacts/spec-lint-openapi.txt` — Spectral lint: ✅ No errors (9 OpenAPI файлов)
   - `artifacts/spec-validate-asyncapi.txt` — AsyncAPI CLI: ✅ Valid
   - `artifacts/spec-validate-jsonschema.txt` — AJV: ⚠️ Предупреждения о форматах `uuid`/`decimal` (не критично)
 
 Не найдено/Требуется:
 - Unit/Integration/E2E отчёты (JUnit/Allure), coverage отчёты.
+
+<!-- BEGIN: PROJECT-CONTEXT:API-EVENT-GAPS -->
 
 ## Gap List (spec/code/tests)
 
@@ -165,6 +171,8 @@ Last Updated: 2025-11-17 (context extended for frontend/backoffice sprint)
 
 - ⚠️ Нет артефактов нагрузочного теста (k6) и e2e сценариев выпуска/покупки/погашения.
 - ⚠️ Не видно отчетов покрытия; нет Pact/контрактных тестов между gateway и сервисами.
+
+<!-- END: PROJECT-CONTEXT:API-EVENT-GAPS -->
 
 ## References
 
