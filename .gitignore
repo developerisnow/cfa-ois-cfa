@@ -83,17 +83,17 @@ secrets/
 packages/sdks/**/node_modules/
 
 .cursor/
-tasks/
-artefact/
-package-lock.json
-/package-lock.json
-*package-lock.json
-apps/backoffice/package-lock.json
-/apps/backoffice/package-lock.json
+# tasks/
+# artefact/
+# package-lock.json
+# /package-lock.json
+# *package-lock.json
+# apps/backoffice/package-lock.json
+# /apps/backoffice/package-lock.json
 kniga_cfa.pdf
-**/app/*
-ARCHIVE/
-artifacts/
+# **/app/*
+# ARCHIVE/
+# artifacts/
 .tools/
 
 # AI
