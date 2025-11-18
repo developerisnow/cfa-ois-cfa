@@ -1,0 +1,562 @@
+{
+    "meta": {
+      "repo": "repositories/customer-gitlab/ois-cfa",
+      "branch": "infra.defis.deploy",
+      "generated_at": "2025-11-18T09:05:00Z",
+      "summary": {
+        "domains": ["issuance", "registry", "settlement", "compliance", "identity"],
+        "tracks": ["spec-contracts", "backend-services", "api-gateway-frontends", "observability-security", "ci-infra"],
+        "trunk_branch_leaf_rules": {
+          "trunk": ["docs/context/**", "docs/deploy/**", "packages/contracts/**", "packages/domain/**"],
+          "branch": ["services/**", "apps/**", "ops/**", "ops/gitops/**"],
+          "leaf": ["tests/**", "ops/scripts/**", "tasks/NX-*.md", "memory-bank/**"]
+        },
+        "git_branches": {
+          "trunk": ["main", "develop (planned from infra.defis.deploy)"],
+          "branch": ["infra", "deploy", "infra.defis.deploy", "release/*"],
+          "leaf": ["feature/NX-*"]
+        }
+      }
+    },
+    "tree": {
+      "path": ".",
+      "type": "dir",
+      "children": [
+        {
+          "path": "apps",
+          "type": "dir",
+          "level": "branch",
+          "size_class": "L",
+          "tags": ["frontends", "edge"],
+          "children": [
+            {
+              "path": "apps/api-gateway",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["gateway", "dotnet", "yarp"]
+            },
+            {
+              "path": "apps/portal-issuer",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["frontend", "issuer", "nextjs"]
+            },
+            {
+              "path": "apps/portal-investor",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["frontend", "investor", "nextjs"]
+            },
+            {
+              "path": "apps/backoffice",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["frontend", "backoffice", "nextjs"]
+            },
+            {
+              "path": "apps/broker-portal",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["frontend", "broker"]
+            },
+            {
+              "path": "apps/shared-ui",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["frontend", "shared-ui", "design-system"]
+            }
+          ]
+        },
+        {
+          "path": "services",
+          "type": "dir",
+          "level": "branch",
+          "size_class": "L",
+          "tags": ["backend", "services"],
+          "children": [
+            {
+              "path": "services/issuance",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["service", "issuance", "events-outbox"]
+            },
+            {
+              "path": "services/registry",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["service", "registry", "orders", "wallets"]
+            },
+            {
+              "path": "services/settlement",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["service", "settlement", "payouts"]
+            },
+            {
+              "path": "services/compliance",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["service", "compliance", "kyc", "audit"]
+            },
+            {
+              "path": "services/identity",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["service", "identity", "oidc"]
+            },
+            {
+              "path": "services/fabric-gateway",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["service", "fabric", "dlt-adapter"]
+            },
+            {
+              "path": "services/integrations",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["integrations"],
+              "children": [
+                {
+                  "path": "services/integrations/bank-nominal",
+                  "type": "dir",
+                  "level": "branch",
+                  "size_class": "S",
+                  "tags": ["integration", "bank"]
+                },
+                {
+                  "path": "services/integrations/esia-adapter",
+                  "type": "dir",
+                  "level": "branch",
+                  "size_class": "S",
+                  "tags": ["integration", "esia"]
+                },
+                {
+                  "path": "services/integrations/edo-connector",
+                  "type": "dir",
+                  "level": "branch",
+                  "size_class": "S",
+                  "tags": ["integration", "edo"]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "path": "packages",
+          "type": "dir",
+          "level": "trunk",
+          "size_class": "L",
+          "tags": ["packages"],
+          "children": [
+            {
+              "path": "packages/contracts",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "M",
+              "tags": ["contracts", "openapi", "asyncapi", "schemas"]
+            },
+            {
+              "path": "packages/domain",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "M",
+              "tags": ["domain", "value-objects"]
+            },
+            {
+              "path": "packages/sdks/typescript-gateway",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["sdk", "typescript", "gateway-client"]
+            },
+            {
+              "path": "packages/sdks/ts",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["sdk", "typescript", "api-client"]
+            },
+            {
+              "path": "packages/types/ts",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["types", "json-schema-generated"]
+            },
+            {
+              "path": "packages/dotnet-clients/gateway",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["sdk", "dotnet", "gateway-client"]
+            }
+          ]
+        },
+        {
+          "path": "docs",
+          "type": "dir",
+          "level": "trunk",
+          "size_class": "L",
+          "tags": ["docs"],
+          "children": [
+            {
+              "path": "docs/context",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "M",
+              "tags": ["context", "wbs", "rules"]
+            },
+            {
+              "path": "docs/architecture",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "M",
+              "tags": ["architecture", "c4", "api-specs"]
+            },
+            {
+              "path": "docs/frontend",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "S",
+              "tags": ["frontend-context"]
+            },
+            {
+              "path": "docs/deploy",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "M",
+              "tags": ["deploy", "uk1", "runbooks"]
+            },
+            {
+              "path": "docs/dlt",
+              "type": "dir",
+              "level": "trunk",
+              "size_class": "S",
+              "tags": ["fabric", "k8s"]
+            }
+          ]
+        },
+        {
+          "path": "ops",
+          "type": "dir",
+          "level": "branch",
+          "size_class": "L",
+          "tags": ["ops", "infra", "gitops"],
+          "children": [
+            {
+              "path": "ops/infra",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["k8s", "helm", "timeweb", "otel", "prometheus"]
+            },
+            {
+              "path": "ops/gitops",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["gitops", "argocd", "uk1"]
+            },
+            {
+              "path": "ops/scripts",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["scripts", "healthchecks", "restore", "validate-specs"]
+            },
+            {
+              "path": "ops/fabric",
+              "type": "dir",
+              "level": "branch",
+              "size_class": "M",
+              "tags": ["fabric", "chaincode", "helm"]
+            }
+          ]
+        },
+        {
+          "path": "tests",
+          "type": "dir",
+          "level": "leaf",
+          "size_class": "L",
+          "tags": ["tests"],
+          "children": [
+            {
+              "path": "tests/issuance.Tests",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["backend-tests", "issuance"]
+            },
+            {
+              "path": "tests/registry.Tests",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["backend-tests", "registry"]
+            },
+            {
+              "path": "tests/settlement.Tests",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["backend-tests", "settlement"]
+            },
+            {
+              "path": "tests/compliance.Tests",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["backend-tests", "compliance"]
+            },
+            {
+              "path": "tests/contracts",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["pact", "contracts"]
+            },
+            {
+              "path": "tests/e2e",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["e2e", "smoke"]
+            },
+            {
+              "path": "tests/e2e-playwright",
+              "type": "dir",
+              "level": "leaf",
+              "size_class": "S",
+              "tags": ["playwright", "portals-journeys"]
+            }
+          ]
+        },
+        {
+          "path": "tasks",
+          "type": "dir",
+          "level": "leaf",
+          "size_class": "S",
+          "tags": ["nx-tasks", "agents"]
+        },
+        {
+          "path": "memory-bank",
+          "type": "dir",
+          "level": "leaf",
+          "size_class": "S",
+          "tags": ["decision-log", "reports"]
+        },
+        {
+          "path": "AGENTS.md",
+          "type": "file",
+          "level": "trunk",
+          "size_class": "S",
+          "tags": ["agents-rules"]
+        },
+        {
+          "path": "project.manifest.json",
+          "type": "file",
+          "level": "trunk",
+          "size_class": "S",
+          "tags": ["manifest", "monorepo-index"]
+        }
+      ]
+    },
+    "logical": {
+      "domains": {
+        "issuance": {
+          "services": ["services/issuance"],
+          "apps": ["apps/portal-issuer"],
+          "contracts": ["packages/contracts/openapi-issuance.yaml", "packages/contracts/schemas/Issuance.json"],
+          "tests": ["tests/issuance.Tests", "tests/e2e-playwright/issuer-journey.spec.ts"]
+        },
+        "registry": {
+          "services": ["services/registry"],
+          "apps": ["apps/portal-investor"],
+          "contracts": ["packages/contracts/openapi-registry.yaml", "packages/contracts/schemas/Order.json"],
+          "tests": ["tests/registry.Tests", "tests/contracts/pact-consumer", "tests/e2e-playwright/investor-journey.spec.ts"]
+        },
+        "settlement": {
+          "services": ["services/settlement"],
+          "apps": ["apps/backoffice"],
+          "contracts": ["packages/contracts/openapi-settlement.yaml", "packages/contracts/schemas/Payout.json"],
+          "tests": ["tests/settlement.Tests"]
+        },
+        "compliance": {
+          "services": ["services/compliance"],
+          "apps": ["apps/backoffice"],
+          "contracts": ["packages/contracts/openapi-compliance.yaml", "packages/contracts/schemas/AuditEvent.json"],
+          "tests": ["tests/compliance.Tests", "tests/e2e-playwright/backoffice-journey.spec.ts"]
+        },
+        "identity": {
+          "services": ["services/identity"],
+          "apps": ["apps/portal-issuer", "apps/portal-investor", "apps/backoffice"],
+          "contracts": ["packages/contracts/openapi-identity.yaml"],
+          "tests": []
+        }
+      },
+      "frontends": [
+        {
+          "name": "portal-issuer",
+          "root": "apps/portal-issuer",
+          "guards": ["role:issuer"],
+          "uses_sdk": "@ois/api-client"
+        },
+        {
+          "name": "portal-investor",
+          "root": "apps/portal-investor",
+          "guards": ["role:investor"],
+          "uses_sdk": "@ois/api-client"
+        },
+        {
+          "name": "backoffice",
+          "root": "apps/backoffice",
+          "guards": ["role:backoffice", "role:admin"],
+          "uses_sdk": "@ois/api-client"
+        }
+      ],
+      "ops": [
+        {
+          "name": "uk1",
+          "root": "docs/deploy/20251113-cloudflare-ingress.md",
+          "level": "trunk"
+        },
+        {
+          "name": "timeweb-k8s",
+          "root": "ops/infra/timeweb",
+          "level": "branch"
+        },
+        {
+          "name": "fabric-network",
+          "root": "ops/fabric",
+          "level": "branch"
+        }
+      ],
+      "tests": [
+        {
+          "name": "backend-unit",
+          "roots": [
+            "tests/issuance.Tests",
+            "tests/registry.Tests",
+            "tests/settlement.Tests",
+            "tests/compliance.Tests"
+          ]
+        },
+        {
+          "name": "e2e-portals",
+          "roots": [
+            "tests/e2e-playwright"
+          ]
+        }
+      ],
+      "nx_index": {
+        "NX-01": {
+          "title": "Spec validation + API/Event Matrix",
+          "task_doc": "tasks/NX-01-spec-validate-and-matrix.md",
+          "level": "branch",
+          "domains": ["cross-cutting"],
+          "nodes": [
+            "packages/contracts",
+            "docs/context/WBS-OIS.md",
+            "docs/architecture/api-event-matrix.md"
+          ]
+        },
+        "NX-02": {
+          "title": "API Gateway routing + health/metrics",
+          "task_doc": "tasks/NX-02-gateway-routing-and-health.md",
+          "level": "branch",
+          "domains": ["cross-cutting"],
+          "nodes": [
+            "apps/api-gateway",
+            "services/*",
+            "docs/ops/gateway-routing.md"
+          ]
+        },
+        "NX-03": {
+          "title": "Issuance endpoints alignment + tests",
+          "task_doc": "tasks/NX-03-issuance-endpoints-coverage.md",
+          "level": "branch",
+          "domains": ["issuance"],
+          "nodes": [
+            "services/issuance",
+            "tests/issuance.Tests",
+            "packages/contracts/openapi-issuance.yaml"
+          ]
+        },
+        "NX-04": {
+          "title": "Registry order flow (create→reserve→paid) + events",
+          "task_doc": "tasks/NX-04-registry-orders-flow.md",
+          "level": "branch",
+          "domains": ["registry"],
+          "nodes": [
+            "services/registry",
+            "tests/registry.Tests",
+            "packages/contracts/openapi-registry.yaml",
+            "packages/contracts/asyncapi.yaml"
+          ]
+        }
+      }
+    },
+    "anchors": [
+      {
+        "path": "docs/context/PROJECT-CONTEXT.md",
+        "role": "project-context",
+        "level": "trunk",
+        "tags": ["anchor", "context"]
+      },
+      {
+        "path": "docs/context/WBS-OIS.md",
+        "role": "wbs",
+        "level": "trunk",
+        "tags": ["anchor", "wbs", "nx"]
+      },
+      {
+        "path": "docs/frontend/context-map.md",
+        "role": "frontend-context",
+        "level": "branch",
+        "tags": ["anchor", "frontend", "contracts"]
+      },
+      {
+        "path": "AGENTS.md",
+        "role": "agents-rules",
+        "level": "trunk",
+        "tags": ["anchor", "agents", "rules"]
+      },
+      {
+        "path": "docs/deploy/20251113-cloudflare-ingress.md",
+        "role": "runbook:uk1",
+        "level": "trunk",
+        "tags": ["anchor", "ops", "uk1"]
+      },
+      {
+        "path": "docs/dlt/k8s-deploy.md",
+        "role": "runbook:fabric",
+        "level": "trunk",
+        "tags": ["anchor", "dlt", "k8s"]
+      },
+      {
+        "path": "tasks/NX-03-issuance-endpoints-coverage.md",
+        "role": "nx-task",
+        "level": "branch",
+        "tags": ["nx", "issuance"]
+      },
+      {
+        "path": "tasks/NX-04-registry-orders-flow.md",
+        "role": "nx-task",
+        "level": "branch",
+        "tags": ["nx", "registry"]
+      }
+    ]
+  }
