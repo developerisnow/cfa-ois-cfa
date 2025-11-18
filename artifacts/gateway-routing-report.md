@@ -1,6 +1,7 @@
 # API Gateway Routing Report
 
 **Generated:** 2025-01-27  
+**Re-checked:** 2025-11-18 (infra.defis.deploy, NX-02 v2)  
 **Task:** NX-02 Gateway Routing and Health
 
 ## Executive Summary
@@ -93,10 +94,10 @@ API Gateway использует **YARP (Yet Another Reverse Proxy)** для м�
 ## Verification Commands
 
 ```bash
-# Check all services health
+# Check all services health (requires docker-compose stack running)
 make check-health
 
-# Check individual service
+# Check individual service (example)
 curl -sf http://localhost:5000/health && echo "Gateway: OK" || echo "Gateway: FAILED"
 
 # Check metrics
@@ -115,4 +116,3 @@ curl -X POST http://localhost:5000/issuances \
 - Gateway Code: `apps/api-gateway/Program.cs`
 - OpenAPI Spec: `packages/contracts/openapi-gateway.yaml`
 - Service Health: `services/*/Program.cs` (MapHealthChecks)
-

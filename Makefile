@@ -126,6 +126,27 @@ health: ## Check health of all services
 	@curl -s http://localhost:5001/health | jq . || echo "Identity: not ready"
 	@curl -s http://localhost:5002/health | jq . || echo "ESIA: not ready"
 
+check-health: ## Check /health for gateway and core services
+	@echo "Checking /health endpoints for gateway and services..."
+	@for svc in \
+		"gateway:5000" \
+		"identity:5001" \
+		"esia:5002" \
+		"issuance:5003" \
+		"registry:5004" \
+		"settlement:5005" \
+		"compliance:5006" \
+		"bank-nominal:5007"; do \
+		name=$${svc%%:*}; \
+		port=$${svc##*:}; \
+		echo "Checking $$name on http://localhost:$$port/health"; \
+		if curl -sSf http://localhost:$$port/health >/dev/null 2>&1; then \
+			echo "  $$name: OK"; \
+		else \
+			echo "  $$name: FAILED"; \
+		fi; \
+	done
+
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	cd backend && dotnet clean
@@ -537,4 +558,3 @@ k8s-healthcheck-debug: ## Run health check from debug toolbox pod
 		 kubectl exec -n tools debug-toolbox -- /scripts/k8s-healthcheck.sh)
 
 .DEFAULT_GOAL := help
-
