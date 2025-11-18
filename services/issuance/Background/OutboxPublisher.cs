@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OIS.Contracts.Events;
@@ -78,4 +79,3 @@ public class OutboxPublisher : BackgroundService
             await publisher.Publish(audit, x => x.MessageId = msg.Id, ct);
     }
 }
-

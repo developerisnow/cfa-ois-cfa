@@ -1,0 +1,58 @@
+# Issuance Service Tests Report
+
+**Generated:** 2025-11-18  
+**Task:** NX-03 Issuance Endpoints Coverage (re-check on infra.defis.deploy, .NET 9)
+
+## Commands
+
+```bash
+# Issuance API + service tests (net9.0)
+$HOME/.dotnet/dotnet test tests/issuance.Tests/issuance.Tests.csproj -v minimal
+```
+
+## Summary
+
+- Test project: `tests/issuance.Tests/issuance.Tests.csproj` (TargetFramework: net9.0).
+- Service project: `services/issuance/issuance.csproj` (TargetFramework: net9.0).
+- Domain project: `packages/domain/domain.csproj` (TargetFramework: net9.0).
+
+### Results
+
+- ✅ `OIS.Issuance.Tests.IssuanceServiceTests.CreateAsync_ShouldCreateDraftIssuance`
+- ⚠️ `OIS.Issuance.Tests.IssuanceApiTests.Publish_NonExistent_Should_Return_404`
+  - **Expected:** `HttpStatusCode.NotFound`
+  - **Actual:** `HttpStatusCode.InternalServerError`
+  - **Location:** `tests/issuance.Tests/IssuanceApiTests.cs:line 42`
+
+### Notes
+
+- Тесты собирались и запускались на локально установленном SDK `.NET 9.0.307` с использованием пакетов:
+  - `Microsoft.NET.Test.Sdk` 17.11.0
+  - `xunit` 2.9.0 (runner 2.8.2)
+  - `Microsoft.AspNetCore.Mvc.Testing` 9.0.0
+- Для успешной сборки тестов внесены минимальные правки:
+  - Исправлена `ProjectReference` в `services/issuance/issuance.Tests.csproj` с `..\issuance.csproj` на `issuance.csproj`.
+  - Добавлены `using Microsoft.Extensions.Logging`, `using Microsoft.Extensions.DependencyInjection`, `using Microsoft.Extensions.Configuration`, `using Microsoft.AspNetCore.Builder` в сервисный код, чтобы корректно подтянуть ASP.NET Core extension methods при сборке под .NET 9.
+  - Добавлен явный `PackageReference` на `Microsoft.TestPlatform.TestHost` 17.11.0.
+
+## Interpretation for NX-03
+
+- **Endpoints ↔ OpenAPI:** покрытие из `artifacts/issuance-endpoints-coverage-report.md` подтверждено сборкой сервиса `issuance` под .NET 9; compile-time ошибок по DTO/маршрутам нет.
+- **Events ↔ AsyncAPI:** события `ois.issuance.published` / `ois.issuance.closed` продолжают иметь SPEC DIFF по полю `dltTxHash` (см. coverage-report) — это зафиксировано как архитектурный gap, а не runtime-ошибка.
+- **Tests:** на текущем срезе ветки:
+  - Unit-тест `CreateAsync_ShouldCreateDraftIssuance` зелёный.
+  - API-тест `Publish_NonExistent_Should_Return_404` по-прежнему выявляет поведение `500` вместо ожидаемого `404` при попытке publish несуществующего выпуска.
+
+Рекомендация для дальнейшей работы по NX-03:
+
+- Локально (на eywa1) повторно прогнать:
+
+```bash
+cd repositories/customer-gitlab/wt__ois-cfa__NX01
+$HOME/.dotnet/dotnet test tests/issuance.Tests/issuance.Tests.csproj -v minimal
+```
+
+- После подтверждения поведения на целевой среде:
+  - либо скорректировать обработку `Publish_NonExistent` (дополнительный guard/логирование вокруг `GetByIdAsync` и `PublishAsync`), 
+  - либо, если 500 связан с внешними зависимостями тестового хоста, зафиксировать это как Known Issue в отдельном SPEC DIFF / tech debt записи.
+

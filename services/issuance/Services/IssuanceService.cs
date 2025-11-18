@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OIS.Domain;
 using OIS.Issuance.DTOs;
 using System.Text.Json;
@@ -215,4 +216,3 @@ public class IssuanceService : IIssuanceService
         };
     }
 }
-
