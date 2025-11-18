@@ -21,6 +21,13 @@ public record OrderCreated(
     decimal amount,
     DateTime createdAt);
 
+public record OrderPlaced(
+    Guid orderId,
+    Guid investorId,
+    Guid issuanceId,
+    decimal amount,
+    DateTime placedAt);
+
 public record OrderReserved(
     Guid orderId,
     Guid investorId,
@@ -36,6 +43,12 @@ public record OrderPaid(
     decimal amount,
     DateTime paidAt,
     string txHash);
+
+public record OrderConfirmed(
+    Guid orderId,
+    DateTime confirmedAt,
+    string dltTxHash,
+    Guid? walletId);
 
 public record RegistryTransferred(
     Guid orderId,
@@ -88,4 +101,3 @@ public record AuditLogged(
     string? userAgent,
     DateTime timestamp,
     string? result);
-

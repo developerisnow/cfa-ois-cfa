@@ -49,6 +49,15 @@ public class OrderFlowTests
 
         r1.Id.Should().Be(r2.Id);
         r1.Status.Should().Be("reserved");
+
+        var topics = await _db.OutboxMessages
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => m.Topic)
+            .ToListAsync();
+
+        topics.Should().Contain("ois.order.created");
+        topics.Should().Contain("ois.order.placed");
+        topics.Should().Contain("ois.order.reserved");
     }
 
     [Fact]
@@ -67,6 +76,15 @@ public class OrderFlowTests
         var tx = await _db.Transactions.FirstOrDefaultAsync(t => t.Id == order.Id);
         tx.Should().NotBeNull();
         tx!.Status.Should().Be("confirmed");
+
+        var topics = await _db.OutboxMessages
+            .Where(m => m.Topic.StartsWith("ois.order.") || m.Topic == "ois.registry.transferred")
+            .Select(m => m.Topic)
+            .ToListAsync();
+
+        topics.Should().Contain("ois.order.paid");
+        topics.Should().Contain("ois.registry.transferred");
+        topics.Should().Contain("ois.order.confirmed");
     }
 
     [Fact]

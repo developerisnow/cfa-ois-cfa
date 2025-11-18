@@ -88,6 +88,16 @@ public class RegistryService : IRegistryService
             amount = request.Amount,
             createdAt = order.CreatedAt
         }, ct);
+
+        // Emit order.placed (business-level event: order accepted before funds reservation)
+        await _outbox.AddAsync("ois.order.placed", new
+        {
+            orderId = order.Id,
+            issuanceId = request.IssuanceId,
+            investorId = request.InvestorId,
+            amount = request.Amount,
+            placedAt = order.CreatedAt
+        }, ct);
         await _db.SaveChangesAsync(ct);
 
         // (b) Reserve funds via bank-nominal (idempotent)
@@ -275,6 +285,14 @@ public class RegistryService : IRegistryService
             txHash = txHash
         }, ct);
 
+        await _outbox.AddAsync("ois.order.confirmed", new
+        {
+            orderId = order.Id,
+            confirmedAt = order.ConfirmedAt,
+            dltTxHash = txHash,
+            walletId = wallet.Id
+        }, ct);
+
         await _outbox.AddAsync("ois.registry.transferred", new
         {
             orderId = order.Id,
@@ -410,4 +428,3 @@ public class OutboxService : IOutboxService
         _db.OutboxMessages.Add(message);
     }
 }
-

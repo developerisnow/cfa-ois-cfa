@@ -68,13 +68,21 @@ public class OutboxPublisher : BackgroundService
                 if (System.Text.Json.JsonSerializer.Deserialize<OrderCreated>(msg.Payload) is { } oc)
                 { await publisher.Publish(oc, x => x.MessageId = msg.Id, ct); return; }
                 break;
+            case "ois.order.placed":
+                if (System.Text.Json.JsonSerializer.Deserialize<OrderPlaced>(msg.Payload) is { } placed)
+                { await publisher.Publish(placed, x => x.MessageId = msg.Id, ct); return; }
+                break;
             case "ois.order.reserved":
                 if (System.Text.Json.JsonSerializer.Deserialize<OrderReserved>(msg.Payload) is { } or)
                 { await publisher.Publish(or, x => x.MessageId = msg.Id, ct); return; }
                 break;
             case "ois.order.paid":
-                if (System.Text.Json.JsonSerializer.Deserialize<OrderPaid>(msg.Payload) is { } op)
-                { await publisher.Publish(op, x => x.MessageId = msg.Id, ct); return; }
+                if (System.Text.Json.JsonSerializer.Deserialize<OrderPaid>(msg.Payload) is { } paid)
+                { await publisher.Publish(paid, x => x.MessageId = msg.Id, ct); return; }
+                break;
+            case "ois.order.confirmed":
+                if (System.Text.Json.JsonSerializer.Deserialize<OrderConfirmed>(msg.Payload) is { } ocf)
+                { await publisher.Publish(ocf, x => x.MessageId = msg.Id, ct); return; }
                 break;
             case "ois.registry.transferred":
                 if (System.Text.Json.JsonSerializer.Deserialize<RegistryTransferred>(msg.Payload) is { } rt)
@@ -87,4 +95,3 @@ public class OutboxPublisher : BackgroundService
             await publisher.Publish(audit, x => x.MessageId = msg.Id, ct);
     }
 }
-
