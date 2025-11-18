@@ -23,7 +23,7 @@ tags: [compose, env]
   - `docker-compose.apps.yml` (опционально: фронтенды Next.js)
 
 Переменные окружения (`.env`)
-- [ ] Открыть `repositories/customer-gitlab/ois-cfa/.env` и проверить:
+- [ ] Открыть `./ois-cfa/.env` и проверить:
   - [ ] Порты сервисов: `GATEWAY_HOST_PORT=55000`, `IDENTITY_HOST_PORT=55001`, `ISSUANCE_HOST_PORT=55005`, `REGISTRY_HOST_PORT=55006`, `SETTLEMENT_HOST_PORT=55007`, `COMPLIANCE_HOST_PORT=55008`
   - [ ] Инфра: `POSTGRES_HOST_PORT=55432`, `KAFKA_HOST_PORT=59092`, `ZOOKEEPER_HOST_PORT=52181`, `KEYCLOAK_HOST_PORT=58080`, `MINIO_HOST_PORT=59000`, `MINIO_CONSOLE_PORT=59001`
   - [ ] Соединения: `SERVICE_DB_CONN=Host=postgres;Port=5432;Database=ois;Username=ois;Password=ois_dev_password`
@@ -33,6 +33,6 @@ tags: [compose, env]
 Git/синхронизация кода на VPS
 - [ ] Если нужно обновить код из локали: 
   ```bash
-  rsync -az --delete --exclude '.git' --exclude 'node_modules' ./repositories/customer-gitlab/ois-cfa/ cfa1:/opt/ois-cfa/
+  rsync -az --delete --exclude '.git' --exclude 'node_modules' ././ois-cfa/ cfa1:/opt/ois-cfa/
   ```
 

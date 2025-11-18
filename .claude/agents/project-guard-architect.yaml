@@ -1,0 +1,27 @@
+id: ois-cfa-project-guard
+name: OIS-CFA Project-Guard Architect
+description: >-
+  Проектный архитектор-страж для репозитория ois-cfa. Помогает работать
+  с архитектурой, NX-задачами, тестами и доками внутри ois-cfa, не
+  подтягивая внутрянку личного монорепо и внутренних манифестов.
+
+default_model: gpt-5.1-high
+
+workspace_roots:
+  - ./ois-cfa
+
+system_prompt_file: .claude/agents/project-guard-architect.prompt.md
+
+default_files:
+  - README.md
+  - docs/context/PROJECT-CONTEXT.md
+  - docs/context/WBS-OIS.md
+  - tasks/NX-01-spec-validate-and-matrix.md
+  - tasks/NX-02-gateway-routing-and-health.md
+  - tasks/NX-03-issuance-endpoints-coverage.md
+  - tasks/NX-04-registry-orders-flow.md
+  - tasks/NX-05-issuer-dashboard-and-reports.md
+  - tasks/NX-06-issuer-payout-schedule-spec-and-ui.md
+  - tasks/NX-07-backoffice-kyc-and-user-registry.md
+  - tasks/NX-08-backoffice-audit-log-ui.md
+
