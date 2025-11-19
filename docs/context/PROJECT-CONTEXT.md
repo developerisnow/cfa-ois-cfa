@@ -93,11 +93,11 @@ Last Updated: 2025-11-18 (NX-01 spec validation re-check on infra.defis.deploy)
 |-------|----------|---------------------|-----------|--------|------|
 | `ois.issuance.published` | ✅ | Issuance (`IssuanceService.cs:121`) | — | ✅ | Outbox: `services/issuance/Background/OutboxPublisher.cs:67` |
 | `ois.issuance.closed` | ✅ | Issuance (`IssuanceService.cs:177`) | — | ✅ | Outbox: `services/issuance/Background/OutboxPublisher.cs:71` |
-| `ois.order.placed` | ✅ | — | — | ⚠️ | В AsyncAPI, но нет в коде (только в тестах: `registry.Tests/OutboxPublishTests.cs:37`) |
+| `ois.order.placed` | ✅ | Registry (`RegistryService.PlaceOrderAsync`) | — | ✅ | Outbox: `services/registry/Services/RegistryService.cs` → `OutboxService` |
 | `ois.order.created` | ✅ | Registry (`RegistryService.cs:83`) | — | ✅ | Outbox: `services/registry/Background/OutboxPublisher.cs:67` |
 | `ois.order.reserved` | ✅ | Registry (`RegistryService.cs:112`) | — | ✅ | Outbox: `services/registry/Background/OutboxPublisher.cs:71` |
-| `ois.order.paid` | ✅ | Registry (`RegistryService.cs:268`) | Settlement (`OrderPaidEventConsumer.cs`, `OrderPaidConsumer.cs`) | ✅ | MassTransit: `services/settlement/Program.cs:69` |
-| `ois.order.confirmed` | ✅ | — | — | ⚠️ | В AsyncAPI, но нет продьюсера в коде |
+| `ois.order.paid` | ✅ | Registry (`RegistryService.MarkPaidAsync`) | Settlement (`OrderPaidEventConsumer.cs`, `OrderPaidConsumer.cs`) | ✅ | MassTransit: `services/settlement/Program.cs:69` |
+| `ois.order.confirmed` | ✅ | Registry (`RegistryService.MarkPaidAsync`) | — | ✅ | Outbox: `services/registry/Background/OutboxPublisher.cs` |
 | `ois.registry.transferred` | ✅ | Registry (`RegistryService.cs:278`) | — | ✅ | Outbox: `services/registry/Background/OutboxPublisher.cs:79` |
 | `ois.payout.executed` | ✅ | Settlement (`SettlementService.cs:175`) | — | ✅ | Outbox: `services/settlement/Background/OutboxPublisher.cs:85` |
 | `ois.payout.scheduled` | ✅ | — | — | ⚠️ | В AsyncAPI, но нет продьюсера в коде |
@@ -106,7 +106,7 @@ Last Updated: 2025-11-18 (NX-01 spec validation re-check on infra.defis.deploy)
 | `ois.compliance.flagged` | ✅ | Compliance (`ComplianceService.cs:150,226`) | — | ✅ | Outbox: `services/compliance/Background/OutboxPublisher.cs:67` |
 | `ois.kyc.updated` | ✅ | Compliance (`ComplianceService.cs:55`) | — | ✅ | Outbox: `services/compliance/Background/OutboxPublisher.cs:71` |
 
-**SPEC DIFF**: Топики `ois.order.placed`, `ois.order.confirmed`, `ois.payout.scheduled`, `ois.transfer.completed` объявлены в AsyncAPI, но не имеют продьюсеров в коде. Требуется либо реализация, либо удаление из AsyncAPI.
+**SPEC DIFF**: Топики `ois.payout.scheduled`, `ois.transfer.completed` объявлены в AsyncAPI, но не имеют продьюсеров в коде. Требуется либо реализация, либо удаление из AsyncAPI.
 
 <!-- END: PROJECT-CONTEXT:API-EVENT-MATRIX -->
 
@@ -135,7 +135,7 @@ Last Updated: 2025-11-18 (NX-01 spec validation re-check on infra.defis.deploy)
 
 **Осталось:**
 - ⚠️ JSON Schemas: форматы `uuid` и `decimal` не поддерживаются AJV по умолчанию. Рекомендация: использовать `pattern` для UUID или добавить кастомные форматы.
-- ⚠️ AsyncAPI: топики `ois.order.placed`, `ois.order.confirmed`, `ois.payout.scheduled`, `ois.transfer.completed` объявлены, но нет продьюсеров в коде.
+- ⚠️ AsyncAPI: топики `ois.payout.scheduled`, `ois.transfer.completed` объявлены, но нет продьюсеров в коде.
 
 ### Код
 
@@ -144,8 +144,8 @@ Last Updated: 2025-11-18 (NX-01 spec validation re-check on infra.defis.deploy)
 - ✅ Основные endpoints соответствуют спецификациям (см. API Matrix выше).
 
 **События:**
-- ⚠️ Топики в AsyncAPI без продьюсеров: `ois.order.placed` (только в тестах), `ois.order.confirmed`, `ois.payout.scheduled`, `ois.transfer.completed`.
-- ✅ Реализованные топики соответствуют AsyncAPI схемам.
+- ⚠️ Топики в AsyncAPI без продьюсеров: `ois.payout.scheduled`, `ois.transfer.completed`.
+- ✅ Реализованные топики (`ois.order.*`, `ois.issuance.*`, `ois.payout.executed`, `ois.registry.transferred`, `ois.audit.logged`, `ois.compliance.flagged`, `ois.kyc.updated`) соответствуют AsyncAPI схемам.
 
 **Сервисы:**
 - ⚠️ Identity — минимальная заглушка; требуется проработка Keycloak интеграции и защищённых политик на всех эндпойнтах.
