@@ -85,16 +85,17 @@ packages/sdks/**/node_modules/
 .cursor/
 # tasks/
 # artefact/
+# ARCHIVE/
 # package-lock.json
 # /package-lock.json
 # *package-lock.json
 # apps/backoffice/package-lock.json
 # /apps/backoffice/package-lock.json
-kniga_cfa.pdf
+# kniga_cfa.pdf
 # **/app/*
 # ARCHIVE/
 # artifacts/
-.tools/
+# .tools/
 
 # AI
 .specstory/
